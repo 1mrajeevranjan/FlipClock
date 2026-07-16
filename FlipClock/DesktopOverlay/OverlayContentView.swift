@@ -6,7 +6,7 @@ import SwiftUI
 /// oversized and out of place next to Calendar/Weather-style widgets.
 /// Optionally shows the day/date/month/year above the clock.
 struct OverlayContentView: View {
-    static let padding: CGFloat = 20
+    static let padding: CGFloat = 22
     static let dateSpacing: CGFloat = 10
 
     let timeProvider: TimeProvider
@@ -46,7 +46,14 @@ struct OverlayContentView: View {
             }
         }
         .padding(Self.padding)
-        .background(.clear)
+        // Center explicitly instead of relying on the hosting window's
+        // frame to match this content's natural size exactly — any drift
+        // between the analytic `windowSize()` estimate and SwiftUI's real
+        // layout (e.g. worst-case weekday width vs. today's actual
+        // weekday) otherwise pins content to the window's top-left corner
+        // instead of centering it, producing lopsided margins.
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(WidgetGlassBackground())
         .preferredColorScheme(settings.theme.colorScheme)
     }
 }

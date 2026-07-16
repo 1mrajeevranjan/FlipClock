@@ -12,6 +12,13 @@ final class OverlayWindowController {
 
     private var floatTimer: Timer?
     private var floatVelocity = CGPoint(x: 0.6, y: 0.4)
+    /// Exact sub-pixel drift position, tracked independently of
+    /// `window.frame` — `NSWindow` truncates its reported origin to whole
+    /// points, so re-deriving next tick's position from `window.frame`
+    /// discards the sub-pixel remainder every time and the window never
+    /// actually moves. Keeping our own precise running position and only
+    /// ever writing (never reading back) `window.frame` fixes that.
+    private var floatPosition: CGPoint?
 
     init(timeProvider: TimeProvider, settings: AppSettings) {
         self.settings = settings
@@ -98,8 +105,12 @@ final class OverlayWindowController {
         // positioning while it's on; turning it off hands control back to
         // the user's drag.
         window.isMovableByWindowBackground = !floating
-        guard floating else { return }
+        guard floating else {
+            floatPosition = nil
+            return
+        }
 
+        floatPosition = window.frame.origin
         let timer = Timer(timeInterval: 1.0 / 30.0, repeats: true) { [weak self] _ in
             self?.stepFloat()
         }
@@ -108,30 +119,29 @@ final class OverlayWindowController {
     }
 
     private func stepFloat() {
-        guard let screen = NSScreen.main else { return }
+        guard let screen = NSScreen.main, var origin = floatPosition else { return }
         let bounds = screen.visibleFrame
-        var frame = window.frame
-        var origin = frame.origin
+        let size = window.frame.size
         origin.x += floatVelocity.x
         origin.y += floatVelocity.y
 
         if origin.x <= bounds.minX {
             origin.x = bounds.minX
             floatVelocity.x = abs(floatVelocity.x)
-        } else if origin.x + frame.width >= bounds.maxX {
-            origin.x = bounds.maxX - frame.width
+        } else if origin.x + size.width >= bounds.maxX {
+            origin.x = bounds.maxX - size.width
             floatVelocity.x = -abs(floatVelocity.x)
         }
 
         if origin.y <= bounds.minY {
             origin.y = bounds.minY
             floatVelocity.y = abs(floatVelocity.y)
-        } else if origin.y + frame.height >= bounds.maxY {
-            origin.y = bounds.maxY - frame.height
+        } else if origin.y + size.height >= bounds.maxY {
+            origin.y = bounds.maxY - size.height
             floatVelocity.y = -abs(floatVelocity.y)
         }
 
-        frame.origin = origin
-        window.setFrame(frame, display: true)
+        floatPosition = origin
+        window.setFrameOrigin(origin)
     }
 }

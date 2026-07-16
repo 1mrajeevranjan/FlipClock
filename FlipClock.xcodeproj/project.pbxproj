@@ -32,12 +32,14 @@
 		E84902489E6F8CCF4F6B778C /* VibrantHostingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFD87184D792EF0F08700422 /* VibrantHostingController.swift */; };
 		E98342BF539CAE355C1D0DEE /* DigitFaceRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2C211AFAE6975DEBA1E8893 /* DigitFaceRenderer.swift */; };
 		F6851EAC55377D47BD073178 /* OverlayContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12A448C0C9D97B8982A4777C /* OverlayContentView.swift */; };
+		9786BCF605334E0DB0814F90 /* WidgetGlassBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 057543F279004714819D3BB6 /* WidgetGlassBackground.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		02DDB38188F3CABDE8AF990C /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		0F05D3D8AB3B3658A5974D0E /* FlapColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlapColors.swift; sourceTree = "<group>"; };
 		12A448C0C9D97B8982A4777C /* OverlayContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayContentView.swift; sourceTree = "<group>"; };
+		057543F279004714819D3BB6 /* WidgetGlassBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetGlassBackground.swift; sourceTree = "<group>"; };
 		16AC161B34E3FF7009C8F9FD /* MenuBarClockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarClockView.swift; sourceTree = "<group>"; };
 		1CD4601C3340A6C28FDF8C3A /* OverlayWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayWindowController.swift; sourceTree = "<group>"; };
 		22AAEA71929350340A866A7B /* SecondClockStatusItemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecondClockStatusItemController.swift; sourceTree = "<group>"; };
@@ -102,6 +104,7 @@
 			isa = PBXGroup;
 			children = (
 				12A448C0C9D97B8982A4777C /* OverlayContentView.swift */,
+				057543F279004714819D3BB6 /* WidgetGlassBackground.swift */,
 				3EA3DA66A1F9A49A759B1825 /* OverlayWindow.swift */,
 				1CD4601C3340A6C28FDF8C3A /* OverlayWindowController.swift */,
 			);
@@ -240,6 +243,7 @@
 				C9754D0A7822746BE4F0F162 /* FlipClockApp.swift in Sources */,
 				64CC5AB390160626B67B5EFE /* MenuBarClockView.swift in Sources */,
 				F6851EAC55377D47BD073178 /* OverlayContentView.swift in Sources */,
+				9786BCF605334E0DB0814F90 /* WidgetGlassBackground.swift in Sources */,
 				CD4212EE01B9C3D2FC4D595E /* OverlayWindow.swift in Sources */,
 				AC742C4A93D9C9D45A481588 /* OverlayWindowController.swift in Sources */,
 				5EACEC3FC36487CFA104204E /* PopoverClockView.swift in Sources */,
