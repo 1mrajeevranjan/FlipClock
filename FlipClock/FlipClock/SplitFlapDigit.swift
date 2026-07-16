@@ -12,15 +12,17 @@ struct SplitFlapDigit: View {
     let cardSize: CGSize
     var isDark: Bool = true
     var compact: Bool = false
+    var textColor: NSColor? = nil
 
     @State private var topValue: String
     @State private var bottomValue: String
 
-    init(value: String, cardSize: CGSize, isDark: Bool = true, compact: Bool = false) {
+    init(value: String, cardSize: CGSize, isDark: Bool = true, compact: Bool = false, textColor: NSColor? = nil) {
         self.value = value
         self.cardSize = cardSize
         self.isDark = isDark
         self.compact = compact
+        self.textColor = textColor
         _topValue = State(initialValue: value)
         _bottomValue = State(initialValue: value)
     }
@@ -28,9 +30,9 @@ struct SplitFlapDigit: View {
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
-                HalfCard(image: DigitFaceRenderer.halfFace(for: topValue, cardSize: cardSize, top: true, isDark: isDark))
+                HalfCard(image: DigitFaceRenderer.halfFace(for: topValue, cardSize: cardSize, top: true, isDark: isDark, textColor: textColor))
                     .frame(width: cardSize.width, height: cardSize.height / 2)
-                HalfCard(image: DigitFaceRenderer.halfFace(for: bottomValue, cardSize: cardSize, top: false, isDark: isDark))
+                HalfCard(image: DigitFaceRenderer.halfFace(for: bottomValue, cardSize: cardSize, top: false, isDark: isDark, textColor: textColor))
                     .frame(width: cardSize.width, height: cardSize.height / 2)
             }
             HingeLine(width: cardSize.width, isDark: isDark, compact: compact)

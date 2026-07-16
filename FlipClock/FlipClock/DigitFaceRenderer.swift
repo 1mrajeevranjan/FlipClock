@@ -24,20 +24,29 @@ enum DigitFaceRenderer {
     }
 
     static func face(for value: String, size: CGSize, isDark: Bool) -> CGImage {
+        face(for: value, size: size, isDark: isDark, textColor: nil)
+    }
+
+    static func face(for value: String, size: CGSize, isDark: Bool, textColor: NSColor?) -> CGImage {
         let key = SizeKey(width: Int(size.width.rounded()), height: Int(size.height.rounded()), isDark: isDark)
-        if let image = fullCache[key]?[value] {
+        let cacheKey = cacheKey(for: value, textColor: textColor)
+        if let image = fullCache[key]?[cacheKey] {
             return image
         }
-        let image = render(value: value, fullSize: size, half: nil, isDark: isDark)
-        fullCache[key, default: [:]][value] = image
+        let image = render(value: value, fullSize: size, half: nil, isDark: isDark, textColor: textColor)
+        fullCache[key, default: [:]][cacheKey] = image
         return image
     }
 
     /// Top or bottom half of a card's face, for the static half-cards and
     /// for the animating flap's two content phases.
     static func halfFace(for value: String, cardSize: CGSize, top: Bool, isDark: Bool) -> CGImage {
+        halfFace(for: value, cardSize: cardSize, top: top, isDark: isDark, textColor: nil)
+    }
+
+    static func halfFace(for value: String, cardSize: CGSize, top: Bool, isDark: Bool, textColor: NSColor?) -> CGImage {
         let key = HalfKey(
-            value: value,
+            value: cacheKey(for: value, textColor: textColor),
             width: Int(cardSize.width.rounded()),
             height: Int(cardSize.height.rounded()),
             top: top,
@@ -46,7 +55,7 @@ enum DigitFaceRenderer {
         if let image = halfCache[key] {
             return image
         }
-        let image = render(value: value, fullSize: cardSize, half: top ? .top : .bottom, isDark: isDark)
+        let image = render(value: value, fullSize: cardSize, half: top ? .top : .bottom, isDark: isDark, textColor: textColor)
         halfCache[key] = image
         return image
     }
@@ -57,7 +66,7 @@ enum DigitFaceRenderer {
     /// card, but into a bitmap that may only be the top or bottom half of
     /// that card — the glyph lands cut exactly at the hinge line, matching
     /// the physical two-housing split-flap card.
-    private static func render(value: String, fullSize: CGSize, half: Half?, isDark: Bool) -> CGImage {
+    private static func render(value: String, fullSize: CGSize, half: Half?, isDark: Bool, textColor: NSColor?) -> CGImage {
         let outputSize = half == nil ? fullSize : CGSize(width: fullSize.width, height: fullSize.height / 2)
         let nsImage = NSImage(size: outputSize)
         nsImage.lockFocus()
@@ -70,13 +79,7 @@ enum DigitFaceRenderer {
             fatalError("DigitFaceRenderer: no graphics context")
         }
 
-        let fontSize = fullSize.height * 0.78
-        let font = NSFont.systemFont(ofSize: fontSize, weight: .heavy)
-        let attrs: [NSAttributedString.Key: Any] = [
-            .font: font,
-            .foregroundColor: NSColor(FlapColors.digit(isDark: isDark))
-        ]
-        let line = CTLineCreateWithAttributedString(NSAttributedString(string: value, attributes: attrs))
+        let line = line(for: value, fullSize: fullSize, isDark: isDark, textColor: textColor)
 
         // The line's actual rendered ink box (not typographic ascent/
         // descent/cap-height, which vary by font design and were still
@@ -108,5 +111,31 @@ enum DigitFaceRenderer {
             fatalError("DigitFaceRenderer: failed to rasterize digit face")
         }
         return cgImage
+    }
+
+    private static func cacheKey(for value: String, textColor: NSColor?) -> String {
+        guard let textColor else { return value }
+        return "\(value)|\(textColor.description)"
+    }
+
+    private static func line(for value: String, fullSize: CGSize, isDark: Bool, textColor: NSColor?) -> CTLine {
+        let maxWidth = fullSize.width * 0.82
+        var fontSize = fullSize.height * 0.78
+        var attributes: [NSAttributedString.Key: Any] = [:]
+
+        while fontSize > 6 {
+            let font = NSFont.systemFont(ofSize: fontSize, weight: .heavy)
+            attributes = [
+                .font: font,
+                .foregroundColor: textColor ?? NSColor(FlapColors.digit(isDark: isDark))
+            ]
+            let size = (value as NSString).size(withAttributes: attributes)
+            if size.width <= maxWidth {
+                break
+            }
+            fontSize -= 1
+        }
+
+        return CTLineCreateWithAttributedString(NSAttributedString(string: value, attributes: attributes))
     }
 }
