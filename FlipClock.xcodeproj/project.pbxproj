@@ -1,0 +1,439 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		02A5B5C771F3CADF7B6AFAA7 /* FlipCardLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1B048EDDC054D8647424B07 /* FlipCardLayer.swift */; };
+		066BBA76C5767ABF5935A9EC /* FlapColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F05D3D8AB3B3658A5974D0E /* FlapColors.swift */; };
+		19A441A793D1B4A1194D4918 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02DDB38188F3CABDE8AF990C /* AppDelegate.swift */; };
+		2811B527FE03B0BFAB73B046 /* SecondClockStatusItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22AAEA71929350340A866A7B /* SecondClockStatusItemController.swift */; };
+		3DA8EB3A8D08B6D82BEE89A0 /* SplitFlapDigit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65A63215BD2AA8AE5332DF36 /* SplitFlapDigit.swift */; };
+		3F10BB5B3BBB26EC9CD50632 /* ClockTick.swift in Sources */ = {isa = PBXBuildFile; fileRef = 915EEE7160E430CB387D242E /* ClockTick.swift */; };
+		4511816071E0C80C3F673194 /* SplitFlapPairView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD2A120ACB0F42A007264D1C /* SplitFlapPairView.swift */; };
+		4B9E8E45D3828A20209486B4 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E79414097EB0F91E58961D38 /* SettingsView.swift */; };
+		5EACEC3FC36487CFA104204E /* PopoverClockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 569EF2149D9DD94C311A6F46 /* PopoverClockView.swift */; };
+		64CC5AB390160626B67B5EFE /* MenuBarClockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16AC161B34E3FF7009C8F9FD /* MenuBarClockView.swift */; };
+		96705FB121D016A608DF8446 /* CalendarMonthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED3D59C1D26F59C0741E18C3 /* CalendarMonthView.swift */; };
+		9F29001BC6E87DC8BF62BF78 /* SplitFlapClockFace.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5A5A1BF8465AA952E2F3DBD /* SplitFlapClockFace.swift */; };
+		ABAFF924E0D4AA14F4E3003A /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8800DAAFAC2F27DC741FF29C /* SettingsWindowController.swift */; };
+		AC742C4A93D9C9D45A481588 /* OverlayWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CD4601C3340A6C28FDF8C3A /* OverlayWindowController.swift */; };
+		B170E1361D84026C0EE80D8A /* SecondClockMenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96A869DA91B1A0C42E527852 /* SecondClockMenuBarView.swift */; };
+		B5B2142D78AB041CCBB45B5B /* TimeProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = CED75368A307036F58F0332F /* TimeProvider.swift */; };
+		B7296591D2A8AA2A29EBEE6A /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C82BBCF4822EE69EB39A8D8C /* AppSettings.swift */; };
+		C9754D0A7822746BE4F0F162 /* FlipClockApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9382537EFD4FE15801C53C0E /* FlipClockApp.swift */; };
+		CD4212EE01B9C3D2FC4D595E /* OverlayWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EA3DA66A1F9A49A759B1825 /* OverlayWindow.swift */; };
+		D0448B25E61FFCC1FD18E9B7 /* StatusItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FEC2FADD24FCE8918E65F47 /* StatusItemController.swift */; };
+		DAB960062120E9ED90E69164 /* DateHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B45723FCF839EE6FCDF79CAA /* DateHeaderView.swift */; };
+		E6960F41E21880F41D3C0C78 /* DigitDelta.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91EE622C614D16D2F0D9CB00 /* DigitDelta.swift */; };
+		E84902489E6F8CCF4F6B778C /* VibrantHostingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFD87184D792EF0F08700422 /* VibrantHostingController.swift */; };
+		E98342BF539CAE355C1D0DEE /* DigitFaceRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2C211AFAE6975DEBA1E8893 /* DigitFaceRenderer.swift */; };
+		F6851EAC55377D47BD073178 /* OverlayContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12A448C0C9D97B8982A4777C /* OverlayContentView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		02DDB38188F3CABDE8AF990C /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		0F05D3D8AB3B3658A5974D0E /* FlapColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlapColors.swift; sourceTree = "<group>"; };
+		12A448C0C9D97B8982A4777C /* OverlayContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayContentView.swift; sourceTree = "<group>"; };
+		16AC161B34E3FF7009C8F9FD /* MenuBarClockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarClockView.swift; sourceTree = "<group>"; };
+		1CD4601C3340A6C28FDF8C3A /* OverlayWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayWindowController.swift; sourceTree = "<group>"; };
+		22AAEA71929350340A866A7B /* SecondClockStatusItemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecondClockStatusItemController.swift; sourceTree = "<group>"; };
+		3EA3DA66A1F9A49A759B1825 /* OverlayWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayWindow.swift; sourceTree = "<group>"; };
+		569EF2149D9DD94C311A6F46 /* PopoverClockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverClockView.swift; sourceTree = "<group>"; };
+		5FEC2FADD24FCE8918E65F47 /* StatusItemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusItemController.swift; sourceTree = "<group>"; };
+		65A63215BD2AA8AE5332DF36 /* SplitFlapDigit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitFlapDigit.swift; sourceTree = "<group>"; };
+		8800DAAFAC2F27DC741FF29C /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
+		915EEE7160E430CB387D242E /* ClockTick.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClockTick.swift; sourceTree = "<group>"; };
+		91EE622C614D16D2F0D9CB00 /* DigitDelta.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigitDelta.swift; sourceTree = "<group>"; };
+		9382537EFD4FE15801C53C0E /* FlipClockApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlipClockApp.swift; sourceTree = "<group>"; };
+		96A869DA91B1A0C42E527852 /* SecondClockMenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecondClockMenuBarView.swift; sourceTree = "<group>"; };
+		ABC77DD942B206F433DB7BBB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		B45723FCF839EE6FCDF79CAA /* DateHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateHeaderView.swift; sourceTree = "<group>"; };
+		B5A5A1BF8465AA952E2F3DBD /* SplitFlapClockFace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitFlapClockFace.swift; sourceTree = "<group>"; };
+		C82BBCF4822EE69EB39A8D8C /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
+		CED75368A307036F58F0332F /* TimeProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeProvider.swift; sourceTree = "<group>"; };
+		D2C211AFAE6975DEBA1E8893 /* DigitFaceRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigitFaceRenderer.swift; sourceTree = "<group>"; };
+		DD2A120ACB0F42A007264D1C /* SplitFlapPairView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitFlapPairView.swift; sourceTree = "<group>"; };
+		E1B048EDDC054D8647424B07 /* FlipCardLayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlipCardLayer.swift; sourceTree = "<group>"; };
+		E79414097EB0F91E58961D38 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		ED3D59C1D26F59C0741E18C3 /* CalendarMonthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarMonthView.swift; sourceTree = "<group>"; };
+		F08D12912A33B8C2196116CD /* FlipClock.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FlipClock.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FFD87184D792EF0F08700422 /* VibrantHostingController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VibrantHostingController.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		14A48FBD465A57F0237AB0EC /* FlipClock */ = {
+			isa = PBXGroup;
+			children = (
+				ABC77DD942B206F433DB7BBB /* Info.plist */,
+				78946FEDA7DF751FD84F7236 /* App */,
+				4F495704C3D7B8E550F16FF0 /* DesktopOverlay */,
+				ED341D91060F5E0777EB0CA6 /* FlipClock */,
+				95A2E716741EC931D83540F9 /* MenuBar */,
+				643D35C44EBA236B0AEF3D6E /* Popover */,
+				AADEE37E141A2DDF0B4481F7 /* Settings */,
+				1F3D7FD8A5FC942103AE5BE0 /* TimeEngine */,
+			);
+			path = FlipClock;
+			sourceTree = "<group>";
+		};
+		1F3D7FD8A5FC942103AE5BE0 /* TimeEngine */ = {
+			isa = PBXGroup;
+			children = (
+				915EEE7160E430CB387D242E /* ClockTick.swift */,
+				91EE622C614D16D2F0D9CB00 /* DigitDelta.swift */,
+				CED75368A307036F58F0332F /* TimeProvider.swift */,
+			);
+			path = TimeEngine;
+			sourceTree = "<group>";
+		};
+		3E16AAA2A605472140D02CE9 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				F08D12912A33B8C2196116CD /* FlipClock.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		4F495704C3D7B8E550F16FF0 /* DesktopOverlay */ = {
+			isa = PBXGroup;
+			children = (
+				12A448C0C9D97B8982A4777C /* OverlayContentView.swift */,
+				3EA3DA66A1F9A49A759B1825 /* OverlayWindow.swift */,
+				1CD4601C3340A6C28FDF8C3A /* OverlayWindowController.swift */,
+			);
+			path = DesktopOverlay;
+			sourceTree = "<group>";
+		};
+		643D35C44EBA236B0AEF3D6E /* Popover */ = {
+			isa = PBXGroup;
+			children = (
+				ED3D59C1D26F59C0741E18C3 /* CalendarMonthView.swift */,
+				B45723FCF839EE6FCDF79CAA /* DateHeaderView.swift */,
+				569EF2149D9DD94C311A6F46 /* PopoverClockView.swift */,
+				FFD87184D792EF0F08700422 /* VibrantHostingController.swift */,
+			);
+			path = Popover;
+			sourceTree = "<group>";
+		};
+		78946FEDA7DF751FD84F7236 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				02DDB38188F3CABDE8AF990C /* AppDelegate.swift */,
+				9382537EFD4FE15801C53C0E /* FlipClockApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		82D3B14187C53EF176700BE8 = {
+			isa = PBXGroup;
+			children = (
+				14A48FBD465A57F0237AB0EC /* FlipClock */,
+				3E16AAA2A605472140D02CE9 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		95A2E716741EC931D83540F9 /* MenuBar */ = {
+			isa = PBXGroup;
+			children = (
+				16AC161B34E3FF7009C8F9FD /* MenuBarClockView.swift */,
+				96A869DA91B1A0C42E527852 /* SecondClockMenuBarView.swift */,
+				22AAEA71929350340A866A7B /* SecondClockStatusItemController.swift */,
+				5FEC2FADD24FCE8918E65F47 /* StatusItemController.swift */,
+			);
+			path = MenuBar;
+			sourceTree = "<group>";
+		};
+		AADEE37E141A2DDF0B4481F7 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				C82BBCF4822EE69EB39A8D8C /* AppSettings.swift */,
+				E79414097EB0F91E58961D38 /* SettingsView.swift */,
+				8800DAAFAC2F27DC741FF29C /* SettingsWindowController.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		ED341D91060F5E0777EB0CA6 /* FlipClock */ = {
+			isa = PBXGroup;
+			children = (
+				D2C211AFAE6975DEBA1E8893 /* DigitFaceRenderer.swift */,
+				0F05D3D8AB3B3658A5974D0E /* FlapColors.swift */,
+				E1B048EDDC054D8647424B07 /* FlipCardLayer.swift */,
+				B5A5A1BF8465AA952E2F3DBD /* SplitFlapClockFace.swift */,
+				65A63215BD2AA8AE5332DF36 /* SplitFlapDigit.swift */,
+				DD2A120ACB0F42A007264D1C /* SplitFlapPairView.swift */,
+			);
+			path = FlipClock;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		3486491F75606E2E23752AE7 /* FlipClock */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9C6C370352085D46B89551FF /* Build configuration list for PBXNativeTarget "FlipClock" */;
+			buildPhases = (
+				1BC40BED797460BF8159D8AB /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = FlipClock;
+			packageProductDependencies = (
+			);
+			productName = FlipClock;
+			productReference = F08D12912A33B8C2196116CD /* FlipClock.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		13CBABB82F4FE5B097A65524 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					3486491F75606E2E23752AE7 = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 01E9CAA5197E676970630C70 /* Build configuration list for PBXProject "FlipClock" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 82D3B14187C53EF176700BE8;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 3E16AAA2A605472140D02CE9 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				3486491F75606E2E23752AE7 /* FlipClock */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		1BC40BED797460BF8159D8AB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				19A441A793D1B4A1194D4918 /* AppDelegate.swift in Sources */,
+				B7296591D2A8AA2A29EBEE6A /* AppSettings.swift in Sources */,
+				96705FB121D016A608DF8446 /* CalendarMonthView.swift in Sources */,
+				3F10BB5B3BBB26EC9CD50632 /* ClockTick.swift in Sources */,
+				DAB960062120E9ED90E69164 /* DateHeaderView.swift in Sources */,
+				E6960F41E21880F41D3C0C78 /* DigitDelta.swift in Sources */,
+				E98342BF539CAE355C1D0DEE /* DigitFaceRenderer.swift in Sources */,
+				066BBA76C5767ABF5935A9EC /* FlapColors.swift in Sources */,
+				02A5B5C771F3CADF7B6AFAA7 /* FlipCardLayer.swift in Sources */,
+				C9754D0A7822746BE4F0F162 /* FlipClockApp.swift in Sources */,
+				64CC5AB390160626B67B5EFE /* MenuBarClockView.swift in Sources */,
+				F6851EAC55377D47BD073178 /* OverlayContentView.swift in Sources */,
+				CD4212EE01B9C3D2FC4D595E /* OverlayWindow.swift in Sources */,
+				AC742C4A93D9C9D45A481588 /* OverlayWindowController.swift in Sources */,
+				5EACEC3FC36487CFA104204E /* PopoverClockView.swift in Sources */,
+				B170E1361D84026C0EE80D8A /* SecondClockMenuBarView.swift in Sources */,
+				2811B527FE03B0BFAB73B046 /* SecondClockStatusItemController.swift in Sources */,
+				4B9E8E45D3828A20209486B4 /* SettingsView.swift in Sources */,
+				ABAFF924E0D4AA14F4E3003A /* SettingsWindowController.swift in Sources */,
+				9F29001BC6E87DC8BF62BF78 /* SplitFlapClockFace.swift in Sources */,
+				3DA8EB3A8D08B6D82BEE89A0 /* SplitFlapDigit.swift in Sources */,
+				4511816071E0C80C3F673194 /* SplitFlapPairView.swift in Sources */,
+				D0448B25E61FFCC1FD18E9B7 /* StatusItemController.swift in Sources */,
+				B5B2142D78AB041CCBB45B5B /* TimeProvider.swift in Sources */,
+				E84902489E6F8CCF4F6B778C /* VibrantHostingController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		3969D88FDC3471BD3C4172EE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		70B08BAABBA9711744F2E770 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = FlipClock/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.rajeevranjan.flipclock;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		95E95257E08DF9818BC5C454 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		E5D757E2865AE02CE45CC432 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = FlipClock/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.rajeevranjan.flipclock;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		01E9CAA5197E676970630C70 /* Build configuration list for PBXProject "FlipClock" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				95E95257E08DF9818BC5C454 /* Debug */,
+				3969D88FDC3471BD3C4172EE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		9C6C370352085D46B89551FF /* Build configuration list for PBXNativeTarget "FlipClock" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E5D757E2865AE02CE45CC432 /* Debug */,
+				70B08BAABBA9711744F2E770 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 13CBABB82F4FE5B097A65524 /* Project object */;
+}
