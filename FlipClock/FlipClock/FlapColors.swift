@@ -21,14 +21,15 @@ enum FlapColors {
     ///
     /// Measured against the desktop overlay's actual on-screen composite
     /// (`.underWindowBackground` blur + wallpaper): a resting card reads as
-    /// a mid-brightness, faintly cool gray (~RGB 130-156), while the
-    /// previous `white: 0.85` fill rendered flatly near-white (~RGB 211) —
-    /// a stark, visible mismatch on every single flip. A neutral mid-gray
-    /// sits far closer to that measured tone and, being roughly the
-    /// midpoint of the brightness range rather than pinned to one end,
-    /// keeps worst-case contrast lower across differently-lit wallpapers
-    /// than a near-white fill ever could.
-    static let glassFlapFill = Color(white: 0.55, opacity: 0.88)
+    /// a mid-brightness, blue-shifted cool gray (~RGB 135-160, 155-180,
+    /// 165-195 — green and blue channels consistently ~20-30 above red),
+    /// not a neutral gray. A first pass at fixing this used a pure neutral
+    /// `white:` value; that closed the brightness gap but left the hue
+    /// wrong, so the flap read as a visibly gray patch against the
+    /// surrounding blue-tinted glass instead of a white one — still a
+    /// mismatch, just a different-looking one. This cool-gray value
+    /// matches the measured hue, not just the brightness.
+    static let glassFlapFill = Color(red: 0.57, green: 0.64, blue: 0.68, opacity: 0.88)
 
     static func digit(isDark: Bool) -> Color {
         isDark ? Color.white : Color.black
