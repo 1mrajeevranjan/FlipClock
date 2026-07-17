@@ -126,6 +126,16 @@ private struct CardGlassBackground: View {
 /// varying color before a flip and was frozen at one flat gray for many
 /// seconds after, never recovering. Toggling `.state` forces the
 /// compositor to treat it as freshly active and resume live sampling.
+///
+/// That toggle must only run right after a flip actually lands on THIS
+/// card, not on every SwiftUI re-render — `updateNSView` fires for every
+/// digit whenever any ancestor re-renders, which happens every second
+/// (`OverlayContentView` reads `timeProvider.tick` directly), so an
+/// unconditional toggle here was re-kicking every card's blur every
+/// second regardless of whether it flipped, reading as a visible
+/// once-a-second flicker across the whole widget. The coordinator tracks
+/// the last-seen `refreshTrigger` so the toggle only fires on the one
+/// update where it actually changed.
 private struct VisualEffectCardBlur: NSViewRepresentable {
     var refreshTrigger: Int
 
@@ -134,12 +144,24 @@ private struct VisualEffectCardBlur: NSViewRepresentable {
         view.blendingMode = .behindWindow
         view.material = .hudWindow
         view.state = .active
+        context.coordinator.lastTrigger = refreshTrigger
         return view
     }
 
     func updateNSView(_ nsView: NSVisualEffectView, context: Context) {
+        guard context.coordinator.lastTrigger != refreshTrigger else { return }
+        context.coordinator.lastTrigger = refreshTrigger
         nsView.state = .inactive
         nsView.state = .active
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(lastTrigger: refreshTrigger)
+    }
+
+    final class Coordinator {
+        var lastTrigger: Int
+        init(lastTrigger: Int) { self.lastTrigger = lastTrigger }
     }
 }
 
