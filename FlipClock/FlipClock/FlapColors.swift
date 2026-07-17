@@ -18,7 +18,17 @@ enum FlapColors {
     /// tone reads close enough to a frosted glass surface in both
     /// appearances to avoid that flash, without depending on a live blur
     /// sample (not available for a static rasterized flap face).
-    static let glassFlapFill = Color(white: 0.85, opacity: 0.92)
+    ///
+    /// Measured against the desktop overlay's actual on-screen composite
+    /// (`.underWindowBackground` blur + wallpaper): a resting card reads as
+    /// a mid-brightness, faintly cool gray (~RGB 130-156), while the
+    /// previous `white: 0.85` fill rendered flatly near-white (~RGB 211) —
+    /// a stark, visible mismatch on every single flip. A neutral mid-gray
+    /// sits far closer to that measured tone and, being roughly the
+    /// midpoint of the brightness range rather than pinned to one end,
+    /// keeps worst-case contrast lower across differently-lit wallpapers
+    /// than a near-white fill ever could.
+    static let glassFlapFill = Color(white: 0.55, opacity: 0.88)
 
     static func digit(isDark: Bool) -> Color {
         isDark ? Color.white : Color.black
