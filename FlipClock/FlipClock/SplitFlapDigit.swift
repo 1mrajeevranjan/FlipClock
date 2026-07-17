@@ -130,7 +130,7 @@ private struct VisualEffectCardBlur: NSViewRepresentable {
     var refreshTrigger: Int
 
     func makeNSView(context: Context) -> NSVisualEffectView {
-        let view = NSVisualEffectView()
+        let view = DraggableVisualEffectView()
         view.blendingMode = .behindWindow
         view.material = .hudWindow
         view.state = .active
@@ -141,6 +141,16 @@ private struct VisualEffectCardBlur: NSViewRepresentable {
         nsView.state = .inactive
         nsView.state = .active
     }
+}
+
+/// `NSVisualEffectView` returns `false` from `mouseDownCanMoveWindow` by
+/// default, which silently defeats the desktop overlay window's
+/// `isMovableByWindowBackground = true` everywhere a card's own glass panel
+/// covers — since `showOwnGlassPanel` tiles one of these per digit across
+/// nearly the whole widget, that's most of its surface. Overriding it here
+/// is what actually lets the widget be dragged by its background.
+private final class DraggableVisualEffectView: NSVisualEffectView {
+    override var mouseDownCanMoveWindow: Bool { true }
 }
 
 private struct HalfCard: View {

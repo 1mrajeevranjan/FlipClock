@@ -70,7 +70,7 @@ struct WidgetGlassBackground: View {
 /// behind the window, which is why the first pass looked wrong.
 private struct VisualEffectBlur: NSViewRepresentable {
     func makeNSView(context: Context) -> NSVisualEffectView {
-        let view = NSVisualEffectView()
+        let view = DraggableVisualEffectView()
         view.blendingMode = .behindWindow
         view.material = .underWindowBackground
         view.state = .active
@@ -78,6 +78,15 @@ private struct VisualEffectBlur: NSViewRepresentable {
     }
 
     func updateNSView(_ nsView: NSVisualEffectView, context: Context) {}
+}
+
+/// `NSVisualEffectView` returns `false` from `mouseDownCanMoveWindow` by
+/// default, which silently defeats the overlay window's
+/// `isMovableByWindowBackground = true` everywhere this blur covers —
+/// practically the whole widget surface. Overriding it here is what
+/// actually lets the widget be dragged by its background.
+private final class DraggableVisualEffectView: NSVisualEffectView {
+    override var mouseDownCanMoveWindow: Bool { true }
 }
 
 extension Comparable {
