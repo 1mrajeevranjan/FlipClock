@@ -6,8 +6,16 @@ import SwiftUI
 /// oversized and out of place next to Calendar/Weather-style widgets.
 /// Optionally shows the day/date/month/year above the clock.
 struct OverlayContentView: View {
-    static let padding: CGFloat = 22
-    static let dateSpacing: CGFloat = 10
+    /// HIG's standard widget margin is 16pt; scaling it by `overlaySize`
+    /// and clamping to `11...22` keeps the smallest widget from crowding
+    /// its edges while never exceeding today's default-size look.
+    static func padding(scale: CGFloat) -> CGFloat {
+        (16 * scale).clamped(to: 11...22)
+    }
+
+    static func dateSpacing(scale: CGFloat) -> CGFloat {
+        (10 * scale).clamped(to: 7...14)
+    }
 
     let timeProvider: TimeProvider
     @ObservedObject var settings: AppSettings
@@ -21,8 +29,9 @@ struct OverlayContentView: View {
     static func windowSize(scale: CGFloat, showDate: Bool, showMeridiem: Bool) -> CGSize {
         let face = SplitFlapClockFace.idealSize(scale: scale, compact: false, showPedestal: false, showMeridiem: showMeridiem)
         let dateSize = showDate ? dateRowSize(scale: scale) : .zero
-        let width = max(face.width, dateSize.width) + padding * 2
-        let height = face.height + (showDate ? dateSpacing + dateSize.height : 0) + padding * 2
+        let contentPadding = padding(scale: scale)
+        let width = max(face.width, dateSize.width) + contentPadding * 2
+        let height = face.height + (showDate ? dateSpacing(scale: scale) + dateSize.height : 0) + contentPadding * 2
         return CGSize(width: width, height: height)
     }
 
@@ -37,7 +46,7 @@ struct OverlayContentView: View {
     }
 
     var body: some View {
-        VStack(spacing: Self.dateSpacing) {
+        VStack(spacing: Self.dateSpacing(scale: settings.overlaySize.scale)) {
             SplitFlapClockFace(
                 tick: timeProvider.tick,
                 scale: effectiveScale,
@@ -52,7 +61,7 @@ struct OverlayContentView: View {
                 DateFlapRow(date: timeProvider.tick.date, scale: effectiveScale, isDark: colorScheme == .dark, glassCard: true)
             }
         }
-        .padding(Self.padding)
+        .padding(Self.padding(scale: settings.overlaySize.scale))
         // Center explicitly instead of relying on the hosting window's
         // frame to match this content's natural size exactly — any drift
         // between the analytic `windowSize()` estimate and SwiftUI's real
