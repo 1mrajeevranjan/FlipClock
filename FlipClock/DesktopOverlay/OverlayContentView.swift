@@ -60,7 +60,7 @@ struct OverlayContentView: View {
         // weekday) otherwise pins content to the window's top-left corner
         // instead of centering it, producing lopsided margins.
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(WidgetGlassBackground(cornerRadius: settings.fillScreen ? 0 : WidgetGlassBackground.cornerRadius, fullyClear: settings.fillScreen))
+        .background(WidgetGlassBackground(scale: settings.overlaySize.scale, fullyClear: settings.fillScreen))
         .preferredColorScheme(settings.theme.colorScheme)
     }
 }
