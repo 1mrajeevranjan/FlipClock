@@ -28,9 +28,10 @@ static func cornerRadius(scale: CGFloat) -> CGFloat {
 }
 ```
 
-- At `scale = 1` (full/default size): `34pt` — visually unchanged from today.
+- At `scale = 0.65` (`.full`, the actual default `OverlaySize`): `clamp(22.1)` → `22.1pt` — down from the old flat `34pt`, a deliberate change so radius tracks widget size instead of staying fixed.
 - At `scale = 0.325` (half): `clamp(11.05)` → `14pt` floor.
 - At `scale = 1.95` (triple): `clamp(66.3)` → `40pt` ceiling.
+- `scale = 1` is the formula's anchor point (`34 * 1 = 34`, matching the old constant exactly) — no `OverlaySize` case actually reaches it; don't read it as "the default."
 - `fillScreen` mode keeps forcing `0` (edge-to-edge), unchanged.
 
 ### 2. Padding (`OverlayContentView.swift`)
@@ -45,7 +46,7 @@ static func dateSpacing(scale: CGFloat) -> CGFloat {
 ```
 
 - Base value now `16pt` (HIG standard margin) instead of an arbitrary `22`.
-- At `scale = 1`: `clamp(16)` → `16pt` — this is a deliberate small visual change (was `22pt`) to actually land on HIG's standard margin at default size, not just preserve today's look.
+- At `scale = 0.65` (`.full`, the actual default `OverlaySize`): `clamp(10.4)` → `11pt` floor — down from the old flat `22pt`, a deliberate move toward HIG's standard margin rather than preserving today's look. (`scale = 1` would give the un-clamped `16pt`, but no `OverlaySize` case reaches `scale = 1`.)
 - Floor `11pt` matches HIG's own tight-margin fallback; never goes below it even at `0.325x`.
 - `dateSpacing` follows the same shape at roughly 2/3 the padding value, floor `7pt`/ceiling `14pt`.
 - `windowSize(...)`'s analytic sizing math already multiplies `padding * 2` — no change to that formula, just to what value flows in.

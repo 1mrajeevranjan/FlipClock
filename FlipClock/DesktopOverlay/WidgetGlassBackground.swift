@@ -19,9 +19,12 @@ struct WidgetGlassBackground: View {
     /// panel that would visibly gray out the whole screen.
     var fullyClear: Bool = false
 
-    /// `34pt` at `scale = 1` (unchanged from the previous flat constant),
-    /// clamped to `14...40` so it never vanishes at the smallest widget size
-    /// or balloons past a sane maximum at the largest.
+    /// `34 * scale`, clamped to `14...40`. The default `.full` size
+    /// (`scale = 0.65`) now renders at `22pt` — smaller than the old flat
+    /// `34pt` constant, a deliberate change to make radius track widget
+    /// size rather than stay fixed; `scale = 1` is just the formula's
+    /// anchor point (`OverlaySize` never actually reaches it), not the
+    /// default.
     static func cornerRadius(scale: CGFloat) -> CGFloat {
         (34 * scale).clamped(to: 14...40)
     }

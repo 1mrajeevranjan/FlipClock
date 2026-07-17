@@ -8,7 +8,10 @@ import SwiftUI
 struct OverlayContentView: View {
     /// HIG's standard widget margin is 16pt; scaling it by `overlaySize`
     /// and clamping to `11...22` keeps the smallest widget from crowding
-    /// its edges while never exceeding today's default-size look.
+    /// its edges. At the default `.full` size (`scale = 0.65`) this floors
+    /// at `11pt` — noticeably tighter than the old flat `22pt` constant, a
+    /// deliberate move toward HIG's standard margin rather than an
+    /// unchanged default.
     static func padding(scale: CGFloat) -> CGFloat {
         (16 * scale).clamped(to: 11...22)
     }
