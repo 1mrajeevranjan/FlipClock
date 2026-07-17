@@ -1,5 +1,6 @@
 import AppKit
 import CoreText
+import SwiftUI
 
 /// Renders and caches card faces (digits "0"-"9", or short labels like
 /// "AM"/"PM") as bitmaps, so the flip animation never re-rasterizes text
@@ -13,6 +14,8 @@ enum DigitFaceRenderer {
         let width: Int
         let height: Int
         let isDark: Bool
+        let transparentBackground: Bool
+        let fillColor: String
     }
 
     private struct HalfKey: Hashable {
@@ -21,19 +24,21 @@ enum DigitFaceRenderer {
         let height: Int
         let top: Bool
         let isDark: Bool
+        let transparentBackground: Bool
+        let fillColor: String
     }
 
     static func face(for value: String, size: CGSize, isDark: Bool) -> CGImage {
         face(for: value, size: size, isDark: isDark, textColor: nil)
     }
 
-    static func face(for value: String, size: CGSize, isDark: Bool, textColor: NSColor?) -> CGImage {
-        let key = SizeKey(width: Int(size.width.rounded()), height: Int(size.height.rounded()), isDark: isDark)
+    static func face(for value: String, size: CGSize, isDark: Bool, textColor: NSColor?, transparentBackground: Bool = false) -> CGImage {
+        let key = SizeKey(width: Int(size.width.rounded()), height: Int(size.height.rounded()), isDark: isDark, transparentBackground: transparentBackground, fillColor: "leaf")
         let cacheKey = cacheKey(for: value, textColor: textColor)
         if let image = fullCache[key]?[cacheKey] {
             return image
         }
-        let image = render(value: value, fullSize: size, half: nil, isDark: isDark, textColor: textColor)
+        let image = render(value: value, fullSize: size, half: nil, isDark: isDark, textColor: textColor, transparentBackground: transparentBackground)
         fullCache[key, default: [:]][cacheKey] = image
         return image
     }
@@ -44,18 +49,31 @@ enum DigitFaceRenderer {
         halfFace(for: value, cardSize: cardSize, top: top, isDark: isDark, textColor: nil)
     }
 
-    static func halfFace(for value: String, cardSize: CGSize, top: Bool, isDark: Bool, textColor: NSColor?) -> CGImage {
+    /// `transparentBackground` skips the fill entirely — used for the
+    /// "liquid glass" card style's idle static halves, where a real
+    /// blurred `NSVisualEffectView` sits behind this image and the digit
+    /// needs to read as drawn directly on top of that glass.
+    ///
+    /// `fillColor` overrides the default opaque leaf color when a fill is
+    /// drawn — used by the animating flap in glass mode, which needs to
+    /// stay opaque enough to fully mask the static digit underneath (or
+    /// it "ghosts"/double-exposes mid-flip) while still reading as
+    /// translucent glass rather than a solid leaf card, so the card
+    /// doesn't visibly flash to a different color for the flip's duration.
+    static func halfFace(for value: String, cardSize: CGSize, top: Bool, isDark: Bool, textColor: NSColor?, transparentBackground: Bool = false, fillColor: NSColor? = nil) -> CGImage {
         let key = HalfKey(
             value: cacheKey(for: value, textColor: textColor),
             width: Int(cardSize.width.rounded()),
             height: Int(cardSize.height.rounded()),
             top: top,
-            isDark: isDark
+            isDark: isDark,
+            transparentBackground: transparentBackground,
+            fillColor: fillColor?.description ?? "leaf"
         )
         if let image = halfCache[key] {
             return image
         }
-        let image = render(value: value, fullSize: cardSize, half: top ? .top : .bottom, isDark: isDark, textColor: textColor)
+        let image = render(value: value, fullSize: cardSize, half: top ? .top : .bottom, isDark: isDark, textColor: textColor, transparentBackground: transparentBackground, fillColor: fillColor)
         halfCache[key] = image
         return image
     }
@@ -66,13 +84,15 @@ enum DigitFaceRenderer {
     /// card, but into a bitmap that may only be the top or bottom half of
     /// that card — the glyph lands cut exactly at the hinge line, matching
     /// the physical two-housing split-flap card.
-    private static func render(value: String, fullSize: CGSize, half: Half?, isDark: Bool, textColor: NSColor?) -> CGImage {
+    private static func render(value: String, fullSize: CGSize, half: Half?, isDark: Bool, textColor: NSColor?, transparentBackground: Bool = false, fillColor: NSColor? = nil) -> CGImage {
         let outputSize = half == nil ? fullSize : CGSize(width: fullSize.width, height: fullSize.height / 2)
         let nsImage = NSImage(size: outputSize)
         nsImage.lockFocus()
 
-        NSColor(FlapColors.leaf(isDark: isDark)).setFill()
-        CGRect(origin: .zero, size: outputSize).fill()
+        if !transparentBackground {
+            (fillColor ?? NSColor(FlapColors.leaf(isDark: isDark))).setFill()
+            CGRect(origin: .zero, size: outputSize).fill()
+        }
 
         guard let context = NSGraphicsContext.current?.cgContext else {
             nsImage.unlockFocus()

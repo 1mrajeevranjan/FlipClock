@@ -30,19 +30,26 @@ struct OverlayContentView: View {
         DateFlapRow.idealSize(scale: scale)
     }
 
+    /// Full-screen mode gets a noticeably larger clock to better fill the
+    /// extra space a whole-screen layout affords.
+    private var effectiveScale: CGFloat {
+        settings.overlaySize.scale * (settings.fillScreen ? 1.6 : 1.0)
+    }
+
     var body: some View {
         VStack(spacing: Self.dateSpacing) {
             SplitFlapClockFace(
                 tick: timeProvider.tick,
-                scale: settings.overlaySize.scale,
+                scale: effectiveScale,
                 compact: false,
                 showPedestal: false,
                 meridiemStyle: settings.meridiemStyle,
-                timeFormat: settings.timeFormat
+                timeFormat: settings.timeFormat,
+                glassCard: settings.fillScreen
             )
 
             if settings.showDateOnOverlay {
-                DateFlapRow(date: timeProvider.tick.date, scale: settings.overlaySize.scale, isDark: colorScheme == .dark)
+                DateFlapRow(date: timeProvider.tick.date, scale: effectiveScale, isDark: colorScheme == .dark, glassCard: settings.fillScreen)
             }
         }
         .padding(Self.padding)
@@ -53,7 +60,7 @@ struct OverlayContentView: View {
         // weekday) otherwise pins content to the window's top-left corner
         // instead of centering it, producing lopsided margins.
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(WidgetGlassBackground())
+        .background(WidgetGlassBackground(cornerRadius: settings.fillScreen ? 0 : WidgetGlassBackground.cornerRadius, fullyClear: settings.fillScreen))
         .preferredColorScheme(settings.theme.colorScheme)
     }
 }
@@ -62,6 +69,7 @@ private struct DateFlapRow: View {
     let date: Date
     let scale: CGFloat
     let isDark: Bool
+    var glassCard: Bool = false
 
     private static let weekdayFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -91,7 +99,7 @@ private struct DateFlapRow: View {
         let f = DateFormatter()
         f.locale = .current
         f.timeZone = .current
-        f.dateFormat = "yy"
+        f.dateFormat = "yyyy"
         return f
     }()
 
@@ -128,7 +136,8 @@ private struct DateFlapRow: View {
                         cardSize: cardSize,
                         isDark: isDark,
                         compact: false,
-                        textColor: weekdayColor
+                        textColor: weekdayColor,
+                        glassCard: glassCard
                     )
                 }
             }
@@ -141,7 +150,8 @@ private struct DateFlapRow: View {
                                 value: character,
                                 cardSize: cardSize,
                                 isDark: isDark,
-                                compact: false
+                                compact: false,
+                                glassCard: glassCard
                             )
                         }
                     }
@@ -156,7 +166,7 @@ private struct DateFlapRow: View {
         let groupGap: CGFloat = 14 * scale
         let rowGap: CGFloat = 6 * scale
         let maxWeekdayCharacters: CGFloat = 9
-        let dateCharacters: CGFloat = 7
+        let dateCharacters: CGFloat = 9 // "MMM" + "dd" + "yyyy" = 3 + 2 + 4
         let weekdayWidth = cardSize.width * maxWeekdayCharacters + digitGap * (maxWeekdayCharacters - 1)
         let dateWidth = cardSize.width * dateCharacters + digitGap * (dateCharacters - 3) + groupGap * 2
         return CGSize(width: max(weekdayWidth, dateWidth), height: cardSize.height * 2 + rowGap)

@@ -16,6 +16,7 @@ struct SplitFlapClockFace: View {
     var showPedestal: Bool = true
     var meridiemStyle: MeridiemStyle = .text
     var timeFormat: TimeFormat = .twelveHour
+    var glassCard: Bool = false
 
     @Environment(\.colorScheme) private var colorScheme
     private var isDark: Bool { colorScheme == .dark }
@@ -28,13 +29,17 @@ struct SplitFlapClockFace: View {
         let hour = tick.hourDigits(format: timeFormat)
         VStack(spacing: compact ? 0 : m.vGroupSpacing) {
             HStack(alignment: .center, spacing: m.rowSpacing) {
-                SplitFlapPairView(tens: hour.tens, ones: hour.ones, cardSize: m.digitCardSize, digitSpacing: m.digitSpacing, isDark: isDark, compact: compact)
+                SplitFlapPairView(tens: hour.tens, ones: hour.ones, cardSize: m.digitCardSize, digitSpacing: m.digitSpacing, isDark: isDark, compact: compact, glassCard: glassCard)
                 separator(m)
-                SplitFlapPairView(tens: tick.minute / 10, ones: tick.minute % 10, cardSize: m.digitCardSize, digitSpacing: m.digitSpacing, isDark: isDark, compact: compact)
+                SplitFlapPairView(tens: tick.minute / 10, ones: tick.minute % 10, cardSize: m.digitCardSize, digitSpacing: m.digitSpacing, isDark: isDark, compact: compact, glassCard: glassCard)
                 separator(m)
-                SplitFlapPairView(tens: tick.second / 10, ones: tick.second % 10, cardSize: m.digitCardSize, digitSpacing: m.digitSpacing, isDark: isDark, compact: compact)
+                SplitFlapPairView(tens: tick.second / 10, ones: tick.second % 10, cardSize: m.digitCardSize, digitSpacing: m.digitSpacing, isDark: isDark, compact: compact, glassCard: glassCard)
                 if showMeridiem {
-                    SplitFlapDigit(value: meridiemStyle.value(isPM: tick.isPM), cardSize: m.ampmCardSize, isDark: isDark, compact: compact)
+                    HStack(spacing: m.digitSpacing) {
+                        ForEach(Array(meridiemStyle.cards(isPM: tick.isPM).enumerated()), id: \.offset) { _, card in
+                            SplitFlapDigit(value: card, cardSize: m.ampmCardSize, isDark: isDark, compact: compact, glassCard: glassCard)
+                        }
+                    }
                 }
             }
 
@@ -86,14 +91,16 @@ private struct Metrics {
     var separatorDotGap: CGFloat { compact ? 1 : 4 * scale }
     var horizontalPadding: CGFloat { compact ? 4 : 0 }
 
+    /// Every digit in a pair is its own separate card — see
+    /// `SplitFlapPairView`.
     var pairWidth: CGFloat { digitCardSize.width * 2 + digitSpacing }
 
-    /// AM/PM as its own flip card — a real black-background card with the
-    /// same flip animation as the digits, just "50% of the number height"
-    /// as requested, sized to fit "AM"/"PM" at the same font formula
-    /// `DigitFaceRenderer` uses (fullSize.height * 0.78) so the analytic
-    /// width here matches what actually renders — the same class of bug
-    /// fixed earlier for the digit cards, now applied to this card too.
+    /// The meridiem indicator is two separate flip cards ("A"+"M" or
+    /// "P"+"M", one for icon style), each a real black-background card
+    /// with the same flip animation as the digits, just "50% of the
+    /// number height" as requested — sized per single letter at the same
+    /// font formula `DigitFaceRenderer` uses (fullSize.height * 0.78) so
+    /// the analytic width here matches what actually renders.
     var ampmCardSize: CGSize {
         let height = digitCardSize.height * 0.5
         let fontSize = height * 0.78
@@ -106,11 +113,18 @@ private struct Metrics {
         // corrupted the whole status item's width. A fixed extra margin
         // covers the emoji case without measuring it directly.
         let widest = max(
-            ("AM" as NSString).size(withAttributes: attrs).width,
-            ("PM" as NSString).size(withAttributes: attrs).width
+            ("A" as NSString).size(withAttributes: attrs).width,
+            ("P" as NSString).size(withAttributes: attrs).width,
+            ("M" as NSString).size(withAttributes: attrs).width
         )
         let width = widest * 1.3 + fontSize * 0.5
         return CGSize(width: width, height: height)
+    }
+
+    /// Total width of the two-card meridiem group (or one card for icon
+    /// style — see `MeridiemStyle.cards`).
+    func ampmGroupWidth(cardCount: Int) -> CGFloat {
+        ampmCardSize.width * CGFloat(cardCount) + digitSpacing * CGFloat(max(0, cardCount - 1))
     }
 
     var pedestalWidth: CGFloat {
@@ -121,7 +135,9 @@ private struct Metrics {
         // 5 items without the meridiem card (HH, separator, MM, separator,
         // SS) = 4 gaps; the meridiem card adds a 6th item and 5th gap.
         let gaps = showMeridiem ? 5 : 4
-        let meridiemWidth = showMeridiem ? ampmCardSize.width : 0
+        // Worst case (text style, "AM"/"PM" as two cards) reserves enough
+        // width for icon style's single card too.
+        let meridiemWidth = showMeridiem ? ampmGroupWidth(cardCount: 2) : 0
         let width = pairWidth * 3 + separatorDotSize * 2 + rowSpacing * CGFloat(gaps) + meridiemWidth + horizontalPadding * 2
         let rowHeight = digitCardSize.height
         let pedestalHeight = (!compact && showPedestal) ? vGroupSpacing + 28 * scale : 0

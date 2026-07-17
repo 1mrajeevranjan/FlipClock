@@ -57,6 +57,11 @@ final class OverlayWindowController {
             .sink { [weak self] _ in self?.applySize(anchorTopRight: false) }
             .store(in: &cancellables)
 
+        settings.$fillScreen
+            .dropFirst()
+            .sink { [weak self] _ in self?.applySize(anchorTopRight: false) }
+            .store(in: &cancellables)
+
         settings.$floatAcrossScreen
             .sink { [weak self] floating in
                 self?.setFloating(floating)
@@ -65,6 +70,19 @@ final class OverlayWindowController {
     }
 
     private func applySize(anchorTopRight: Bool) {
+        if settings.fillScreen, let screen = NSScreen.main {
+            window.isMovableByWindowBackground = false
+            window.hasShadow = false
+            // `setFrame(_:display:)` has proven unreliable elsewhere in this
+            // window's lifecycle (see `stepFloat`'s history) — drive size
+            // and position through the two calls that are proven to work
+            // instead of the combined one.
+            window.setContentSize(screen.frame.size)
+            window.setFrameOrigin(screen.frame.origin)
+            return
+        }
+        window.hasShadow = true
+
         let contentSize = OverlayContentView.windowSize(
             scale: settings.overlaySize.scale,
             showDate: settings.showDateOnOverlay,

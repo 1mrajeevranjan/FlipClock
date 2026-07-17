@@ -8,18 +8,31 @@ import AppKit
 struct WidgetGlassBackground: View {
     static let cornerRadius: CGFloat = 34
 
+    /// 0 for the full-screen mode, where the glass is a square, edge-to-edge
+    /// layer rather than a floating rounded widget.
+    var cornerRadius: CGFloat = Self.cornerRadius
+    /// Full-screen mode wants completely transparent glass — no blur, no
+    /// tint, no stroke, just the raw desktop showing through with the
+    /// clock floating on top of it — rather than a widget-style frosted
+    /// panel that would visibly gray out the whole screen.
+    var fullyClear: Bool = false
+
     var body: some View {
-        RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous)
-            .fill(.clear)
-            .background(
-                VisualEffectBlur()
-                    .opacity(0.6)
-                    .clipShape(RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous)
-                    .strokeBorder(Color.white.opacity(0.18), lineWidth: 0.75)
-            )
+        if fullyClear {
+            Color.clear
+        } else {
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                .fill(.clear)
+                .background(
+                    VisualEffectBlur()
+                        .opacity(0.22)
+                        .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                        .strokeBorder(Color.white.opacity(0.12), lineWidth: 0.75)
+                )
+        }
     }
 }
 

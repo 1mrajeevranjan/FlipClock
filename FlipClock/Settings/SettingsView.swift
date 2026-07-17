@@ -171,6 +171,8 @@ struct SettingsView: View {
 
                 Toggle("Show day, date, month, year", isOn: $settings.showDateOnOverlay)
                 Toggle("Float across the screen", isOn: $settings.floatAcrossScreen)
+                    .disabled(settings.fillScreen)
+                Toggle("Fill screen", isOn: $settings.fillScreen)
             }
         case .secondClock:
             settingsCard("Menu bar clock") {

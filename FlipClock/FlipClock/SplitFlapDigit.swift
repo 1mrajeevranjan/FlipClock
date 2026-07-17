@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 /// One flap position: a static top half, a static bottom half, and the
 /// animating flap layered on top. Works for a single digit ("7") or a
@@ -13,40 +14,121 @@ struct SplitFlapDigit: View {
     var isDark: Bool = true
     var compact: Bool = false
     var textColor: NSColor? = nil
+    /// Whether this card is fused edge-to-edge with a neighbor on that
+    /// side — a fused edge gets no housing corner rounding (it reads as
+    /// one continuous drum with its neighbor, like "1" and "0" inside a
+    /// single "10" module) and no spool cap (the axle only pokes out at
+    /// the true outer ends of a fused run, not at every internal digit
+    /// boundary).
+    var fusedLeading: Bool = false
+    var fusedTrailing: Bool = false
+    /// "Liquid glass" card style for full-screen mode: the card faces
+    /// render with a transparent background (see `DigitFaceRenderer`) and
+    /// a real behind-window blur sits underneath, so the digit reads as
+    /// drawn on frosted glass rather than a solid card.
+    var glassCard: Bool = false
 
     @State private var topValue: String
     @State private var bottomValue: String
+    /// Bumped every time a flip lands, to force `CardGlassBackground` to
+    /// re-kick its `NSVisualEffectView` — see the doc comment there for
+    /// why that's necessary.
+    @State private var glassRefreshTick = 0
 
-    init(value: String, cardSize: CGSize, isDark: Bool = true, compact: Bool = false, textColor: NSColor? = nil) {
+    init(value: String, cardSize: CGSize, isDark: Bool = true, compact: Bool = false, textColor: NSColor? = nil, fusedLeading: Bool = false, fusedTrailing: Bool = false, glassCard: Bool = false) {
         self.value = value
         self.cardSize = cardSize
         self.isDark = isDark
         self.compact = compact
         self.textColor = textColor
+        self.fusedLeading = fusedLeading
+        self.fusedTrailing = fusedTrailing
+        self.glassCard = glassCard
         _topValue = State(initialValue: value)
         _bottomValue = State(initialValue: value)
     }
 
+    private var cornerRadius: CGFloat { compact ? 2 : 6 }
+
+    private var cardShape: UnevenRoundedRectangle {
+        UnevenRoundedRectangle(
+            topLeadingRadius: fusedLeading ? 0 : cornerRadius,
+            bottomLeadingRadius: fusedLeading ? 0 : cornerRadius,
+            bottomTrailingRadius: fusedTrailing ? 0 : cornerRadius,
+            topTrailingRadius: fusedTrailing ? 0 : cornerRadius
+        )
+    }
+
     var body: some View {
         ZStack {
+            if glassCard {
+                CardGlassBackground(refreshTrigger: glassRefreshTick).clipShape(cardShape)
+            }
+
             VStack(spacing: 0) {
-                HalfCard(image: DigitFaceRenderer.halfFace(for: topValue, cardSize: cardSize, top: true, isDark: isDark, textColor: textColor))
+                HalfCard(image: DigitFaceRenderer.halfFace(for: topValue, cardSize: cardSize, top: true, isDark: isDark, textColor: textColor, transparentBackground: glassCard))
                     .frame(width: cardSize.width, height: cardSize.height / 2)
-                HalfCard(image: DigitFaceRenderer.halfFace(for: bottomValue, cardSize: cardSize, top: false, isDark: isDark, textColor: textColor))
+                HalfCard(image: DigitFaceRenderer.halfFace(for: bottomValue, cardSize: cardSize, top: false, isDark: isDark, textColor: textColor, transparentBackground: glassCard))
                     .frame(width: cardSize.width, height: cardSize.height / 2)
             }
+            .clipShape(cardShape)
+
             HingeLine(width: cardSize.width, isDark: isDark, compact: compact)
 
-            FlipCardLayer(value: value, cardSize: cardSize, isDark: isDark) {
+            // The animating leaf always renders opaque, even in glass
+            // mode — it needs to fully mask the static half underneath
+            // while it's mid-rotation, or the old digit bleeds through the
+            // new one and reads as a double-exposed "ghost" during the
+            // flip (only the idle resting card should be see-through).
+            // `glassCard` still tints that opaque fill to a translucent
+            // tone so the card doesn't visibly flash to a different color
+            // for the flip's duration.
+            FlipCardLayer(value: value, cardSize: cardSize, isDark: isDark, glassCard: glassCard) {
                 bottomValue = value
+                glassRefreshTick += 1
             }
             .frame(width: cardSize.width, height: cardSize.height)
+            .clipShape(cardShape)
         }
         .frame(width: cardSize.width, height: cardSize.height)
-        .clipShape(RoundedRectangle(cornerRadius: compact ? 2 : 6))
         .onChange(of: value) { _, newValue in
             topValue = newValue
         }
+    }
+}
+
+/// The frosted-glass panel behind a single glass-style card — same
+/// behind-window blur technique as `WidgetGlassBackground`, sized to one
+/// card instead of the whole overlay.
+private struct CardGlassBackground: View {
+    var refreshTrigger: Int = 0
+
+    var body: some View {
+        VisualEffectCardBlur(refreshTrigger: refreshTrigger)
+    }
+}
+
+/// `NSVisualEffectView.behindWindow` blending stops re-sampling the
+/// desktop and freezes on its last-drawn pixels once fully covered for a
+/// while (here, by the opaque animating flap during a flip) — measured
+/// directly off a screen recording: the same card position read as live,
+/// varying color before a flip and was frozen at one flat gray for many
+/// seconds after, never recovering. Toggling `.state` forces the
+/// compositor to treat it as freshly active and resume live sampling.
+private struct VisualEffectCardBlur: NSViewRepresentable {
+    var refreshTrigger: Int
+
+    func makeNSView(context: Context) -> NSVisualEffectView {
+        let view = NSVisualEffectView()
+        view.blendingMode = .behindWindow
+        view.material = .hudWindow
+        view.state = .active
+        return view
+    }
+
+    func updateNSView(_ nsView: NSVisualEffectView, context: Context) {
+        nsView.state = .inactive
+        nsView.state = .active
     }
 }
 
@@ -59,33 +141,18 @@ private struct HalfCard: View {
     }
 }
 
-/// The seam between the two half-cards, built as shadow → bold line →
-/// highlight rather than one flat rule — that's what reads as an actual
-/// physical gap/fold instead of a printed stripe.
+/// The seam between the two half-cards — a single flat rule, no
+/// shadow/highlight bands (those read as a smudge, not a fold).
 private struct HingeLine: View {
     let width: CGFloat
     let isDark: Bool
     let compact: Bool
 
-    private var edgeBand: CGFloat { compact ? 1 : 3 }
-    private var coreHeight: CGFloat { compact ? 1 : 2.5 }
+    private var coreHeight: CGFloat { compact ? 1.5 : 3.5 }
 
     var body: some View {
-        VStack(spacing: 0) {
-            LinearGradient(colors: [.clear, shadowColor], startPoint: .top, endPoint: .bottom)
-                .frame(height: edgeBand)
-            Rectangle()
-                .fill(FlapColors.leafHinge(isDark: isDark))
-                .frame(height: coreHeight)
-            LinearGradient(colors: [highlightColor, .clear], startPoint: .top, endPoint: .bottom)
-                .frame(height: edgeBand)
-        }
-        .frame(width: width)
+        Rectangle()
+            .fill(FlapColors.leafHinge(isDark: isDark))
+            .frame(width: width, height: coreHeight)
     }
-
-    // Softer than the first pass — HIG favors subtle depth cues over
-    // heavy contrast; the stronger values read as a harsh painted line
-    // rather than a shadowed physical gap.
-    private var shadowColor: Color { .black.opacity(isDark ? 0.4 : 0.22) }
-    private var highlightColor: Color { .white.opacity(isDark ? 0.08 : 0.4) }
 }

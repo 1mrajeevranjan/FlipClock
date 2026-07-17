@@ -91,6 +91,17 @@ enum MeridiemStyle: String, CaseIterable, Identifiable {
         case .icon: return isPM ? "🌙" : "☀️"
         }
     }
+
+    /// The card(s) the meridiem indicator splits into — two separate flip
+    /// cards for text ("A"+"M"/"P"+"M", matching every other position in
+    /// the clock being its own card), one for the icon style (a single
+    /// glyph doesn't split meaningfully).
+    func cards(isPM: Bool) -> [String] {
+        switch self {
+        case .text: return (isPM ? "PM" : "AM").map(String.init)
+        case .icon: return [value(isPM: isPM)]
+        }
+    }
 }
 
 /// Single source of truth for user-facing preferences, backed by
@@ -153,6 +164,19 @@ final class AppSettings: ObservableObject {
         didSet { UserDefaults.standard.set(floatAcrossScreen, forKey: Keys.floatAcrossScreen) }
     }
 
+    /// When true, the desktop overlay window covers the entire screen
+    /// (edge to edge, square corners) instead of sizing itself to the
+    /// clock content — the glass background becomes a full-screen liquid
+    /// glass layer with the clock centered on top. Mutually exclusive
+    /// with float-across-screen (a full-screen window has nowhere to
+    /// drift to).
+    @Published var fillScreen: Bool {
+        didSet {
+            UserDefaults.standard.set(fillScreen, forKey: Keys.fillScreen)
+            if fillScreen { floatAcrossScreen = false }
+        }
+    }
+
     private enum Keys {
         static let showDesktopOverlay = "showDesktopOverlay"
         static let launchAtLogin = "launchAtLogin"
@@ -165,6 +189,7 @@ final class AppSettings: ObservableObject {
         static let timeFormat = "timeFormat"
         static let showDateOnOverlay = "showDateOnOverlay"
         static let floatAcrossScreen = "floatAcrossScreen"
+        static let fillScreen = "fillScreen"
     }
 
     init() {
@@ -180,6 +205,7 @@ final class AppSettings: ObservableObject {
         timeFormat = (defaults.string(forKey: Keys.timeFormat)).flatMap(TimeFormat.init(rawValue:)) ?? .twelveHour
         showDateOnOverlay = defaults.object(forKey: Keys.showDateOnOverlay) as? Bool ?? true
         floatAcrossScreen = defaults.object(forKey: Keys.floatAcrossScreen) as? Bool ?? false
+        fillScreen = defaults.object(forKey: Keys.fillScreen) as? Bool ?? false
     }
 
     private func applyLaunchAtLogin() {

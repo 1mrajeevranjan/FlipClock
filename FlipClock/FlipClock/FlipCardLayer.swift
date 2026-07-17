@@ -14,6 +14,7 @@ struct FlipCardLayer: NSViewRepresentable {
     let value: String
     let cardSize: CGSize
     let isDark: Bool
+    var glassCard: Bool = false
     var onLanded: () -> Void = {}
 
     func makeNSView(context: Context) -> FlapAnimatingNSView {
@@ -26,6 +27,7 @@ struct FlipCardLayer: NSViewRepresentable {
     func updateNSView(_ nsView: FlapAnimatingNSView, context: Context) {
         nsView.onLanded = onLanded
         nsView.isDark = isDark
+        nsView.glassCard = glassCard
         nsView.configure(cardSize: cardSize)
         guard context.coordinator.lastValue != value else { return }
         let old = context.coordinator.lastValue
@@ -46,6 +48,7 @@ struct FlipCardLayer: NSViewRepresentable {
 final class FlapAnimatingNSView: NSView {
     var onLanded: (() -> Void)?
     var isDark: Bool = true
+    var glassCard: Bool = false
 
     private let flapLayer = CALayer()
     private var cardSize: CGSize = .zero
@@ -73,14 +76,9 @@ final class FlapAnimatingNSView: NSView {
         layer?.sublayerTransform = perspective
 
         flapLayer.isHidden = true
+        flapLayer.isDoubleSided = false
         flapLayer.contentsGravity = .resize
-        // Softer, tighter shadow — HIG favors subtle depth over a heavy
-        // drop shadow; the previous radius/opacity read as smudgy at
-        // small sizes (menu bar) and too heavy at large ones (overlay).
         flapLayer.shadowColor = NSColor.black.cgColor
-        flapLayer.shadowOpacity = 0.25
-        flapLayer.shadowRadius = 1.5
-        flapLayer.shadowOffset = CGSize(width: 0, height: -0.5)
         layer?.addSublayer(flapLayer)
     }
 
@@ -103,12 +101,24 @@ final class FlapAnimatingNSView: NSView {
         flapLayer.anchorPoint = CGPoint(x: 0.5, y: 0)
         flapLayer.bounds = CGRect(x: 0, y: 0, width: cardSize.width, height: cardSize.height / 2)
         flapLayer.position = CGPoint(x: cardSize.width / 2, y: cardSize.height / 2)
-        flapLayer.contents = DigitFaceRenderer.halfFace(for: oldValue, cardSize: cardSize, top: true, isDark: isDark)
+        flapLayer.contents = DigitFaceRenderer.halfFace(for: oldValue, cardSize: cardSize, top: true, isDark: isDark, textColor: nil, fillColor: glassCard ? NSColor(FlapColors.glassFlapFill) : nil)
         flapLayer.transform = CATransform3DIdentity
+        // A drop shadow on a translucent glass leaf reads as a stray dark
+        // smudge sweeping past the hinge line as the flap rotates — only
+        // the opaque, non-glass card style wants that depth cue.
+        flapLayer.shadowOpacity = glassCard ? 0 : 0.25
+        flapLayer.shadowRadius = 1.5
+        flapLayer.shadowOffset = CGSize(width: 0, height: -0.5)
         CATransaction.commit()
 
         let toAngle = -CGFloat.pi / 2
         CATransaction.begin()
+        // Without this, the plain `transform` assignment below ALSO
+        // triggers CALayer's own implicit action for that keypath (default
+        // ~0.25s ease) running alongside the explicit animation we add
+        // right after — two competing transforms on the same layer, which
+        // is what read as the digit "merging"/double-exposing mid-flip.
+        CATransaction.setDisableActions(true)
         CATransaction.setCompletionBlock { [weak self] in
             self?.startPhase2(newValue: newValue)
         }
@@ -130,11 +140,14 @@ final class FlapAnimatingNSView: NSView {
         flapLayer.anchorPoint = CGPoint(x: 0.5, y: 1)
         flapLayer.bounds = CGRect(x: 0, y: 0, width: cardSize.width, height: cardSize.height / 2)
         flapLayer.position = CGPoint(x: cardSize.width / 2, y: cardSize.height / 2)
-        flapLayer.contents = DigitFaceRenderer.halfFace(for: newValue, cardSize: cardSize, top: false, isDark: isDark)
+        flapLayer.contents = DigitFaceRenderer.halfFace(for: newValue, cardSize: cardSize, top: false, isDark: isDark, textColor: nil, fillColor: glassCard ? NSColor(FlapColors.glassFlapFill) : nil)
         flapLayer.transform = CATransform3DMakeRotation(startAngle, 1, 0, 0)
         CATransaction.commit()
 
         CATransaction.begin()
+        // Same reasoning as phase 1 — disable implicit actions so only the
+        // explicit animation below drives the transform.
+        CATransaction.setDisableActions(true)
         CATransaction.setCompletionBlock { [weak self] in
             self?.flapLayer.isHidden = true
             self?.onLanded?()
