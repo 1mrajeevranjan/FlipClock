@@ -22,28 +22,22 @@ struct SplitFlapDigit: View {
     /// boundary).
     var fusedLeading: Bool = false
     var fusedTrailing: Bool = false
-    /// "Liquid glass" card style: card faces render with a transparent
-    /// background (see `DigitFaceRenderer`) instead of a solid leaf fill,
-    /// so the digit reads as drawn on frosted glass. Also governs the
-    /// animating flap's tint (translucent instead of opaque leaf color)
-    /// and shadow (off — a drop shadow doesn't belong on glass) so the
-    /// flip matches the resting card instead of visibly changing style
-    /// mid-animation.
+    /// "Frosted glass" card style: the card face is a single opaque frosted
+    /// tone (`FlapColors.frostedCard`), used identically by the resting
+    /// halves and the animating flap. Because both share that exact opaque
+    /// tone, a flip never changes the card's look — the flap has to stay
+    /// opaque to mask the old digit mid-rotation, but there's no
+    /// transparent/live-blur resting state for it to visibly flash away
+    /// from. The floating widget panel behind the cards stays real glass.
     var glassCard: Bool = false
-    /// Whether this card draws its own behind-window blur panel. Only
-    /// meaningful when `glassCard` is true. The desktop overlay wants
-    /// this (each card samples its own patch of desktop); the popover
-    /// doesn't (it already sits on `VibrantHostingController`'s own
-    /// blur — a second independent `NSVisualEffectView` per card just
-    /// grays everything out instead of compositing).
+    /// Retained for source compatibility with existing call sites; no
+    /// longer affects rendering. Frosted cards are opaque, so there's no
+    /// per-card behind-window blur to draw (and thus none of the freeze/
+    /// flicker behavior an `NSVisualEffectView` per card used to cause).
     var showOwnGlassPanel: Bool = true
 
     @State private var topValue: String
     @State private var bottomValue: String
-    /// Bumped every time a flip lands, to force `CardGlassBackground` to
-    /// re-kick its `NSVisualEffectView` — see the doc comment there for
-    /// why that's necessary.
-    @State private var glassRefreshTick = 0
 
     init(value: String, cardSize: CGSize, isDark: Bool = true, compact: Bool = false, textColor: NSColor? = nil, fusedLeading: Bool = false, fusedTrailing: Bool = false, glassCard: Bool = false, showOwnGlassPanel: Bool = true) {
         self.value = value
@@ -72,8 +66,14 @@ struct SplitFlapDigit: View {
 
     var body: some View {
         ZStack {
-            if glassCard && showOwnGlassPanel {
-                CardGlassBackground(refreshTrigger: glassRefreshTick).clipShape(cardShape)
+            if glassCard {
+                // Opaque frosted base, drawn by a real drag-enabled NSView
+                // (see `DraggableColorView`) so the desktop overlay stays
+                // draggable by its background over the cards. The static
+                // halves render their digit on a transparent background and
+                // composite on top of this, so the resting card is exactly
+                // "frosted tone + digit" — identical to what the flap draws.
+                DraggableColorView(color: FlapColors.frostedCard(isDark: isDark)).clipShape(cardShape)
             }
 
             VStack(spacing: 0) {
@@ -86,17 +86,16 @@ struct SplitFlapDigit: View {
 
             HingeLine(width: cardSize.width, isDark: isDark, compact: compact)
 
-            // The animating leaf always renders opaque, even in glass
-            // mode — it needs to fully mask the static half underneath
-            // while it's mid-rotation, or the old digit bleeds through the
-            // new one and reads as a double-exposed "ghost" during the
-            // flip (only the idle resting card should be see-through).
-            // `glassCard` still tints that opaque fill to a translucent
-            // tone so the card doesn't visibly flash to a different color
-            // for the flip's duration.
+            // The animating leaf always renders opaque — it needs to fully
+            // mask the static half underneath while it's mid-rotation, or
+            // the old digit bleeds through the new one and reads as a
+            // double-exposed "ghost" during the flip. In glass mode it
+            // fills with the same `FlapColors.frostedCard` tone as the
+            // resting halves, so the opaque flap is visually indistinct
+            // from the resting card and the flip doesn't change the card's
+            // appearance at all.
             FlipCardLayer(value: value, cardSize: cardSize, isDark: isDark, glassCard: glassCard) {
                 bottomValue = value
-                glassRefreshTick += 1
             }
             .frame(width: cardSize.width, height: cardSize.height)
             .clipShape(cardShape)
@@ -108,71 +107,45 @@ struct SplitFlapDigit: View {
     }
 }
 
-/// The frosted-glass panel behind a single glass-style card — same
-/// behind-window blur technique as `WidgetGlassBackground`, sized to one
-/// card instead of the whole overlay.
-private struct CardGlassBackground: View {
-    var refreshTrigger: Int = 0
-
-    var body: some View {
-        VisualEffectCardBlur(refreshTrigger: refreshTrigger)
-    }
-}
-
-/// `NSVisualEffectView.behindWindow` blending stops re-sampling the
-/// desktop and freezes on its last-drawn pixels once fully covered for a
-/// while (here, by the opaque animating flap during a flip) — measured
-/// directly off a screen recording: the same card position read as live,
-/// varying color before a flip and was frozen at one flat gray for many
-/// seconds after, never recovering. Toggling `.state` forces the
-/// compositor to treat it as freshly active and resume live sampling.
+/// Opaque frosted-tone base for a glass-style card. This replaces the
+/// per-card behind-window `NSVisualEffectView` that glass cards used to
+/// draw: a live blur can't be matched by the static rasterized flap, so
+/// the flip flashed. A flat opaque frosted tone (shared with the flap) is
+/// what makes resting and mid-flip identical.
 ///
-/// That toggle must only run right after a flip actually lands on THIS
-/// card, not on every SwiftUI re-render — `updateNSView` fires for every
-/// digit whenever any ancestor re-renders, which happens every second
-/// (`OverlayContentView` reads `timeProvider.tick` directly), so an
-/// unconditional toggle here was re-kicking every card's blur every
-/// second regardless of whether it flipped, reading as a visible
-/// once-a-second flicker across the whole widget. The coordinator tracks
-/// the last-seen `refreshTrigger` so the toggle only fires on the one
-/// update where it actually changed.
-private struct VisualEffectCardBlur: NSViewRepresentable {
-    var refreshTrigger: Int
+/// It's a real `NSView` rather than a SwiftUI `Color` specifically so it
+/// can override `mouseDownCanMoveWindow` — the desktop overlay window is
+/// `isMovableByWindowBackground`, and this base view tiles across nearly
+/// the whole widget, so it has to report itself draggable or the widget
+/// can't be moved by dragging over the digits. (This is the same reason
+/// the old per-card blur subclassed `NSVisualEffectView`; that blur is
+/// gone, but the drag requirement remains.)
+private struct DraggableColorView: NSViewRepresentable {
+    let color: Color
 
-    func makeNSView(context: Context) -> NSVisualEffectView {
-        let view = DraggableVisualEffectView()
-        view.blendingMode = .behindWindow
-        view.material = .hudWindow
-        view.state = .active
-        context.coordinator.lastTrigger = refreshTrigger
+    func makeNSView(context: Context) -> NSView {
+        let view = DraggableColorNSView()
+        view.wantsLayer = true
+        view.cardColor = NSColor(color)
         return view
     }
 
-    func updateNSView(_ nsView: NSVisualEffectView, context: Context) {
-        guard context.coordinator.lastTrigger != refreshTrigger else { return }
-        context.coordinator.lastTrigger = refreshTrigger
-        nsView.state = .inactive
-        nsView.state = .active
-    }
-
-    func makeCoordinator() -> Coordinator {
-        Coordinator(lastTrigger: refreshTrigger)
-    }
-
-    final class Coordinator {
-        var lastTrigger: Int
-        init(lastTrigger: Int) { self.lastTrigger = lastTrigger }
+    func updateNSView(_ nsView: NSView, context: Context) {
+        (nsView as? DraggableColorNSView)?.cardColor = NSColor(color)
     }
 }
 
-/// `NSVisualEffectView` returns `false` from `mouseDownCanMoveWindow` by
-/// default, which silently defeats the desktop overlay window's
-/// `isMovableByWindowBackground = true` everywhere a card's own glass panel
-/// covers — since `showOwnGlassPanel` tiles one of these per digit across
-/// nearly the whole widget, that's most of its surface. Overriding it here
-/// is what actually lets the widget be dragged by its background.
-private final class DraggableVisualEffectView: NSVisualEffectView {
+private final class DraggableColorNSView: NSView {
+    var cardColor: NSColor = .clear {
+        didSet { needsDisplay = true }
+    }
+
     override var mouseDownCanMoveWindow: Bool { true }
+    override var wantsUpdateLayer: Bool { true }
+
+    override func updateLayer() {
+        layer?.backgroundColor = cardColor.cgColor
+    }
 }
 
 private struct HalfCard: View {

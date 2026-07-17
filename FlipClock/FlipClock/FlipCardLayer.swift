@@ -101,11 +101,11 @@ final class FlapAnimatingNSView: NSView {
         flapLayer.anchorPoint = CGPoint(x: 0.5, y: 0)
         flapLayer.bounds = CGRect(x: 0, y: 0, width: cardSize.width, height: cardSize.height / 2)
         flapLayer.position = CGPoint(x: cardSize.width / 2, y: cardSize.height / 2)
-        flapLayer.contents = DigitFaceRenderer.halfFace(for: oldValue, cardSize: cardSize, top: true, isDark: isDark, textColor: nil, fillColor: glassCard ? NSColor(FlapColors.glassFlapFill) : nil)
+        flapLayer.contents = DigitFaceRenderer.halfFace(for: oldValue, cardSize: cardSize, top: true, isDark: isDark, textColor: nil, fillColor: glassCard ? NSColor(FlapColors.frostedCard(isDark: isDark)) : nil)
         flapLayer.transform = CATransform3DIdentity
-        // A drop shadow on a translucent glass leaf reads as a stray dark
-        // smudge sweeping past the hinge line as the flap rotates — only
-        // the opaque, non-glass card style wants that depth cue.
+        // A drop shadow on a glass leaf reads as a stray dark smudge
+        // sweeping past the hinge line as the flap rotates — only the
+        // opaque, non-glass mechanical card style wants that depth cue.
         flapLayer.shadowOpacity = glassCard ? 0 : 0.25
         flapLayer.shadowRadius = 1.5
         flapLayer.shadowOffset = CGSize(width: 0, height: -0.5)
@@ -140,7 +140,7 @@ final class FlapAnimatingNSView: NSView {
         flapLayer.anchorPoint = CGPoint(x: 0.5, y: 1)
         flapLayer.bounds = CGRect(x: 0, y: 0, width: cardSize.width, height: cardSize.height / 2)
         flapLayer.position = CGPoint(x: cardSize.width / 2, y: cardSize.height / 2)
-        flapLayer.contents = DigitFaceRenderer.halfFace(for: newValue, cardSize: cardSize, top: false, isDark: isDark, textColor: nil, fillColor: glassCard ? NSColor(FlapColors.glassFlapFill) : nil)
+        flapLayer.contents = DigitFaceRenderer.halfFace(for: newValue, cardSize: cardSize, top: false, isDark: isDark, textColor: nil, fillColor: glassCard ? NSColor(FlapColors.frostedCard(isDark: isDark)) : nil)
         flapLayer.transform = CATransform3DMakeRotation(startAngle, 1, 0, 0)
         CATransaction.commit()
 
