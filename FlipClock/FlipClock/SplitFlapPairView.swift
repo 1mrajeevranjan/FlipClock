@@ -10,11 +10,12 @@ struct SplitFlapPairView: View {
     var isDark: Bool = true
     var compact: Bool = false
     var glassCard: Bool = false
+    var showOwnGlassPanel: Bool = true
 
     var body: some View {
         HStack(spacing: digitSpacing) {
-            SplitFlapDigit(value: String(tens), cardSize: cardSize, isDark: isDark, compact: compact, glassCard: glassCard)
-            SplitFlapDigit(value: String(ones), cardSize: cardSize, isDark: isDark, compact: compact, glassCard: glassCard)
+            SplitFlapDigit(value: String(tens), cardSize: cardSize, isDark: isDark, compact: compact, glassCard: glassCard, showOwnGlassPanel: showOwnGlassPanel)
+            SplitFlapDigit(value: String(ones), cardSize: cardSize, isDark: isDark, compact: compact, glassCard: glassCard, showOwnGlassPanel: showOwnGlassPanel)
         }
     }
 }

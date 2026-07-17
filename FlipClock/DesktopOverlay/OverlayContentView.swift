@@ -45,11 +45,11 @@ struct OverlayContentView: View {
                 showPedestal: false,
                 meridiemStyle: settings.meridiemStyle,
                 timeFormat: settings.timeFormat,
-                glassCard: settings.fillScreen
+                glassCard: true
             )
 
             if settings.showDateOnOverlay {
-                DateFlapRow(date: timeProvider.tick.date, scale: effectiveScale, isDark: colorScheme == .dark, glassCard: settings.fillScreen)
+                DateFlapRow(date: timeProvider.tick.date, scale: effectiveScale, isDark: colorScheme == .dark, glassCard: true)
             }
         }
         .padding(Self.padding)

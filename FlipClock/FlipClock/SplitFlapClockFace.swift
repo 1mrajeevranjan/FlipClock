@@ -17,6 +17,7 @@ struct SplitFlapClockFace: View {
     var meridiemStyle: MeridiemStyle = .text
     var timeFormat: TimeFormat = .twelveHour
     var glassCard: Bool = false
+    var showOwnGlassPanel: Bool = true
 
     @Environment(\.colorScheme) private var colorScheme
     private var isDark: Bool { colorScheme == .dark }
@@ -29,15 +30,15 @@ struct SplitFlapClockFace: View {
         let hour = tick.hourDigits(format: timeFormat)
         VStack(spacing: compact ? 0 : m.vGroupSpacing) {
             HStack(alignment: .center, spacing: m.rowSpacing) {
-                SplitFlapPairView(tens: hour.tens, ones: hour.ones, cardSize: m.digitCardSize, digitSpacing: m.digitSpacing, isDark: isDark, compact: compact, glassCard: glassCard)
+                SplitFlapPairView(tens: hour.tens, ones: hour.ones, cardSize: m.digitCardSize, digitSpacing: m.digitSpacing, isDark: isDark, compact: compact, glassCard: glassCard, showOwnGlassPanel: showOwnGlassPanel)
                 separator(m)
-                SplitFlapPairView(tens: tick.minute / 10, ones: tick.minute % 10, cardSize: m.digitCardSize, digitSpacing: m.digitSpacing, isDark: isDark, compact: compact, glassCard: glassCard)
+                SplitFlapPairView(tens: tick.minute / 10, ones: tick.minute % 10, cardSize: m.digitCardSize, digitSpacing: m.digitSpacing, isDark: isDark, compact: compact, glassCard: glassCard, showOwnGlassPanel: showOwnGlassPanel)
                 separator(m)
-                SplitFlapPairView(tens: tick.second / 10, ones: tick.second % 10, cardSize: m.digitCardSize, digitSpacing: m.digitSpacing, isDark: isDark, compact: compact, glassCard: glassCard)
+                SplitFlapPairView(tens: tick.second / 10, ones: tick.second % 10, cardSize: m.digitCardSize, digitSpacing: m.digitSpacing, isDark: isDark, compact: compact, glassCard: glassCard, showOwnGlassPanel: showOwnGlassPanel)
                 if showMeridiem {
                     HStack(spacing: m.digitSpacing) {
                         ForEach(Array(meridiemStyle.cards(isPM: tick.isPM).enumerated()), id: \.offset) { _, card in
-                            SplitFlapDigit(value: card, cardSize: m.ampmCardSize, isDark: isDark, compact: compact, glassCard: glassCard)
+                            SplitFlapDigit(value: card, cardSize: m.ampmCardSize, isDark: isDark, compact: compact, glassCard: glassCard, showOwnGlassPanel: showOwnGlassPanel)
                         }
                     }
                 }

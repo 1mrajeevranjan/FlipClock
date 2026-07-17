@@ -27,7 +27,14 @@ struct PopoverClockView: View {
     var body: some View {
         VStack(spacing: 18) {
             DateHeaderView(date: timeProvider.tick.date)
-            SplitFlapClockFace(tick: timeProvider.tick, scale: Self.clockScale, compact: false, showPedestal: false, meridiemStyle: settings.meridiemStyle, timeFormat: settings.timeFormat)
+            // `showOwnGlassPanel: false` — this view already sits on
+            // `VibrantHostingController`'s own blur; a second independent
+            // `NSVisualEffectView` per card just grays everything out
+            // instead of compositing (confirmed visually). `glassCard`
+            // still gets the cards transparent digit rendering and the
+            // matching translucent/shadowless flip animation, so they
+            // read as glass sitting on the popover's existing vibrancy.
+            SplitFlapClockFace(tick: timeProvider.tick, scale: Self.clockScale, compact: false, showPedestal: false, meridiemStyle: settings.meridiemStyle, timeFormat: settings.timeFormat, glassCard: true, showOwnGlassPanel: false)
             CalendarMonthView()
         }
         .padding(Self.padding)

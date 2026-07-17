@@ -22,11 +22,21 @@ struct SplitFlapDigit: View {
     /// boundary).
     var fusedLeading: Bool = false
     var fusedTrailing: Bool = false
-    /// "Liquid glass" card style for full-screen mode: the card faces
-    /// render with a transparent background (see `DigitFaceRenderer`) and
-    /// a real behind-window blur sits underneath, so the digit reads as
-    /// drawn on frosted glass rather than a solid card.
+    /// "Liquid glass" card style: card faces render with a transparent
+    /// background (see `DigitFaceRenderer`) instead of a solid leaf fill,
+    /// so the digit reads as drawn on frosted glass. Also governs the
+    /// animating flap's tint (translucent instead of opaque leaf color)
+    /// and shadow (off — a drop shadow doesn't belong on glass) so the
+    /// flip matches the resting card instead of visibly changing style
+    /// mid-animation.
     var glassCard: Bool = false
+    /// Whether this card draws its own behind-window blur panel. Only
+    /// meaningful when `glassCard` is true. The desktop overlay wants
+    /// this (each card samples its own patch of desktop); the popover
+    /// doesn't (it already sits on `VibrantHostingController`'s own
+    /// blur — a second independent `NSVisualEffectView` per card just
+    /// grays everything out instead of compositing).
+    var showOwnGlassPanel: Bool = true
 
     @State private var topValue: String
     @State private var bottomValue: String
@@ -35,7 +45,7 @@ struct SplitFlapDigit: View {
     /// why that's necessary.
     @State private var glassRefreshTick = 0
 
-    init(value: String, cardSize: CGSize, isDark: Bool = true, compact: Bool = false, textColor: NSColor? = nil, fusedLeading: Bool = false, fusedTrailing: Bool = false, glassCard: Bool = false) {
+    init(value: String, cardSize: CGSize, isDark: Bool = true, compact: Bool = false, textColor: NSColor? = nil, fusedLeading: Bool = false, fusedTrailing: Bool = false, glassCard: Bool = false, showOwnGlassPanel: Bool = true) {
         self.value = value
         self.cardSize = cardSize
         self.isDark = isDark
@@ -44,6 +54,7 @@ struct SplitFlapDigit: View {
         self.fusedLeading = fusedLeading
         self.fusedTrailing = fusedTrailing
         self.glassCard = glassCard
+        self.showOwnGlassPanel = showOwnGlassPanel
         _topValue = State(initialValue: value)
         _bottomValue = State(initialValue: value)
     }
@@ -61,7 +72,7 @@ struct SplitFlapDigit: View {
 
     var body: some View {
         ZStack {
-            if glassCard {
+            if glassCard && showOwnGlassPanel {
                 CardGlassBackground(refreshTrigger: glassRefreshTick).clipShape(cardShape)
             }
 
