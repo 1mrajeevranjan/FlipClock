@@ -19,6 +19,15 @@ final class OverlayWindowController {
     /// actually moves. Keeping our own precise running position and only
     /// ever writing (never reading back) `window.frame` fixes that.
     private var floatPosition: CGPoint?
+    /// Top-left corner captured right before switching into full-screen
+    /// mode, so leaving full-screen can restore the widget to where it
+    /// actually was — the normal "pin the top-left corner" resize logic in
+    /// `applySize` reads it from `window.frame`, but by the time full-screen
+    /// is turned off `window.frame` IS the full-screen frame, not the
+    /// widget's last real position, so without this the widget snapped to
+    /// the screen's top-left corner on every exit instead of returning to
+    /// its box.
+    private var preFillScreenTopLeft: NSPoint?
 
     init(timeProvider: TimeProvider, settings: AppSettings) {
         self.settings = settings
@@ -38,6 +47,20 @@ final class OverlayWindowController {
 
         settings.$overlaySize
             .dropFirst()
+            // `applySize` reads several `settings` properties directly
+            // (including whichever one just changed) rather than using the
+            // value each publisher emits. `@Published` sends from `willSet`,
+            // before the new value is actually stored, so a `.sink` that
+            // re-reads the same property it's reacting to synchronously
+            // would see the OLD value — not a rare race, a guaranteed
+            // ordering. Deferring to the next run-loop turn (by which point
+            // the property write has completed) is what makes `applySize`
+            // see the real, current value. This was the actual cause of the
+            // "fill screen off doesn't restore the widget box" bug: the
+            // resize ran once more with `fillScreen` read back as `true`,
+            // sizing the window for full-screen again instead of shrinking
+            // it back down.
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 // A size change should keep the window pinned at its
                 // current top-left corner, not silently re-snap to the
@@ -49,16 +72,19 @@ final class OverlayWindowController {
 
         settings.$showDateOnOverlay
             .dropFirst()
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.applySize(anchorTopRight: false) }
             .store(in: &cancellables)
 
         settings.$timeFormat
             .dropFirst()
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.applySize(anchorTopRight: false) }
             .store(in: &cancellables)
 
         settings.$fillScreen
             .dropFirst()
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.applySize(anchorTopRight: false) }
             .store(in: &cancellables)
 
@@ -71,6 +97,12 @@ final class OverlayWindowController {
 
     private func applySize(anchorTopRight: Bool) {
         if settings.fillScreen, let screen = NSScreen.main {
+            // Only capture on the transition into full-screen — repeated
+            // calls while already full-screen (e.g. toggling "show date"
+            // mid-fill) must not overwrite this with the full-screen frame.
+            if preFillScreenTopLeft == nil {
+                preFillScreenTopLeft = NSPoint(x: window.frame.minX, y: window.frame.maxY)
+            }
             window.isMovableByWindowBackground = false
             window.hasShadow = false
             // `setFrame(_:display:)` has proven unreliable elsewhere in this
@@ -81,6 +113,7 @@ final class OverlayWindowController {
             window.setFrameOrigin(screen.frame.origin)
             return
         }
+        window.isMovableByWindowBackground = true
         window.hasShadow = true
 
         let contentSize = OverlayContentView.windowSize(
@@ -88,7 +121,13 @@ final class OverlayWindowController {
             showDate: settings.showDateOnOverlay,
             showMeridiem: settings.timeFormat == .twelveHour
         )
-        let previousTopLeft = NSPoint(x: window.frame.minX, y: window.frame.maxY)
+        let previousTopLeft: NSPoint
+        if let savedTopLeft = preFillScreenTopLeft {
+            previousTopLeft = savedTopLeft
+            preFillScreenTopLeft = nil
+        } else {
+            previousTopLeft = NSPoint(x: window.frame.minX, y: window.frame.maxY)
+        }
         window.setContentSize(contentSize)
 
         if anchorTopRight, let screen = NSScreen.main {
