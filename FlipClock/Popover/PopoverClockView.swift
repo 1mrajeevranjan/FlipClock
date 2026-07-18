@@ -34,7 +34,19 @@ struct PopoverClockView: View {
             // still gets the cards transparent digit rendering and the
             // matching translucent/shadowless flip animation, so they
             // read as glass sitting on the popover's existing vibrancy.
-            SplitFlapClockFace(tick: timeProvider.tick, scale: Self.clockScale, compact: false, showPedestal: false, meridiemStyle: settings.meridiemStyle, timeFormat: settings.timeFormat, glassCard: true, showOwnGlassPanel: false)
+            SplitFlapClockFace(
+                tick: timeProvider.tick,
+                scale: Self.clockScale,
+                compact: false,
+                showPedestal: false,
+                meridiemStyle: settings.meridiemStyle,
+                timeFormat: settings.timeFormat,
+                glassCard: true,
+                showOwnGlassPanel: false,
+                tintColor: settings.widgetTintEnabled ? settings.widgetTintColor : nil,
+                fontName: settings.widgetFont.postscriptName,
+                isMonospacedSystemFont: settings.widgetFont.isMonospacedSystem
+            )
             CalendarMonthView()
         }
         .padding(Self.padding)

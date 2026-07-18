@@ -48,6 +48,10 @@ struct OverlayContentView: View {
         settings.overlaySize.scale * (settings.fillScreen ? 1.6 : 1.0)
     }
 
+    private var effectiveTint: Color? {
+        settings.widgetTintEnabled ? settings.widgetTintColor : nil
+    }
+
     var body: some View {
         VStack(spacing: Self.dateSpacing(scale: settings.overlaySize.scale)) {
             SplitFlapClockFace(
@@ -57,11 +61,14 @@ struct OverlayContentView: View {
                 showPedestal: false,
                 meridiemStyle: settings.meridiemStyle,
                 timeFormat: settings.timeFormat,
-                glassCard: true
+                glassCard: true,
+                tintColor: effectiveTint,
+                fontName: settings.widgetFont.postscriptName,
+                isMonospacedSystemFont: settings.widgetFont.isMonospacedSystem
             )
 
             if settings.showDateOnOverlay {
-                DateFlapRow(date: timeProvider.tick.date, scale: effectiveScale, isDark: colorScheme == .dark, glassCard: true)
+                DateFlapRow(date: timeProvider.tick.date, scale: effectiveScale, isDark: colorScheme == .dark, glassCard: true, tintColor: effectiveTint, fontName: settings.widgetFont.postscriptName, isMonospacedSystemFont: settings.widgetFont.isMonospacedSystem)
             }
         }
         .padding(Self.padding(scale: settings.overlaySize.scale))
@@ -72,7 +79,7 @@ struct OverlayContentView: View {
         // weekday) otherwise pins content to the window's top-left corner
         // instead of centering it, producing lopsided margins.
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(WidgetGlassBackground(scale: settings.overlaySize.scale, fullyClear: settings.fillScreen))
+        .background(WidgetGlassBackground(scale: settings.overlaySize.scale, fullyClear: settings.fillScreen, tintColor: effectiveTint))
         .preferredColorScheme(settings.theme.colorScheme)
     }
 }
@@ -82,6 +89,9 @@ private struct DateFlapRow: View {
     let scale: CGFloat
     let isDark: Bool
     var glassCard: Bool = false
+    var tintColor: Color? = nil
+    var fontName: String? = nil
+    var isMonospacedSystemFont: Bool = false
 
     private static let weekdayFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -149,7 +159,10 @@ private struct DateFlapRow: View {
                         isDark: isDark,
                         compact: false,
                         textColor: weekdayColor,
-                        glassCard: glassCard
+                        glassCard: glassCard,
+                        tintColor: tintColor,
+                        fontName: fontName,
+                        isMonospacedSystemFont: isMonospacedSystemFont
                     )
                 }
             }
@@ -163,7 +176,10 @@ private struct DateFlapRow: View {
                                 cardSize: cardSize,
                                 isDark: isDark,
                                 compact: false,
-                                glassCard: glassCard
+                                glassCard: glassCard,
+                                tintColor: tintColor,
+                                fontName: fontName,
+                                isMonospacedSystemFont: isMonospacedSystemFont
                             )
                         }
                     }

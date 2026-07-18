@@ -15,7 +15,16 @@ struct MenuBarClockView: View {
     @ObservedObject var settings: AppSettings
 
     var body: some View {
-        SplitFlapClockFace(tick: timeProvider.tick, scale: 1, compact: true, meridiemStyle: settings.meridiemStyle, timeFormat: settings.timeFormat)
-            .preferredColorScheme(settings.theme.colorScheme)
+        SplitFlapClockFace(
+            tick: timeProvider.tick,
+            scale: 1,
+            compact: true,
+            meridiemStyle: settings.meridiemStyle,
+            timeFormat: settings.timeFormat,
+            tintColor: settings.widgetTintEnabled ? settings.widgetTintColor : nil,
+            fontName: settings.widgetFont.postscriptName,
+            isMonospacedSystemFont: settings.widgetFont.isMonospacedSystem
+        )
+        .preferredColorScheme(settings.theme.colorScheme)
     }
 }

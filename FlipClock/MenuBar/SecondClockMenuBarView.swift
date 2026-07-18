@@ -16,7 +16,16 @@ struct SecondClockMenuBarView: View {
     }
 
     var body: some View {
-        SplitFlapClockFace(tick: tick, scale: 1, compact: true, meridiemStyle: settings.meridiemStyle, timeFormat: settings.timeFormat)
-            .preferredColorScheme(settings.theme.colorScheme)
+        SplitFlapClockFace(
+            tick: tick,
+            scale: 1,
+            compact: true,
+            meridiemStyle: settings.meridiemStyle,
+            timeFormat: settings.timeFormat,
+            tintColor: settings.widgetTintEnabled ? settings.widgetTintColor : nil,
+            fontName: settings.widgetFont.postscriptName,
+            isMonospacedSystemFont: settings.widgetFont.isMonospacedSystem
+        )
+        .preferredColorScheme(settings.theme.colorScheme)
     }
 }
