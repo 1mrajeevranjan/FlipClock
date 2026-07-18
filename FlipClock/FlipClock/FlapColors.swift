@@ -5,8 +5,9 @@ enum FlapColors {
         isDark ? Color(red: 0.07, green: 0.07, blue: 0.08) : Color(white: 0.93)
     }
 
-    static func leafHinge(isDark: Bool) -> Color {
-        isDark ? Color.black.opacity(0.55) : Color.black.opacity(0.2)
+    static func leafHinge(isDark: Bool, tint: Color? = nil) -> Color {
+        if let tint { return tint.opacity(0.4) }
+        return isDark ? Color.black.opacity(0.55) : Color.black.opacity(0.2)
     }
 
     /// Opaque "frosted glass" fill for glass-style cards. Both the resting
@@ -22,8 +23,9 @@ enum FlapColors {
     /// the flap to match, and the flip flashes. A fixed frosted tone that
     /// reads as glass sidesteps that entirely. The floating widget panel
     /// behind the cards (`WidgetGlassBackground`) stays real live glass.
-    static func frostedCard(isDark: Bool) -> Color {
-        isDark
+    static func frostedCard(isDark: Bool, tint: Color? = nil) -> Color {
+        if let tint { return tint.opacity(0.3) }
+        return isDark
             ? Color(red: 0.22, green: 0.25, blue: 0.30)
             : Color(red: 0.86, green: 0.89, blue: 0.93)
     }
@@ -32,8 +34,9 @@ enum FlapColors {
         isDark ? Color.white : Color.black
     }
 
-    static func separatorDot(isDark: Bool) -> Color {
-        isDark ? Color.white.opacity(0.85) : Color.black.opacity(0.5)
+    static func separatorDot(isDark: Bool, tint: Color? = nil) -> Color {
+        if let tint { return tint.opacity(0.85) }
+        return isDark ? Color.white.opacity(0.85) : Color.black.opacity(0.5)
     }
 
     static let chromeTop = Color(white: 0.92)
