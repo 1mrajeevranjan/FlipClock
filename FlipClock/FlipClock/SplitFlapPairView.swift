@@ -11,11 +11,14 @@ struct SplitFlapPairView: View {
     var compact: Bool = false
     var glassCard: Bool = false
     var showOwnGlassPanel: Bool = true
+    var tintColor: Color? = nil
+    var fontName: String? = nil
+    var isMonospacedSystemFont: Bool = false
 
     var body: some View {
         HStack(spacing: digitSpacing) {
-            SplitFlapDigit(value: String(tens), cardSize: cardSize, isDark: isDark, compact: compact, glassCard: glassCard, showOwnGlassPanel: showOwnGlassPanel)
-            SplitFlapDigit(value: String(ones), cardSize: cardSize, isDark: isDark, compact: compact, glassCard: glassCard, showOwnGlassPanel: showOwnGlassPanel)
+            SplitFlapDigit(value: String(tens), cardSize: cardSize, isDark: isDark, compact: compact, glassCard: glassCard, showOwnGlassPanel: showOwnGlassPanel, tintColor: tintColor, fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont)
+            SplitFlapDigit(value: String(ones), cardSize: cardSize, isDark: isDark, compact: compact, glassCard: glassCard, showOwnGlassPanel: showOwnGlassPanel, tintColor: tintColor, fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont)
         }
     }
 }

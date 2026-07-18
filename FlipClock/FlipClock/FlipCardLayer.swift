@@ -15,6 +15,9 @@ struct FlipCardLayer: NSViewRepresentable {
     let cardSize: CGSize
     let isDark: Bool
     var glassCard: Bool = false
+    var tintColor: Color? = nil
+    var fontName: String? = nil
+    var isMonospacedSystemFont: Bool = false
     var onLanded: () -> Void = {}
 
     func makeNSView(context: Context) -> FlapAnimatingNSView {
@@ -28,6 +31,9 @@ struct FlipCardLayer: NSViewRepresentable {
         nsView.onLanded = onLanded
         nsView.isDark = isDark
         nsView.glassCard = glassCard
+        nsView.tintColor = tintColor
+        nsView.fontName = fontName
+        nsView.isMonospacedSystemFont = isMonospacedSystemFont
         nsView.configure(cardSize: cardSize)
         guard context.coordinator.lastValue != value else { return }
         let old = context.coordinator.lastValue
@@ -49,6 +55,9 @@ final class FlapAnimatingNSView: NSView {
     var onLanded: (() -> Void)?
     var isDark: Bool = true
     var glassCard: Bool = false
+    var tintColor: Color? = nil
+    var fontName: String? = nil
+    var isMonospacedSystemFont: Bool = false
 
     private let flapLayer = CALayer()
     private var cardSize: CGSize = .zero
@@ -101,7 +110,7 @@ final class FlapAnimatingNSView: NSView {
         flapLayer.anchorPoint = CGPoint(x: 0.5, y: 0)
         flapLayer.bounds = CGRect(x: 0, y: 0, width: cardSize.width, height: cardSize.height / 2)
         flapLayer.position = CGPoint(x: cardSize.width / 2, y: cardSize.height / 2)
-        flapLayer.contents = DigitFaceRenderer.halfFace(for: oldValue, cardSize: cardSize, top: true, isDark: isDark, textColor: nil, fillColor: glassCard ? NSColor(FlapColors.frostedCard(isDark: isDark)) : nil)
+        flapLayer.contents = DigitFaceRenderer.halfFace(for: oldValue, cardSize: cardSize, top: true, isDark: isDark, textColor: tintColor.map(NSColor.init), fillColor: glassCard ? NSColor(FlapColors.frostedCard(isDark: isDark, tint: tintColor)) : nil, fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont)
         flapLayer.transform = CATransform3DIdentity
         // A drop shadow on a glass leaf reads as a stray dark smudge
         // sweeping past the hinge line as the flap rotates — only the
@@ -140,7 +149,7 @@ final class FlapAnimatingNSView: NSView {
         flapLayer.anchorPoint = CGPoint(x: 0.5, y: 1)
         flapLayer.bounds = CGRect(x: 0, y: 0, width: cardSize.width, height: cardSize.height / 2)
         flapLayer.position = CGPoint(x: cardSize.width / 2, y: cardSize.height / 2)
-        flapLayer.contents = DigitFaceRenderer.halfFace(for: newValue, cardSize: cardSize, top: false, isDark: isDark, textColor: nil, fillColor: glassCard ? NSColor(FlapColors.frostedCard(isDark: isDark)) : nil)
+        flapLayer.contents = DigitFaceRenderer.halfFace(for: newValue, cardSize: cardSize, top: false, isDark: isDark, textColor: tintColor.map(NSColor.init), fillColor: glassCard ? NSColor(FlapColors.frostedCard(isDark: isDark, tint: tintColor)) : nil, fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont)
         flapLayer.transform = CATransform3DMakeRotation(startAngle, 1, 0, 0)
         CATransaction.commit()
 

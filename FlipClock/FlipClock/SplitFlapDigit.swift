@@ -14,6 +14,13 @@ struct SplitFlapDigit: View {
     var isDark: Bool = true
     var compact: Bool = false
     var textColor: NSColor? = nil
+    /// HIG-style accent tint. When set, this wins over `textColor` for the
+    /// digit ink (a global "themed" mode beats the one-off Sunday-red
+    /// weekday case), and also drives the hinge line and frosted-card fill
+    /// via the tint-aware `FlapColors` overloads.
+    var tintColor: Color? = nil
+    var fontName: String? = nil
+    var isMonospacedSystemFont: Bool = false
     /// Whether this card is fused edge-to-edge with a neighbor on that
     /// side — a fused edge gets no housing corner rounding (it reads as
     /// one continuous drum with its neighbor, like "1" and "0" inside a
@@ -39,7 +46,7 @@ struct SplitFlapDigit: View {
     @State private var topValue: String
     @State private var bottomValue: String
 
-    init(value: String, cardSize: CGSize, isDark: Bool = true, compact: Bool = false, textColor: NSColor? = nil, fusedLeading: Bool = false, fusedTrailing: Bool = false, glassCard: Bool = false, showOwnGlassPanel: Bool = true) {
+    init(value: String, cardSize: CGSize, isDark: Bool = true, compact: Bool = false, textColor: NSColor? = nil, fusedLeading: Bool = false, fusedTrailing: Bool = false, glassCard: Bool = false, showOwnGlassPanel: Bool = true, tintColor: Color? = nil, fontName: String? = nil, isMonospacedSystemFont: Bool = false) {
         self.value = value
         self.cardSize = cardSize
         self.isDark = isDark
@@ -49,11 +56,20 @@ struct SplitFlapDigit: View {
         self.fusedTrailing = fusedTrailing
         self.glassCard = glassCard
         self.showOwnGlassPanel = showOwnGlassPanel
+        self.tintColor = tintColor
+        self.fontName = fontName
+        self.isMonospacedSystemFont = isMonospacedSystemFont
         _topValue = State(initialValue: value)
         _bottomValue = State(initialValue: value)
     }
 
     private var cornerRadius: CGFloat { compact ? 2 : 6 }
+
+    /// Tint wins over the `textColor` override (e.g. Sunday-red) when
+    /// present — see the doc comment on `tintColor` above.
+    private var effectiveTextColor: NSColor? {
+        tintColor.map(NSColor.init) ?? textColor
+    }
 
     private var cardShape: UnevenRoundedRectangle {
         UnevenRoundedRectangle(
@@ -73,18 +89,18 @@ struct SplitFlapDigit: View {
                 // halves render their digit on a transparent background and
                 // composite on top of this, so the resting card is exactly
                 // "frosted tone + digit" — identical to what the flap draws.
-                DraggableColorView(color: FlapColors.frostedCard(isDark: isDark)).clipShape(cardShape)
+                DraggableColorView(color: FlapColors.frostedCard(isDark: isDark, tint: tintColor)).clipShape(cardShape)
             }
 
             VStack(spacing: 0) {
-                HalfCard(image: DigitFaceRenderer.halfFace(for: topValue, cardSize: cardSize, top: true, isDark: isDark, textColor: textColor, transparentBackground: glassCard))
+                HalfCard(image: DigitFaceRenderer.halfFace(for: topValue, cardSize: cardSize, top: true, isDark: isDark, textColor: effectiveTextColor, transparentBackground: glassCard, fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont))
                     .frame(width: cardSize.width, height: cardSize.height / 2)
-                HalfCard(image: DigitFaceRenderer.halfFace(for: bottomValue, cardSize: cardSize, top: false, isDark: isDark, textColor: textColor, transparentBackground: glassCard))
+                HalfCard(image: DigitFaceRenderer.halfFace(for: bottomValue, cardSize: cardSize, top: false, isDark: isDark, textColor: effectiveTextColor, transparentBackground: glassCard, fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont))
                     .frame(width: cardSize.width, height: cardSize.height / 2)
             }
             .clipShape(cardShape)
 
-            HingeLine(width: cardSize.width, isDark: isDark, compact: compact)
+            HingeLine(width: cardSize.width, isDark: isDark, compact: compact, tint: tintColor)
 
             // The animating leaf always renders opaque — it needs to fully
             // mask the static half underneath while it's mid-rotation, or
@@ -94,7 +110,7 @@ struct SplitFlapDigit: View {
             // resting halves, so the opaque flap is visually indistinct
             // from the resting card and the flip doesn't change the card's
             // appearance at all.
-            FlipCardLayer(value: value, cardSize: cardSize, isDark: isDark, glassCard: glassCard) {
+            FlipCardLayer(value: value, cardSize: cardSize, isDark: isDark, glassCard: glassCard, tintColor: tintColor, fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont) {
                 bottomValue = value
             }
             .frame(width: cardSize.width, height: cardSize.height)
@@ -163,12 +179,13 @@ private struct HingeLine: View {
     let width: CGFloat
     let isDark: Bool
     let compact: Bool
+    var tint: Color? = nil
 
     private var coreHeight: CGFloat { compact ? 1.5 : 3.5 }
 
     var body: some View {
         Rectangle()
-            .fill(FlapColors.leafHinge(isDark: isDark))
+            .fill(FlapColors.leafHinge(isDark: isDark, tint: tint))
             .frame(width: width, height: coreHeight)
     }
 }
