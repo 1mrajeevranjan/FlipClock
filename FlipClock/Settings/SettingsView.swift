@@ -36,7 +36,7 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
         switch self {
         case .general: return CGSize(width: 430, height: 220)
         case .appearance: return CGSize(width: 470, height: 340)
-        case .desktopClock: return CGSize(width: 470, height: 305)
+        case .desktopClock: return CGSize(width: 470, height: 340)
         case .secondClock: return CGSize(width: 470, height: 285)
         }
     }
@@ -174,6 +174,13 @@ struct SettingsView: View {
                 Picker("Time format", selection: $settings.timeFormat) {
                     ForEach(TimeFormat.allCases) { format in
                         Text(format.label).tag(format)
+                    }
+                }
+                .pickerStyle(.segmented)
+
+                Picker("Color style", selection: $settings.widgetColorStyle) {
+                    ForEach(WidgetColorStyle.allCases) { style in
+                        Text(style.label).tag(style)
                     }
                 }
                 .pickerStyle(.segmented)

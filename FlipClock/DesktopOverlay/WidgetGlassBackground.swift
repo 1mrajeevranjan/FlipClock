@@ -25,6 +25,10 @@ struct WidgetGlassBackground: View {
     /// (or forever, if Screen Recording access was denied), in which case
     /// this falls back to the live `NSVisualEffectView` blur below.
     var backdropImage: CGImage? = nil
+    /// Mirrors macOS's own desktop-widget "Full Color / Monochrome" style
+    /// picker — desaturates the glass entirely (backdrop blur, gloss rim
+    /// tint stays neutral either way since it's already grayscale white).
+    var monochrome: Bool = false
 
     /// `34 * scale`, clamped to `14...40`. The default `.full` size
     /// (`scale = 0.65`) now renders at `22pt` — smaller than the old flat
@@ -111,6 +115,7 @@ struct WidgetGlassBackground: View {
                         }
                     }
                     .clipShape(shape)
+                    .saturation(monochrome ? 0 : 1)
                 )
                 .overlay(
                     // The glossy rim macOS's own widgets have: a bright

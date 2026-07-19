@@ -116,6 +116,7 @@ final class OverlayWindowController {
             // instead of the combined one.
             window.setContentSize(screen.frame.size)
             window.setFrameOrigin(screen.frame.origin)
+            maskContentView(cornerRadius: 0)
             return
         }
         window.isMovableByWindowBackground = true
@@ -157,6 +158,22 @@ final class OverlayWindowController {
             // relocate the window.
             window.setFrameOrigin(NSPoint(x: previousTopLeft.x, y: previousTopLeft.y - contentSize.height))
         }
+        maskContentView(cornerRadius: WidgetGlassBackground.cornerRadius(scale: settings.overlaySize.scale))
+    }
+
+    /// The glass card fills the window's content view edge-to-edge (no
+    /// margin left for shadow bleed, so this costs nothing extra to clip)
+    /// — masking the content view's own layer to the same rounded rect is
+    /// what finally guarantees zero edge artifacts regardless of how any
+    /// inner SwiftUI content composites, instead of relying on every
+    /// nested layer (blur view, backdrop image, shadow) to each get its
+    /// own rounding exactly right.
+    private func maskContentView(cornerRadius: CGFloat) {
+        guard let contentView = window.contentView else { return }
+        contentView.wantsLayer = true
+        contentView.layer?.cornerRadius = cornerRadius
+        contentView.layer?.cornerCurve = .continuous
+        contentView.layer?.masksToBounds = true
     }
 
     private func setVisible(_ visible: Bool) {

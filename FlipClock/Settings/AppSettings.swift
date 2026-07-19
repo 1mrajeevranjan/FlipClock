@@ -104,6 +104,19 @@ enum MeridiemStyle: String, CaseIterable, Identifiable {
     }
 }
 
+enum WidgetColorStyle: String, CaseIterable, Identifiable {
+    case full, monochrome
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .full: return "Full Color"
+        case .monochrome: return "Monochrome"
+        }
+    }
+}
+
 /// Single source of truth for user-facing preferences, backed by
 /// UserDefaults and exposed as Combine-observable so both SwiftUI (via
 /// `SettingsView`) and plain AppKit controllers (`OverlayWindowController`)
@@ -184,6 +197,14 @@ final class AppSettings: ObservableObject {
         didSet { UserDefaults.standard.set(widgetFont.id, forKey: Keys.widgetFont) }
     }
 
+    /// Mirrors macOS's own desktop-widget "Full Color / Monochrome" style
+    /// picker — desaturates the glass background's blurred backdrop so
+    /// the widget reads as grayscale-tinted glass instead of a color
+    /// photo diffused behind it.
+    @Published var widgetColorStyle: WidgetColorStyle {
+        didSet { UserDefaults.standard.set(widgetColorStyle.rawValue, forKey: Keys.widgetColorStyle) }
+    }
+
     private enum Keys {
         static let showDesktopOverlay = "showDesktopOverlay"
         static let launchAtLogin = "launchAtLogin"
@@ -198,6 +219,7 @@ final class AppSettings: ObservableObject {
         static let floatAcrossScreen = "floatAcrossScreen"
         static let fillScreen = "fillScreen"
         static let widgetFont = "widgetFont"
+        static let widgetColorStyle = "widgetColorStyle"
     }
 
     init() {
@@ -215,6 +237,7 @@ final class AppSettings: ObservableObject {
         floatAcrossScreen = defaults.object(forKey: Keys.floatAcrossScreen) as? Bool ?? false
         fillScreen = defaults.object(forKey: Keys.fillScreen) as? Bool ?? false
         widgetFont = (defaults.string(forKey: Keys.widgetFont)).map(WidgetFont.byID) ?? .system
+        widgetColorStyle = (defaults.string(forKey: Keys.widgetColorStyle)).flatMap(WidgetColorStyle.init(rawValue:)) ?? .full
     }
 
     private func applyLaunchAtLogin() {
