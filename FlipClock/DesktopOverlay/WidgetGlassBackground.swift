@@ -37,22 +37,57 @@ struct WidgetGlassBackground: View {
         if fullyClear {
             Color.clear
         } else {
-            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+            let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+            shape
                 .fill(.clear)
                 .background(
+                    // Pushed well past the old 0.22 — at this opacity the
+                    // behind-window blur itself (not just a tint over sharp
+                    // pixels) dominates what reads through, which is what
+                    // makes the desktop underneath look genuinely diffused
+                    // rather than merely darkened.
                     VisualEffectBlur()
-                        .opacity(0.22)
-                        .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+                        .opacity(0.68)
+                        .clipShape(shape)
                 )
                 .overlay(
-                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                        .strokeBorder(Color.white.opacity(0.12), lineWidth: 0.75)
+                    // A directional highlight (bright upper-left, fading to
+                    // near-nothing lower-right) instead of a flat stroke —
+                    // reads as a light source catching the rim of a curved
+                    // glass edge rather than a drawn outline.
+                    shape.strokeBorder(
+                        LinearGradient(
+                            colors: [.white.opacity(0.55), .white.opacity(0.05)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1.1
+                    )
+                )
+                .overlay(
+                    // Soft specular wash across the top third — the "light
+                    // leaking through" glass look — additive so it brightens
+                    // rather than flattening whatever's blurred beneath it.
+                    LinearGradient(
+                        colors: [.white.opacity(0.16), .white.opacity(0)],
+                        startPoint: .top,
+                        endPoint: .init(x: 0.5, y: 0.42)
+                    )
+                    .clipShape(shape)
+                    .blendMode(.plusLighter)
+                    .allowsHitTesting(false)
                 )
                 .shadow(
-                    color: .black.opacity(0.18),
-                    radius: (12 * scale).clamped(to: 6...20),
+                    color: .black.opacity(0.28),
+                    radius: (16 * scale).clamped(to: 8...26),
                     x: 0,
-                    y: (4 * scale).clamped(to: 2...8)
+                    y: (6 * scale).clamped(to: 3...10)
+                )
+                .shadow(
+                    color: .black.opacity(0.14),
+                    radius: (4 * scale).clamped(to: 2...7),
+                    x: 0,
+                    y: (1.5 * scale).clamped(to: 1...3)
                 )
         }
     }
