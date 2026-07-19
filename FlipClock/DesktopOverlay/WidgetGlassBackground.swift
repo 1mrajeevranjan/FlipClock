@@ -20,6 +20,11 @@ struct WidgetGlassBackground: View {
     /// the clock floating on top of it — rather than a widget-style frosted
     /// panel that would visibly gray out the whole screen.
     var fullyClear: Bool = false
+    /// A pre-blurred snapshot of whatever sits behind the window, supplied
+    /// by `DesktopBackdropCapture` — `nil` until the first capture lands
+    /// (or forever, if Screen Recording access was denied), in which case
+    /// this falls back to the live `NSVisualEffectView` blur below.
+    var backdropImage: CGImage? = nil
 
     /// `34 * scale`, clamped to `14...40`. The default `.full` size
     /// (`scale = 0.65`) now renders at `22pt` — smaller than the old flat
@@ -55,30 +60,76 @@ struct WidgetGlassBackground: View {
                     y: (6 * scale).clamped(to: 3...10)
                 )
         } else {
-            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+            let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+            shape
                 .fill(.clear)
                 .background(
-                    // The corner rounding lives on the NSVisualEffectView's
-                    // own CALayer (see `VisualEffectBlur`), not a SwiftUI
-                    // `.clipShape` on top of it — clipping a live
-                    // behind-window blur from the outside leaves a faint
-                    // antialiasing fringe right at the curve, which is
-                    // exactly the hairline this replaces. Masking the
-                    // layer that's actually doing the sampling gives the
-                    // same clean edge macOS's own widgets have.
-                    //
-                    // Stacking a SwiftUI `.ultraThinMaterial` on top of this
-                    // (tried in an earlier pass) was a mistake: Material
-                    // renders its own light-appearance fill underneath the
-                    // blur, which is what washed the whole panel out toward
-                    // opaque white, killed the digit cards' contrast, and
-                    // even reintroduced a corner seam (its clip doesn't
-                    // line up with the layer-masked blur beneath it).
-                    // `.underWindowBackground` alone, at full strength (no
-                    // `.opacity()` dampening at all — the previous 0.94/0.68
-                    // values were both artificially thinning the one lever
-                    // that actually matters here), is the correct approach.
-                    VisualEffectBlur(cornerRadius: cornerRadius)
+                    GeometryReader { proxy in
+                        // `Image().resizable().aspectRatio(.fill)` sizes
+                        // itself from the *proposed* size flowing down
+                        // through `.background()` — through this
+                        // particular chain (shape -> background ->
+                        // conditional content) that proposal wasn't
+                        // actually bounded, so the image rendered at its
+                        // full captured-bitmap resolution instead of the
+                        // widget's real size: only a sliver of true curve
+                        // showed near the corner before a huge image
+                        // "straightened out" past it. An explicit
+                        // `.frame(width:height:)` from `GeometryReader`'s
+                        // own measured size removes the ambiguity — the
+                        // image is now forced to exactly the container's
+                        // pixel bounds before it's ever clipped.
+                        Group {
+                            if let backdropImage {
+                                // A real, strongly Gaussian-blurred bitmap
+                                // of whatever's behind the window (see
+                                // `DesktopBackdropCapture`) — this is what
+                                // actually reaches Notification Center
+                                // widget levels of diffusion, since
+                                // `NSVisualEffectView`'s own blur radius is
+                                // fixed and isn't a public API.
+                                Image(decorative: backdropImage, scale: 1)
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                                    .frame(width: proxy.size.width, height: proxy.size.height)
+                                    .clipped()
+                            } else {
+                                // The corner rounding lives on the
+                                // NSVisualEffectView's own CALayer (see
+                                // `VisualEffectBlur`), not a SwiftUI
+                                // `.clipShape` on top of it — clipping a
+                                // live behind-window blur from the outside
+                                // leaves a faint antialiasing fringe right
+                                // at the curve. Masking the layer that's
+                                // actually doing the sampling gives a
+                                // clean edge instead. This path only
+                                // renders before the first capture lands,
+                                // or permanently if Screen Recording
+                                // access was denied.
+                                VisualEffectBlur(cornerRadius: cornerRadius)
+                            }
+                        }
+                    }
+                    .clipShape(shape)
+                )
+                .overlay(
+                    // The glossy rim macOS's own widgets have: a bright
+                    // specular arc along the top edge fading to almost
+                    // nothing by the sides/bottom — light catching curved
+                    // glass from above, not a stroke drawn all the way
+                    // around (which is what previously read as an
+                    // artificial "ring").
+                    shape.strokeBorder(
+                        AngularGradient(
+                            colors: [.white.opacity(0.05), .white.opacity(0.55), .white.opacity(0.05)],
+                            center: .center,
+                            startAngle: .degrees(200),
+                            endAngle: .degrees(340)
+                        ),
+                        lineWidth: 1
+                    )
+                    .blendMode(.plusLighter)
+                    .allowsHitTesting(false)
                 )
                 .shadow(
                     color: .black.opacity(0.28),

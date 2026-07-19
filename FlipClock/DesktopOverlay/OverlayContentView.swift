@@ -22,6 +22,7 @@ struct OverlayContentView: View {
 
     let timeProvider: TimeProvider
     @ObservedObject var settings: AppSettings
+    @ObservedObject var backdropCapture: DesktopBackdropCapture
     @Environment(\.colorScheme) private var colorScheme
 
     /// Total window content size for this view at a given scale/date
@@ -73,7 +74,7 @@ struct OverlayContentView: View {
         // weekday) otherwise pins content to the window's top-left corner
         // instead of centering it, producing lopsided margins.
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(WidgetGlassBackground(scale: settings.overlaySize.scale, fullyClear: settings.fillScreen))
+        .background(WidgetGlassBackground(scale: settings.overlaySize.scale, fullyClear: settings.fillScreen, backdropImage: backdropCapture.image))
         .preferredColorScheme(settings.theme.colorScheme)
     }
 }

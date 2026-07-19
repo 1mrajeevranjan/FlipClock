@@ -8,6 +8,7 @@ import Combine
 final class OverlayWindowController {
     private let window: OverlayWindow
     private let settings: AppSettings
+    private let backdropCapture = DesktopBackdropCapture()
     private var cancellables = Set<AnyCancellable>()
 
     private var floatTimer: Timer?
@@ -33,7 +34,7 @@ final class OverlayWindowController {
         self.settings = settings
         window = OverlayWindow()
 
-        let hostingController = NSHostingController(rootView: OverlayContentView(timeProvider: timeProvider, settings: settings))
+        let hostingController = NSHostingController(rootView: OverlayContentView(timeProvider: timeProvider, settings: settings, backdropCapture: backdropCapture))
         window.contentViewController = hostingController
 
         applySize(anchorTopRight: true)
@@ -67,6 +68,7 @@ final class OverlayWindowController {
                 // top-right default — that default only applies on first
                 // launch/before the user has ever moved it.
                 self?.applySize(anchorTopRight: false)
+                self?.startBackdropCaptureIfNeeded()
             }
             .store(in: &cancellables)
 
@@ -85,7 +87,10 @@ final class OverlayWindowController {
         settings.$fillScreen
             .dropFirst()
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in self?.applySize(anchorTopRight: false) }
+            .sink { [weak self] _ in
+                self?.applySize(anchorTopRight: false)
+                self?.startBackdropCaptureIfNeeded()
+            }
             .store(in: &cancellables)
 
         settings.$floatAcrossScreen
@@ -157,9 +162,24 @@ final class OverlayWindowController {
     private func setVisible(_ visible: Bool) {
         if visible {
             window.orderFront(nil)
+            startBackdropCaptureIfNeeded()
         } else {
             window.orderOut(nil)
+            backdropCapture.stop()
         }
+    }
+
+    /// Full-screen mode already goes fully transparent (`fullyClear` in
+    /// `WidgetGlassBackground`), so there's nothing to blur behind it —
+    /// skip capturing (and the Screen Recording prompt it would otherwise
+    /// trigger) whenever that mode is active.
+    private func startBackdropCaptureIfNeeded() {
+        guard settings.showDesktopOverlay, !settings.fillScreen else {
+            backdropCapture.stop()
+            return
+        }
+        let blurRadius = (30 * settings.overlaySize.scale).clamped(to: 16...50)
+        backdropCapture.start(window: window, blurRadius: blurRadius)
     }
 
     private func setFloating(_ floating: Bool) {

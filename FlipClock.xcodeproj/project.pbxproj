@@ -13,6 +13,7 @@
 		066BBA76C5767ABF5935A9EC /* FlapColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F05D3D8AB3B3658A5974D0E /* FlapColors.swift */; };
 		068E981DC0577C7881827825 /* BLADRMF_.TTF in Resources */ = {isa = PBXBuildFile; fileRef = 95820B6E1DB27B499C2DAA5F /* BLADRMF_.TTF */; };
 		075757C9FEC228BFE02255D4 /* Sportfield Varsity-Outline1.otf in Resources */ = {isa = PBXBuildFile; fileRef = 00D00F499ACFDC4FD6C9F951 /* Sportfield Varsity-Outline1.otf */; };
+		0A59D6179E919B1B5C9BEC5C /* DesktopBackdropCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FB871E136E63543744A1304 /* DesktopBackdropCapture.swift */; };
 		13D4D9D178B0D26EC1913274 /* ARCADE_N.TTF in Resources */ = {isa = PBXBuildFile; fileRef = 65C518BF9B070A2A98DE8BB6 /* ARCADE_N.TTF */; };
 		1552153680EDAE840A2C9D2B /* ARCADE_I.TTF in Resources */ = {isa = PBXBuildFile; fileRef = 123AD78C1B67252697E8F91E /* ARCADE_I.TTF */; };
 		19A441A793D1B4A1194D4918 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02DDB38188F3CABDE8AF990C /* AppDelegate.swift */; };
@@ -96,6 +97,7 @@
 		3FE91CB5C9D39516AFE000B6 /* Vlump.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Vlump.ttf; sourceTree = "<group>"; };
 		494FF96E602C234D3D76D3CF /* Sportfield Varsity-Shadow.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Sportfield Varsity-Shadow.otf"; sourceTree = "<group>"; };
 		569EF2149D9DD94C311A6F46 /* PopoverClockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverClockView.swift; sourceTree = "<group>"; };
+		5FB871E136E63543744A1304 /* DesktopBackdropCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopBackdropCapture.swift; sourceTree = "<group>"; };
 		5FEC2FADD24FCE8918E65F47 /* StatusItemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusItemController.swift; sourceTree = "<group>"; };
 		610FBE1AA72EC47C519C2E8C /* KGPrimaryItalicsLined.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = KGPrimaryItalicsLined.ttf; sourceTree = "<group>"; };
 		65A63215BD2AA8AE5332DF36 /* SplitFlapDigit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitFlapDigit.swift; sourceTree = "<group>"; };
@@ -253,6 +255,7 @@
 		4F495704C3D7B8E550F16FF0 /* DesktopOverlay */ = {
 			isa = PBXGroup;
 			children = (
+				5FB871E136E63543744A1304 /* DesktopBackdropCapture.swift */,
 				12A448C0C9D97B8982A4777C /* OverlayContentView.swift */,
 				3EA3DA66A1F9A49A759B1825 /* OverlayWindow.swift */,
 				1CD4601C3340A6C28FDF8C3A /* OverlayWindowController.swift */,
@@ -530,6 +533,7 @@
 				96705FB121D016A608DF8446 /* CalendarMonthView.swift in Sources */,
 				3F10BB5B3BBB26EC9CD50632 /* ClockTick.swift in Sources */,
 				DAB960062120E9ED90E69164 /* DateHeaderView.swift in Sources */,
+				0A59D6179E919B1B5C9BEC5C /* DesktopBackdropCapture.swift in Sources */,
 				E6960F41E21880F41D3C0C78 /* DigitDelta.swift in Sources */,
 				E98342BF539CAE355C1D0DEE /* DigitFaceRenderer.swift in Sources */,
 				066BBA76C5767ABF5935A9EC /* FlapColors.swift in Sources */,
