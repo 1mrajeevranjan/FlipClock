@@ -26,6 +26,7 @@
 		301E780BFE282310BCE1E919 /* Vlump Black.ttf in Resources */ = {isa = PBXBuildFile; fileRef = AB31DEDDADF92FBAAA7BF088 /* Vlump Black.ttf */; };
 		3404D70ADEABE3D5B96AFE49 /* Destroy All Humans!.otf in Resources */ = {isa = PBXBuildFile; fileRef = C3EAB38CFE04422718C3047D /* Destroy All Humans!.otf */; };
 		34DEF4B241287C9BD171F090 /* TRON.TTF in Resources */ = {isa = PBXBuildFile; fileRef = EE1FDD56434FA08A26814B3D /* TRON.TTF */; };
+		3AB38857C79E08B3BF2ADBC6 /* DueReminderBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1404A3D2475EEDC6D174181 /* DueReminderBanner.swift */; };
 		3DA8EB3A8D08B6D82BEE89A0 /* SplitFlapDigit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65A63215BD2AA8AE5332DF36 /* SplitFlapDigit.swift */; };
 		3F10BB5B3BBB26EC9CD50632 /* ClockTick.swift in Sources */ = {isa = PBXBuildFile; fileRef = 915EEE7160E430CB387D242E /* ClockTick.swift */; };
 		4511816071E0C80C3F673194 /* SplitFlapPairView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD2A120ACB0F42A007264D1C /* SplitFlapPairView.swift */; };
@@ -36,6 +37,7 @@
 		5EACEC3FC36487CFA104204E /* PopoverClockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 569EF2149D9DD94C311A6F46 /* PopoverClockView.swift */; };
 		5EB9FB47C5C4FFC780D6F0CE /* GFSCUS1D.ttf in Resources */ = {isa = PBXBuildFile; fileRef = BC155D6D5B8537159E016AEC /* GFSCUS1D.ttf */; };
 		64CC5AB390160626B67B5EFE /* MenuBarClockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16AC161B34E3FF7009C8F9FD /* MenuBarClockView.swift */; };
+		693B64F40E31016D0C0F1036 /* AddReminderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75F26A8260DC39BEC3E247F3 /* AddReminderView.swift */; };
 		6CB5D1BC69D39AD6C10B65D4 /* RockFont.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 03659CC7943595F75AF50AFD /* RockFont.ttf */; };
 		6FB425BA9B762D2080B7B0D4 /* Pullstar-Holinight.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 26294A48122D93211F28E15D /* Pullstar-Holinight.ttf */; };
 		75FC8E691208165530B02821 /* WhiteSquareRedYesBlackEightZero-Zero.ttf in Resources */ = {isa = PBXBuildFile; fileRef = AF79222F73CC682D76B2C6E9 /* WhiteSquareRedYesBlackEightZero-Zero.ttf */; };
@@ -46,6 +48,7 @@
 		7D438319D81BDDF0A8C3F82D /* Game Of Squids.otf in Resources */ = {isa = PBXBuildFile; fileRef = FD27A64CB19D63C62E58408A /* Game Of Squids.otf */; };
 		7E2CF474D97571BAEF4A3759 /* Vlump.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 3FE91CB5C9D39516AFE000B6 /* Vlump.ttf */; };
 		8715624FD54347A806F275C1 /* KGPrimaryItalicsLined.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 610FBE1AA72EC47C519C2E8C /* KGPrimaryItalicsLined.ttf */; };
+		8B2973DC33ED8E39177D0930 /* Reminder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 135E56F9C9038BA61C90310C /* Reminder.swift */; };
 		8CF69FF5774595D4ACE959B3 /* Linebeam.ttf in Resources */ = {isa = PBXBuildFile; fileRef = F91DF752E113AA6A5C453C24 /* Linebeam.ttf */; };
 		96705FB121D016A608DF8446 /* CalendarMonthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED3D59C1D26F59C0741E18C3 /* CalendarMonthView.swift */; };
 		9F29001BC6E87DC8BF62BF78 /* SplitFlapClockFace.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5A5A1BF8465AA952E2F3DBD /* SplitFlapClockFace.swift */; };
@@ -63,7 +66,9 @@
 		C9754D0A7822746BE4F0F162 /* FlipClockApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9382537EFD4FE15801C53C0E /* FlipClockApp.swift */; };
 		CD4212EE01B9C3D2FC4D595E /* OverlayWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EA3DA66A1F9A49A759B1825 /* OverlayWindow.swift */; };
 		D0448B25E61FFCC1FD18E9B7 /* StatusItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FEC2FADD24FCE8918E65F47 /* StatusItemController.swift */; };
+		D0F8A5633C87FBE5502EB6D7 /* ReminderBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5896ECD25212EC9A5CB044A /* ReminderBadge.swift */; };
 		DAB960062120E9ED90E69164 /* DateHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B45723FCF839EE6FCDF79CAA /* DateHeaderView.swift */; };
+		DB13156575EEFA035F2AB15B /* ReminderStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99B38BBE6721287DFCDD38D1 /* ReminderStore.swift */; };
 		DC9C7F4FB4955BC7BA2B07E7 /* WidgetFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7E3F10687F2F80B1FA8F91E /* WidgetFont.swift */; };
 		E68EDA1FE502621924873DBE /* abduction2002.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B991B52C184F247E89C7B552 /* abduction2002.ttf */; };
 		E6960F41E21880F41D3C0C78 /* DigitDelta.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91EE622C614D16D2F0D9CB00 /* DigitDelta.swift */; };
@@ -86,6 +91,7 @@
 		117A7E39C1E35B6312E3AA2C /* YrBkMess.TTF */ = {isa = PBXFileReference; path = YrBkMess.TTF; sourceTree = "<group>"; };
 		123AD78C1B67252697E8F91E /* ARCADE_I.TTF */ = {isa = PBXFileReference; path = ARCADE_I.TTF; sourceTree = "<group>"; };
 		12A448C0C9D97B8982A4777C /* OverlayContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayContentView.swift; sourceTree = "<group>"; };
+		135E56F9C9038BA61C90310C /* Reminder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reminder.swift; sourceTree = "<group>"; };
 		16AC161B34E3FF7009C8F9FD /* MenuBarClockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarClockView.swift; sourceTree = "<group>"; };
 		1CD4601C3340A6C28FDF8C3A /* OverlayWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayWindowController.swift; sourceTree = "<group>"; };
 		22AAEA71929350340A866A7B /* SecondClockStatusItemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecondClockStatusItemController.swift; sourceTree = "<group>"; };
@@ -105,6 +111,7 @@
 		662CD1BF127064A4EF3EC6EC /* moon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = moon.png; sourceTree = "<group>"; };
 		700B2677EE2AAF09F5FD974F /* Sportfield Varsity-Scrible.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Sportfield Varsity-Scrible.otf"; sourceTree = "<group>"; };
 		7433122D748E80051A23B7BD /* WidgetGlassBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetGlassBackground.swift; sourceTree = "<group>"; };
+		75F26A8260DC39BEC3E247F3 /* AddReminderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddReminderView.swift; sourceTree = "<group>"; };
 		76AE834CBCB2C51C0DE02C22 /* Sportfield Varsity.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Sportfield Varsity.otf"; sourceTree = "<group>"; };
 		7E04EE7FD9784E7541D7296F /* sun.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = sun.png; sourceTree = "<group>"; };
 		802A44BC4930D0F1FC34E804 /* ARCADE_R.TTF */ = {isa = PBXFileReference; path = ARCADE_R.TTF; sourceTree = "<group>"; };
@@ -119,6 +126,7 @@
 		95820B6E1DB27B499C2DAA5F /* BLADRMF_.TTF */ = {isa = PBXFileReference; path = BLADRMF_.TTF; sourceTree = "<group>"; };
 		95C32DF3B238972ABB75917B /* Tennessee College.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Tennessee College.ttf"; sourceTree = "<group>"; };
 		96A869DA91B1A0C42E527852 /* SecondClockMenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecondClockMenuBarView.swift; sourceTree = "<group>"; };
+		99B38BBE6721287DFCDD38D1 /* ReminderStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderStore.swift; sourceTree = "<group>"; };
 		A91D51A54F868D836DF9EEE5 /* space age.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "space age.ttf"; sourceTree = "<group>"; };
 		AB31DEDDADF92FBAAA7BF088 /* Vlump Black.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Vlump Black.ttf"; sourceTree = "<group>"; };
 		ABC77DD942B206F433DB7BBB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -128,6 +136,7 @@
 		B5A5A1BF8465AA952E2F3DBD /* SplitFlapClockFace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitFlapClockFace.swift; sourceTree = "<group>"; };
 		B991B52C184F247E89C7B552 /* abduction2002.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = abduction2002.ttf; sourceTree = "<group>"; };
 		BC155D6D5B8537159E016AEC /* GFSCUS1D.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = GFSCUS1D.ttf; sourceTree = "<group>"; };
+		C1404A3D2475EEDC6D174181 /* DueReminderBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DueReminderBanner.swift; sourceTree = "<group>"; };
 		C34727CD47DA893CF590CD5E /* Bring Me A Helicopter!.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Bring Me A Helicopter!.otf"; sourceTree = "<group>"; };
 		C3EAB38CFE04422718C3047D /* Destroy All Humans!.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Destroy All Humans!.otf"; sourceTree = "<group>"; };
 		C82BBCF4822EE69EB39A8D8C /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
@@ -135,6 +144,7 @@
 		CB3B3C2DD6832C4407F90348 /* Sportfield Varsity-Italic.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Sportfield Varsity-Italic.otf"; sourceTree = "<group>"; };
 		CED75368A307036F58F0332F /* TimeProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeProvider.swift; sourceTree = "<group>"; };
 		D2C211AFAE6975DEBA1E8893 /* DigitFaceRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigitFaceRenderer.swift; sourceTree = "<group>"; };
+		D5896ECD25212EC9A5CB044A /* ReminderBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderBadge.swift; sourceTree = "<group>"; };
 		DD2A120ACB0F42A007264D1C /* SplitFlapPairView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitFlapPairView.swift; sourceTree = "<group>"; };
 		E1B048EDDC054D8647424B07 /* FlipCardLayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlipCardLayer.swift; sourceTree = "<group>"; };
 		E79414097EB0F91E58961D38 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -151,6 +161,18 @@
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
+		072447B6D6CCF9AC85A910E5 /* Reminders */ = {
+			isa = PBXGroup;
+			children = (
+				75F26A8260DC39BEC3E247F3 /* AddReminderView.swift */,
+				C1404A3D2475EEDC6D174181 /* DueReminderBanner.swift */,
+				135E56F9C9038BA61C90310C /* Reminder.swift */,
+				D5896ECD25212EC9A5CB044A /* ReminderBadge.swift */,
+				99B38BBE6721287DFCDD38D1 /* ReminderStore.swift */,
+			);
+			path = Reminders;
+			sourceTree = "<group>";
+		};
 		0B578E2466EB5A623DA8AC90 /* year_book_mess */ = {
 			isa = PBXGroup;
 			children = (
@@ -168,6 +190,7 @@
 				ED341D91060F5E0777EB0CA6 /* FlipClock */,
 				95A2E716741EC931D83540F9 /* MenuBar */,
 				643D35C44EBA236B0AEF3D6E /* Popover */,
+				072447B6D6CCF9AC85A910E5 /* Reminders */,
 				AADEE37E141A2DDF0B4481F7 /* Settings */,
 				1F3D7FD8A5FC942103AE5BE0 /* TimeEngine */,
 			);
@@ -528,6 +551,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				693B64F40E31016D0C0F1036 /* AddReminderView.swift in Sources */,
 				19A441A793D1B4A1194D4918 /* AppDelegate.swift in Sources */,
 				B7296591D2A8AA2A29EBEE6A /* AppSettings.swift in Sources */,
 				96705FB121D016A608DF8446 /* CalendarMonthView.swift in Sources */,
@@ -536,6 +560,7 @@
 				0A59D6179E919B1B5C9BEC5C /* DesktopBackdropCapture.swift in Sources */,
 				E6960F41E21880F41D3C0C78 /* DigitDelta.swift in Sources */,
 				E98342BF539CAE355C1D0DEE /* DigitFaceRenderer.swift in Sources */,
+				3AB38857C79E08B3BF2ADBC6 /* DueReminderBanner.swift in Sources */,
 				066BBA76C5767ABF5935A9EC /* FlapColors.swift in Sources */,
 				02A5B5C771F3CADF7B6AFAA7 /* FlipCardLayer.swift in Sources */,
 				C9754D0A7822746BE4F0F162 /* FlipClockApp.swift in Sources */,
@@ -544,6 +569,9 @@
 				CD4212EE01B9C3D2FC4D595E /* OverlayWindow.swift in Sources */,
 				AC742C4A93D9C9D45A481588 /* OverlayWindowController.swift in Sources */,
 				5EACEC3FC36487CFA104204E /* PopoverClockView.swift in Sources */,
+				8B2973DC33ED8E39177D0930 /* Reminder.swift in Sources */,
+				D0F8A5633C87FBE5502EB6D7 /* ReminderBadge.swift in Sources */,
+				DB13156575EEFA035F2AB15B /* ReminderStore.swift in Sources */,
 				B170E1361D84026C0EE80D8A /* SecondClockMenuBarView.swift in Sources */,
 				2811B527FE03B0BFAB73B046 /* SecondClockStatusItemController.swift in Sources */,
 				4B9E8E45D3828A20209486B4 /* SettingsView.swift in Sources */,

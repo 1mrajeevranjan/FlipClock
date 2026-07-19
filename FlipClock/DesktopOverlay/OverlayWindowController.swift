@@ -30,11 +30,11 @@ final class OverlayWindowController {
     /// its box.
     private var preFillScreenTopLeft: NSPoint?
 
-    init(timeProvider: TimeProvider, settings: AppSettings) {
+    init(timeProvider: TimeProvider, settings: AppSettings, reminderStore: ReminderStore) {
         self.settings = settings
         window = OverlayWindow()
 
-        let hostingController = NSHostingController(rootView: OverlayContentView(timeProvider: timeProvider, settings: settings, backdropCapture: backdropCapture))
+        let hostingController = NSHostingController(rootView: OverlayContentView(timeProvider: timeProvider, settings: settings, backdropCapture: backdropCapture, reminderStore: reminderStore))
         window.contentViewController = hostingController
 
         applySize(anchorTopRight: true)

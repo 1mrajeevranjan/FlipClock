@@ -10,14 +10,26 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
     private let popover = NSPopover()
     private let timeProvider: TimeProvider
     private let settings: AppSettings
+    private let reminderStore: ReminderStore
     private let onOpenSettings: () -> Void
     private var hosting: NSHostingView<MenuBarClockView>?
     private var cancellables = Set<AnyCancellable>()
 
-    init(timeProvider: TimeProvider, settings: AppSettings, onOpenSettings: @escaping () -> Void) {
+    /// Every 5s while a reminder is due today and unacknowledged, this
+    /// flips between `.light`/`.dark` and gets force-fed into
+    /// `MenuBarClockView`. `nil` when nothing's due, which falls back to
+    /// the user's real theme setting.
+    private var pulseColorScheme: ColorScheme? {
+        didSet { updateHostedRootView() }
+    }
+    private var pulseTimer: Timer?
+
+    init(timeProvider: TimeProvider, settings: AppSettings, reminderStore: ReminderStore, onOpenSettings: @escaping () -> Void) {
         self.timeProvider = timeProvider
         self.settings = settings
+        self.reminderStore = reminderStore
         self.onOpenSettings = onOpenSettings
+        self.pulseColorScheme = nil
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         super.init()
 
@@ -32,7 +44,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         popover.behavior = .transient
         popover.delegate = self
         popover.contentViewController = VibrantHostingController(
-            rootView: PopoverClockView(timeProvider: timeProvider, settings: settings),
+            rootView: PopoverClockView(timeProvider: timeProvider, settings: settings, reminderStore: reminderStore),
             settings: settings
         )
 
@@ -43,13 +55,19 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
             .dropFirst()
             .sink { [weak self] _ in self?.applyItemSize() }
             .store(in: &cancellables)
+
+        reminderStore.$reminders
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.updatePulseState() }
+            .store(in: &cancellables)
+        updatePulseState()
     }
 
     private func applyItemSize() {
         let itemSize = MenuBarClockView.itemSize(timeFormat: settings.timeFormat)
         statusItem.length = itemSize.width
 
-        let hosting = NSHostingView(rootView: MenuBarClockView(timeProvider: timeProvider, settings: settings))
+        let hosting = NSHostingView(rootView: MenuBarClockView(timeProvider: timeProvider, settings: settings, pulseColorScheme: pulseColorScheme))
         hosting.frame = NSRect(x: 0, y: 0, width: itemSize.width, height: itemSize.height)
         self.hosting = hosting
 
@@ -57,6 +75,39 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
             button.subviews.forEach { $0.removeFromSuperview() }
             button.addSubview(hosting)
         }
+    }
+
+    /// The actual fix for the pulse never visually repainting: an
+    /// `NSStatusItem`'s button subview doesn't redraw on its own just
+    /// because a hosted SwiftUI view's `rootView` changed — confirmed the
+    /// hard way (state changes verified firing correctly via logging,
+    /// zero visible change) with both a plain `rootView` reassignment and
+    /// a `TimelineView`-only approach. `NSStatusBarButton` composites its
+    /// content into the menu bar through a separate (SkyLight) pipeline
+    /// that isn't part of a normal window's live-updating render loop, so
+    /// it needs to be told explicitly, on the *button* itself (not just
+    /// the hosted subview), that its content changed.
+    private func updateHostedRootView() {
+        hosting?.rootView = MenuBarClockView(timeProvider: timeProvider, settings: settings, pulseColorScheme: pulseColorScheme)
+        statusItem.button?.needsDisplay = true
+    }
+
+    private func updatePulseState() {
+        let isDue = !reminderStore.dueTodayUnacknowledged.isEmpty
+        guard isDue else {
+            pulseTimer?.invalidate()
+            pulseTimer = nil
+            pulseColorScheme = nil
+            return
+        }
+        guard pulseTimer == nil else { return }
+        pulseColorScheme = .dark
+        let timer = Timer(timeInterval: 5, repeats: true) { [weak self] _ in
+            guard let self else { return }
+            self.pulseColorScheme = self.pulseColorScheme == .dark ? .light : .dark
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        pulseTimer = timer
     }
 
     @objc private func statusItemClicked() {

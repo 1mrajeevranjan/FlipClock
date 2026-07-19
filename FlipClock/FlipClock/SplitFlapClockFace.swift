@@ -20,9 +20,18 @@ struct SplitFlapClockFace: View {
     var showOwnGlassPanel: Bool = true
     var fontName: String? = nil
     var isMonospacedSystemFont: Bool = false
+    /// Forces light/dark rendering regardless of the environment's actual
+    /// color scheme — `nil` (the normal case) defers to
+    /// `@Environment(\.colorScheme)` as before. Exists for the menu bar's
+    /// reminder pulse: `.preferredColorScheme()` on this view's ancestors
+    /// doesn't reliably re-propagate down to `@Environment` reads here on
+    /// updates when this view is hosted inside an `NSStatusItem` button
+    /// (confirmed — plain view parameters like this one *do* update
+    /// correctly in that same hosting context, environment values don't).
+    var isDarkOverride: Bool? = nil
 
     @Environment(\.colorScheme) private var colorScheme
-    private var isDark: Bool { colorScheme == .dark }
+    private var isDark: Bool { isDarkOverride ?? (colorScheme == .dark) }
 
     private var showMeridiem: Bool { timeFormat == .twelveHour }
     private var metrics: Metrics { Metrics(scale: scale, compact: compact, showPedestal: showPedestal, showMeridiem: showMeridiem) }

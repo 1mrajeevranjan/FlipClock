@@ -23,10 +23,17 @@ struct PopoverClockView: View {
 
     let timeProvider: TimeProvider
     @ObservedObject var settings: AppSettings
+    @ObservedObject var reminderStore: ReminderStore
 
     var body: some View {
         VStack(spacing: 18) {
             DateHeaderView(date: timeProvider.tick.date)
+
+            if !reminderStore.dueTodayUnacknowledged.isEmpty {
+                DueReminderBanner(reminders: reminderStore.dueTodayUnacknowledged) { reminder in
+                    reminderStore.acknowledge(reminder)
+                }
+            }
             // `showOwnGlassPanel: false` — this view already sits on
             // `VibrantHostingController`'s own blur; a second independent
             // `NSVisualEffectView` per card just grays everything out
@@ -45,7 +52,7 @@ struct PopoverClockView: View {
                 showOwnGlassPanel: false,
                 fontName: settings.widgetFont.postscriptName
             )
-            CalendarMonthView()
+            CalendarMonthView(reminderStore: reminderStore)
         }
         .padding(Self.padding)
         .frame(width: Self.width)

@@ -3,7 +3,12 @@ import SwiftUI
 /// Current-month calendar grid with prev/next navigation arrows on either
 /// side of the month title, matching a typical menu-bar calendar widget.
 struct CalendarMonthView: View {
+    @ObservedObject var reminderStore: ReminderStore
+
     @State private var displayedMonth: Date = Calendar.current.startOfMonth(for: Date())
+    /// The day currently showing the "New Reminder" popover, or `nil` if
+    /// none is open — set by a double-click on a day cell.
+    @State private var addingReminderFor: Date? = nil
 
     private let calendar = Calendar.current
     private let today = Calendar.current.startOfDay(for: Date())
@@ -55,16 +60,51 @@ struct CalendarMonthView: View {
     private func dayCell(_ day: Int?, column: Int) -> some View {
         Group {
             if let day {
-                Text("\(day)")
-                    .font(.system(size: 12, weight: isToday(day) ? .bold : .regular))
-                    .foregroundStyle(textColor(day: day, column: column))
-                    .frame(width: 22, height: 22)
-                    .background(isToday(day) ? Color.primary : Color.clear)
-                    .clipShape(Circle())
+                let cellDate = date(for: day)
+                let cellReminders = reminderStore.reminders(on: cellDate)
+                VStack(spacing: 2) {
+                    Text("\(day)")
+                        .font(.system(size: 12, weight: isToday(day) ? .bold : .regular))
+                        .foregroundStyle(textColor(day: day, column: column))
+                        .frame(width: 22, height: 22)
+                        .background(isToday(day) ? Color.primary : Color.clear)
+                        .clipShape(Circle())
+                    // Reserve the mark's height even when empty so every
+                    // row of the grid stays the same height regardless of
+                    // which days happen to have reminders.
+                    if !cellReminders.isEmpty {
+                        ReminderBadge(isDue: calendar.isDateInToday(cellDate) && cellReminders.contains { !$0.isAcknowledged }, diameter: 5)
+                    } else {
+                        Color.clear.frame(width: 5, height: 5)
+                    }
+                }
+                .contentShape(Rectangle())
+                .onTapGesture(count: 2) { addingReminderFor = cellDate }
+                .popover(isPresented: Binding(
+                    get: { addingReminderFor == cellDate },
+                    set: { isPresented in if !isPresented { addingReminderFor = nil } }
+                )) {
+                    AddReminderView(
+                        date: cellDate,
+                        onSave: { title in
+                            reminderStore.add(title: title, date: cellDate)
+                            addingReminderFor = nil
+                        },
+                        onCancel: { addingReminderFor = nil }
+                    )
+                }
             } else {
-                Color.clear.frame(width: 22, height: 22)
+                Color.clear.frame(width: 22, height: 22 + 2 + 5)
             }
         }
+    }
+
+    /// The actual `Date` a grid day number represents, combined from
+    /// `displayedMonth`'s year/month and the cell's day-of-month.
+    private func date(for day: Int) -> Date {
+        var comps = calendar.dateComponents([.year, .month], from: displayedMonth)
+        comps.day = day
+        return calendar.date(from: comps) ?? displayedMonth
     }
 
     private func textColor(day: Int, column: Int) -> Color {

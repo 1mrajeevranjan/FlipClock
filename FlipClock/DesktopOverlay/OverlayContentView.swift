@@ -23,7 +23,11 @@ struct OverlayContentView: View {
     let timeProvider: TimeProvider
     @ObservedObject var settings: AppSettings
     @ObservedObject var backdropCapture: DesktopBackdropCapture
+    @ObservedObject var reminderStore: ReminderStore
     @Environment(\.colorScheme) private var colorScheme
+
+    private var hasDueReminder: Bool { !reminderStore.dueTodayUnacknowledged.isEmpty }
+    private var hasUpcomingReminder: Bool { !reminderStore.upcomingWithin24Hours.isEmpty }
 
     /// Total window content size for this view at a given scale/date
     /// visibility — computed analytically (see
@@ -75,6 +79,16 @@ struct OverlayContentView: View {
         // instead of centering it, producing lopsided margins.
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(WidgetGlassBackground(scale: settings.overlaySize.scale, fullyClear: settings.fillScreen, backdropImage: backdropCapture.image, monochrome: settings.widgetColorStyle == .monochrome))
+        // Top-trailing badge for a reminder that's due today or landing
+        // within 24 hours — a corner dot rather than anything that
+        // disturbs the clock face itself, matching the "very subtle" nudge
+        // this was asked for.
+        .overlay(alignment: .topTrailing) {
+            if hasDueReminder || hasUpcomingReminder {
+                ReminderBadge(isDue: hasDueReminder, diameter: (10 * settings.overlaySize.scale).clamped(to: 8...16))
+                    .padding((10 * settings.overlaySize.scale).clamped(to: 8...16))
+            }
+        }
         .preferredColorScheme(settings.theme.colorScheme)
     }
 }
