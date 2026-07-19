@@ -105,37 +105,41 @@ enum DigitFaceRenderer {
             CGRect(origin: .zero, size: outputSize).fill()
         }
 
-        guard let context = NSGraphicsContext.current?.cgContext else {
-            nsImage.unlockFocus()
-            fatalError("DigitFaceRenderer: no graphics context")
+        if let icon = iconImage(for: value) {
+            drawIcon(icon, fullSize: fullSize, half: half)
+        } else {
+            guard let context = NSGraphicsContext.current?.cgContext else {
+                nsImage.unlockFocus()
+                fatalError("DigitFaceRenderer: no graphics context")
+            }
+
+            let line = line(for: value, fullSize: fullSize, isDark: isDark, textColor: textColor, fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont)
+
+            // The line's actual rendered ink box (not typographic ascent/
+            // descent/cap-height, which vary by font design and were still
+            // leaving the glyph a few px off the true visual center) — this
+            // is what "50% of the number height" means for a mixed-shape
+            // glyph set like digits.
+            let ink = CTLineGetImageBounds(line, context)
+
+            // Origin such that the ink box's own center lands on the target
+            // center — full card's midpoint, or that midpoint shifted by
+            // half a card height for the top-half bitmap (see below).
+            let targetCenterY = fullSize.height / 2
+            let fullCardOriginY = targetCenterY - ink.midY
+            let originX = (fullSize.width - ink.width) / 2 - ink.minX
+
+            let originY: CGFloat
+            switch half {
+            case nil, .bottom:
+                originY = fullCardOriginY
+            case .top:
+                originY = fullCardOriginY - fullSize.height / 2
+            }
+
+            context.textPosition = CGPoint(x: originX, y: originY)
+            CTLineDraw(line, context)
         }
-
-        let line = line(for: value, fullSize: fullSize, isDark: isDark, textColor: textColor, fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont)
-
-        // The line's actual rendered ink box (not typographic ascent/
-        // descent/cap-height, which vary by font design and were still
-        // leaving the glyph a few px off the true visual center) — this is
-        // what "50% of the number height" means for a mixed-shape glyph
-        // set like digits.
-        let ink = CTLineGetImageBounds(line, context)
-
-        // Origin such that the ink box's own center lands on the target
-        // center — full card's midpoint, or that midpoint shifted by half
-        // a card height for the top-half bitmap (see below).
-        let targetCenterY = fullSize.height / 2
-        let fullCardOriginY = targetCenterY - ink.midY
-        let originX = (fullSize.width - ink.width) / 2 - ink.minX
-
-        let originY: CGFloat
-        switch half {
-        case nil, .bottom:
-            originY = fullCardOriginY
-        case .top:
-            originY = fullCardOriginY - fullSize.height / 2
-        }
-
-        context.textPosition = CGPoint(x: originX, y: originY)
-        CTLineDraw(line, context)
         nsImage.unlockFocus()
 
         guard let cgImage = nsImage.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
@@ -147,6 +151,51 @@ enum DigitFaceRenderer {
     private static func cacheKey(for value: String, textColor: NSColor?) -> String {
         guard let textColor else { return value }
         return "\(value)|\(textColor.description)"
+    }
+
+    private static var iconCache: [String: NSImage] = [:]
+
+    /// Maps the meridiem sentinel strings (`MeridiemStyle.value(isPM:)`'s
+    /// `.icon` case) to the bundled sun/moon PNGs at the repo root, loaded
+    /// once and cached — these ship as plain resources, not registered
+    /// fonts, so no `CTFontManagerRegisterFontsForURL`-style setup applies.
+    private static func iconImage(for value: String) -> NSImage? {
+        let fileName: String
+        switch value {
+        case "☀️": fileName = "sun"
+        case "🌙": fileName = "moon"
+        default: return nil
+        }
+        if let cached = iconCache[fileName] {
+            return cached
+        }
+        guard let url = Bundle.main.url(forResource: fileName, withExtension: "png"),
+              let image = NSImage(contentsOf: url) else {
+            return nil
+        }
+        iconCache[fileName] = image
+        return image
+    }
+
+    /// Draws an icon centered in the full card, cropped to `half` using the
+    /// same origin-shift trick as the text path so the flip animation's
+    /// top/bottom halves line up at the hinge.
+    private static func drawIcon(_ icon: NSImage, fullSize: CGSize, half: Half?) {
+        let maxDimension = min(fullSize.width, fullSize.height) * 0.82
+        let iconSize = CGSize(width: maxDimension, height: maxDimension)
+        let originX = (fullSize.width - iconSize.width) / 2
+        let fullCardOriginY = (fullSize.height - iconSize.height) / 2
+
+        let originY: CGFloat
+        switch half {
+        case nil, .bottom:
+            originY = fullCardOriginY
+        case .top:
+            originY = fullCardOriginY - fullSize.height / 2
+        }
+
+        icon.draw(in: CGRect(origin: CGPoint(x: originX, y: originY), size: iconSize),
+                   from: .zero, operation: .sourceOver, fraction: 1.0)
     }
 
     private static func line(for value: String, fullSize: CGSize, isDark: Bool, textColor: NSColor?, fontName: String? = nil, isMonospacedSystemFont: Bool = false) -> CTLine {

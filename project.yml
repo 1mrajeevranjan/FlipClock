@@ -27,6 +27,10 @@ targets:
           - "**/*.otf"
           - "**/*.TTF"
           - "**/*.OTF"
+      - path: sun.png
+        buildPhase: resources
+      - path: moon.png
+        buildPhase: resources
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.rajeevranjan.flipclock
