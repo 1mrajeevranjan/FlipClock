@@ -40,16 +40,7 @@ struct WidgetGlassBackground: View {
             Color.clear
         } else {
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                // A second, SwiftUI-native blur pass stacked on top of the
-                // live `NSVisualEffectView` sample below — Notification
-                // Center's own widgets run behind that panel's own heavy
-                // system blur in addition to any per-widget material, which
-                // this app has no access to; compositing a `.ultraThinMaterial`
-                // fill over the already-blurred desktop sample is the closest
-                // public-API equivalent, and is what finally smooths out the
-                // faint rock/water texture that a single `.behindWindow`
-                // pass alone still let through.
-                .fill(.ultraThinMaterial)
+                .fill(.clear)
                 .background(
                     // The corner rounding lives on the NSVisualEffectView's
                     // own CALayer (see `VisualEffectBlur`), not a SwiftUI
@@ -60,12 +51,17 @@ struct WidgetGlassBackground: View {
                     // layer that's actually doing the sampling gives the
                     // same clean edge macOS's own widgets have.
                     //
-                    // Opacity near-1 (not the old 0.68) because Apple's
-                    // Notification Center widgets read as a solidly frosted,
-                    // fairly opaque material — strongly blurred and tinted,
-                    // not a faint see-through veil.
+                    // Stacking a SwiftUI `.ultraThinMaterial` on top of this
+                    // (tried in an earlier pass) was a mistake: Material
+                    // renders its own light-appearance fill underneath the
+                    // blur, which is what washed the whole panel out toward
+                    // opaque white, killed the digit cards' contrast, and
+                    // even reintroduced a corner seam (its clip doesn't
+                    // line up with the layer-masked blur beneath it).
+                    // `.underWindowBackground` alone, pushed via opacity, is
+                    // the correct lever.
                     VisualEffectBlur(cornerRadius: cornerRadius)
-                        .opacity(0.97)
+                        .opacity(0.94)
                 )
                 .shadow(
                     color: .black.opacity(0.28),
