@@ -58,10 +58,11 @@ struct WidgetGlassBackground: View {
                     // opaque white, killed the digit cards' contrast, and
                     // even reintroduced a corner seam (its clip doesn't
                     // line up with the layer-masked blur beneath it).
-                    // `.underWindowBackground` alone, pushed via opacity, is
-                    // the correct lever.
+                    // `.underWindowBackground` alone, at full strength (no
+                    // `.opacity()` dampening at all — the previous 0.94/0.68
+                    // values were both artificially thinning the one lever
+                    // that actually matters here), is the correct approach.
                     VisualEffectBlur(cornerRadius: cornerRadius)
-                        .opacity(0.94)
                 )
                 .shadow(
                     color: .black.opacity(0.28),
