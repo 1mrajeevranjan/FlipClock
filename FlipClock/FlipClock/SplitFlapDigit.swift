@@ -93,9 +93,9 @@ struct SplitFlapDigit: View {
             }
 
             VStack(spacing: 0) {
-                HalfCard(image: DigitFaceRenderer.halfFace(for: topValue, cardSize: cardSize, top: true, isDark: isDark, textColor: effectiveTextColor, transparentBackground: glassCard, fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont))
+                HalfCard(image: DigitFaceRenderer.halfFace(for: topValue, cardSize: cardSize, top: true, isDark: isDark, textColor: effectiveTextColor, transparentBackground: glassCard, fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont, tint: tintColor))
                     .frame(width: cardSize.width, height: cardSize.height / 2)
-                HalfCard(image: DigitFaceRenderer.halfFace(for: bottomValue, cardSize: cardSize, top: false, isDark: isDark, textColor: effectiveTextColor, transparentBackground: glassCard, fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont))
+                HalfCard(image: DigitFaceRenderer.halfFace(for: bottomValue, cardSize: cardSize, top: false, isDark: isDark, textColor: effectiveTextColor, transparentBackground: glassCard, fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont, tint: tintColor))
                     .frame(width: cardSize.width, height: cardSize.height / 2)
             }
             .clipShape(cardShape)
