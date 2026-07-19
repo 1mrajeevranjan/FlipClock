@@ -18,10 +18,6 @@ struct WidgetGlassBackground: View {
     /// the clock floating on top of it — rather than a widget-style frosted
     /// panel that would visibly gray out the whole screen.
     var fullyClear: Bool = false
-    /// HIG-style accent tint — when set, washes a translucent tint-colored
-    /// layer over the panel's blur, matching Apple's "tinted" widget
-    /// appearance.
-    var tintColor: Color? = nil
 
     /// `34 * scale`, clamped to `14...40`. The default `.full` size
     /// (`scale = 0.65`) now renders at `22pt` — smaller than the old flat
@@ -52,12 +48,6 @@ struct WidgetGlassBackground: View {
                     RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                         .strokeBorder(Color.white.opacity(0.12), lineWidth: 0.75)
                 )
-                .overlay {
-                    if let tintColor {
-                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                            .fill(tintColor.opacity(0.18))
-                    }
-                }
                 .shadow(
                     color: .black.opacity(0.18),
                     radius: (12 * scale).clamped(to: 6...20),

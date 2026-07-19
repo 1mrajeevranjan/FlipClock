@@ -35,7 +35,7 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
     var windowSize: CGSize {
         switch self {
         case .general: return CGSize(width: 430, height: 220)
-        case .appearance: return CGSize(width: 470, height: 420)
+        case .appearance: return CGSize(width: 470, height: 340)
         case .desktopClock: return CGSize(width: 470, height: 305)
         case .secondClock: return CGSize(width: 470, height: 285)
         }
@@ -154,16 +154,9 @@ struct SettingsView: View {
                 }
             }
 
-            settingsCard("Tint") {
-                Toggle("Use custom tint", isOn: $settings.widgetTintEnabled)
-                if settings.widgetTintEnabled {
-                    ColorPicker("Tint color", selection: $settings.widgetTintColor)
-                }
-            }
-
             settingsCard("Font") {
                 Picker("Font", selection: $settings.widgetFont) {
-                    ForEach(WidgetFont.allCases) { font in
+                    ForEach(WidgetFont.all) { font in
                         Text(font.label).tag(font)
                     }
                 }

@@ -18,7 +18,6 @@ struct SplitFlapClockFace: View {
     var timeFormat: TimeFormat = .twelveHour
     var glassCard: Bool = false
     var showOwnGlassPanel: Bool = true
-    var tintColor: Color? = nil
     var fontName: String? = nil
     var isMonospacedSystemFont: Bool = false
 
@@ -33,15 +32,15 @@ struct SplitFlapClockFace: View {
         let hour = tick.hourDigits(format: timeFormat)
         VStack(spacing: compact ? 0 : m.vGroupSpacing) {
             HStack(alignment: .center, spacing: m.rowSpacing) {
-                SplitFlapPairView(tens: hour.tens, ones: hour.ones, cardSize: m.digitCardSize, digitSpacing: m.digitSpacing, isDark: isDark, compact: compact, glassCard: glassCard, showOwnGlassPanel: showOwnGlassPanel, tintColor: tintColor, fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont)
+                SplitFlapPairView(tens: hour.tens, ones: hour.ones, cardSize: m.digitCardSize, digitSpacing: m.digitSpacing, isDark: isDark, compact: compact, glassCard: glassCard, showOwnGlassPanel: showOwnGlassPanel, fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont)
                 separator(m)
-                SplitFlapPairView(tens: tick.minute / 10, ones: tick.minute % 10, cardSize: m.digitCardSize, digitSpacing: m.digitSpacing, isDark: isDark, compact: compact, glassCard: glassCard, showOwnGlassPanel: showOwnGlassPanel, tintColor: tintColor, fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont)
+                SplitFlapPairView(tens: tick.minute / 10, ones: tick.minute % 10, cardSize: m.digitCardSize, digitSpacing: m.digitSpacing, isDark: isDark, compact: compact, glassCard: glassCard, showOwnGlassPanel: showOwnGlassPanel, fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont)
                 separator(m)
-                SplitFlapPairView(tens: tick.second / 10, ones: tick.second % 10, cardSize: m.digitCardSize, digitSpacing: m.digitSpacing, isDark: isDark, compact: compact, glassCard: glassCard, showOwnGlassPanel: showOwnGlassPanel, tintColor: tintColor, fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont)
+                SplitFlapPairView(tens: tick.second / 10, ones: tick.second % 10, cardSize: m.digitCardSize, digitSpacing: m.digitSpacing, isDark: isDark, compact: compact, glassCard: glassCard, showOwnGlassPanel: showOwnGlassPanel, fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont)
                 if showMeridiem {
                     HStack(spacing: m.digitSpacing) {
                         ForEach(Array(meridiemStyle.cards(isPM: tick.isPM).enumerated()), id: \.offset) { _, card in
-                            SplitFlapDigit(value: card, cardSize: m.ampmCardSize, isDark: isDark, compact: compact, glassCard: glassCard, showOwnGlassPanel: showOwnGlassPanel, tintColor: tintColor, fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont)
+                            SplitFlapDigit(value: card, cardSize: m.ampmCardSize, isDark: isDark, compact: compact, glassCard: glassCard, showOwnGlassPanel: showOwnGlassPanel, fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont)
                         }
                     }
                 }
@@ -71,7 +70,7 @@ struct SplitFlapClockFace: View {
             Circle().frame(width: m.separatorDotSize)
             Circle().frame(width: m.separatorDotSize)
         }
-        .foregroundStyle(FlapColors.separatorDot(isDark: isDark, tint: tintColor))
+        .foregroundStyle(FlapColors.separatorDot(isDark: isDark))
     }
 }
 

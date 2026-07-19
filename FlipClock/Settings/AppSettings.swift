@@ -2,7 +2,6 @@ import Foundation
 import Combine
 import ServiceManagement
 import SwiftUI
-import AppKit
 
 enum AppTheme: String, CaseIterable, Identifiable {
     case light, dark, system
@@ -105,40 +104,6 @@ enum MeridiemStyle: String, CaseIterable, Identifiable {
     }
 }
 
-enum WidgetFont: String, CaseIterable, Identifiable {
-    case system, sfMono, menlo, avenirNext, helveticaCondensed, courier
-
-    var id: String { rawValue }
-
-    var label: String {
-        switch self {
-        case .system: return "System"
-        case .sfMono: return "SF Mono"
-        case .menlo: return "Menlo"
-        case .avenirNext: return "Avenir Next"
-        case .helveticaCondensed: return "Helvetica Condensed"
-        case .courier: return "Courier"
-        }
-    }
-
-    /// PostScript name for `NSFont(name:size:)`. `nil` means either the
-    /// plain system font (`.system`) or the monospaced system font
-    /// (`.sfMono`, resolved via `NSFont.monospacedSystemFont` since that's
-    /// the correct API for it, not a PostScript name lookup) —
-    /// `isMonospacedSystem` disambiguates the two `nil` cases.
-    var postscriptName: String? {
-        switch self {
-        case .system, .sfMono: return nil
-        case .menlo: return "Menlo-Bold"
-        case .avenirNext: return "AvenirNext-Heavy"
-        case .helveticaCondensed: return "HelveticaNeue-CondensedBlack"
-        case .courier: return "Courier-Bold"
-        }
-    }
-
-    var isMonospacedSystem: Bool { self == .sfMono }
-}
-
 /// Single source of truth for user-facing preferences, backed by
 /// UserDefaults and exposed as Combine-observable so both SwiftUI (via
 /// `SettingsView`) and plain AppKit controllers (`OverlayWindowController`)
@@ -212,20 +177,11 @@ final class AppSettings: ObservableObject {
         }
     }
 
+    /// Persisted by `WidgetFont.id` (a stable string), looked up against
+    /// `WidgetFont.all` — that list can grow without invalidating
+    /// previously-saved preferences the way an enum `rawValue` would.
     @Published var widgetFont: WidgetFont {
-        didSet { UserDefaults.standard.set(widgetFont.rawValue, forKey: Keys.widgetFont) }
-    }
-
-    @Published var widgetTintEnabled: Bool {
-        didSet { UserDefaults.standard.set(widgetTintEnabled, forKey: Keys.widgetTintEnabled) }
-    }
-
-    /// The HIG-style accent tint applied across the clock when
-    /// `widgetTintEnabled` is true. Persisted as a hex string (`Color`
-    /// itself isn't a `UserDefaults`-storable type) — alpha isn't part of
-    /// the stored value, every consumer applies its own fixed opacity.
-    @Published var widgetTintColor: Color {
-        didSet { UserDefaults.standard.set(widgetTintColor.hexString, forKey: Keys.widgetTintColor) }
+        didSet { UserDefaults.standard.set(widgetFont.id, forKey: Keys.widgetFont) }
     }
 
     private enum Keys {
@@ -242,8 +198,6 @@ final class AppSettings: ObservableObject {
         static let floatAcrossScreen = "floatAcrossScreen"
         static let fillScreen = "fillScreen"
         static let widgetFont = "widgetFont"
-        static let widgetTintEnabled = "widgetTintEnabled"
-        static let widgetTintColor = "widgetTintColor"
     }
 
     init() {
@@ -260,9 +214,7 @@ final class AppSettings: ObservableObject {
         showDateOnOverlay = defaults.object(forKey: Keys.showDateOnOverlay) as? Bool ?? true
         floatAcrossScreen = defaults.object(forKey: Keys.floatAcrossScreen) as? Bool ?? false
         fillScreen = defaults.object(forKey: Keys.fillScreen) as? Bool ?? false
-        widgetFont = (defaults.string(forKey: Keys.widgetFont)).flatMap(WidgetFont.init(rawValue:)) ?? .system
-        widgetTintEnabled = defaults.object(forKey: Keys.widgetTintEnabled) as? Bool ?? false
-        widgetTintColor = (defaults.string(forKey: Keys.widgetTintColor)).map(Color.init(hex:)) ?? Color(hex: "007AFF")
+        widgetFont = (defaults.string(forKey: Keys.widgetFont)).map(WidgetFont.byID) ?? .system
     }
 
     private func applyLaunchAtLogin() {
@@ -278,29 +230,5 @@ final class AppSettings: ObservableObject {
             // take effect; log for debugging.
             print("AppSettings: launch-at-login registration failed: \(error)")
         }
-    }
-}
-
-private extension Color {
-    /// RGB-only hex string (no alpha) for `UserDefaults` persistence —
-    /// tint is always applied at a fixed opacity by each renderer, not by
-    /// the stored color itself.
-    var hexString: String {
-        guard let converted = NSColor(self).usingColorSpace(.deviceRGB) else { return "007AFF" }
-        let red = Int((converted.redComponent * 255).rounded())
-        let green = Int((converted.greenComponent * 255).rounded())
-        let blue = Int((converted.blueComponent * 255).rounded())
-        return String(format: "%02X%02X%02X", red, green, blue)
-    }
-
-    init(hex: String) {
-        var sanitized = hex.trimmingCharacters(in: .whitespacesAndNewlines)
-        sanitized = sanitized.replacingOccurrences(of: "#", with: "")
-        var rgb: UInt64 = 0
-        Scanner(string: sanitized).scanHexInt64(&rgb)
-        let red = Double((rgb & 0xFF0000) >> 16) / 255
-        let green = Double((rgb & 0x00FF00) >> 8) / 255
-        let blue = Double(rgb & 0x0000FF) / 255
-        self.init(red: red, green: green, blue: blue)
     }
 }

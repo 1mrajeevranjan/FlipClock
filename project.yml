@@ -13,6 +13,20 @@ targets:
     platform: macOS
     sources:
       - path: FlipClock
+      - path: Fonts
+        buildPhase: resources
+        # Xcode's resource copy phase flattens this folder's subdirectories
+        # into a single Resources/ directory — several font packs ship a
+        # same-named license/readme/preview file (READ_BEFORE_ANY_USE.txt,
+        # README.txt, img/poster01.png, ...) that would collide once
+        # flattened. Only the actual font files are needed at runtime, so
+        # allowlisting extensions sidesteps every collision at once instead
+        # of excluding each offending filename individually.
+        includes:
+          - "**/*.ttf"
+          - "**/*.otf"
+          - "**/*.TTF"
+          - "**/*.OTF"
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.rajeevranjan.flipclock

@@ -43,9 +43,7 @@ struct PopoverClockView: View {
                 timeFormat: settings.timeFormat,
                 glassCard: true,
                 showOwnGlassPanel: false,
-                tintColor: settings.widgetTintEnabled ? settings.widgetTintColor : nil,
-                fontName: settings.widgetFont.postscriptName,
-                isMonospacedSystemFont: settings.widgetFont.isMonospacedSystem
+                fontName: settings.widgetFont.postscriptName
             )
             CalendarMonthView()
         }

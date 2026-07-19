@@ -42,13 +42,13 @@ enum DigitFaceRenderer {
         face(for: value, size: size, isDark: isDark, textColor: nil)
     }
 
-    static func face(for value: String, size: CGSize, isDark: Bool, textColor: NSColor?, transparentBackground: Bool = false, fontName: String? = nil, isMonospacedSystemFont: Bool = false, tint: Color? = nil) -> CGImage {
-        let key = SizeKey(width: Int(size.width.rounded()), height: Int(size.height.rounded()), isDark: isDark, transparentBackground: transparentBackground, fillColor: tint.map { NSColor($0).description } ?? "leaf", fontIdentifier: fontIdentifier(fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont))
+    static func face(for value: String, size: CGSize, isDark: Bool, textColor: NSColor?, transparentBackground: Bool = false, fontName: String? = nil, isMonospacedSystemFont: Bool = false) -> CGImage {
+        let key = SizeKey(width: Int(size.width.rounded()), height: Int(size.height.rounded()), isDark: isDark, transparentBackground: transparentBackground, fillColor: "leaf", fontIdentifier: fontIdentifier(fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont))
         let cacheKey = cacheKey(for: value, textColor: textColor)
         if let image = fullCache[key]?[cacheKey] {
             return image
         }
-        let image = render(value: value, fullSize: size, half: nil, isDark: isDark, textColor: textColor, transparentBackground: transparentBackground, fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont, tint: tint)
+        let image = render(value: value, fullSize: size, half: nil, isDark: isDark, textColor: textColor, transparentBackground: transparentBackground, fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont)
         fullCache[key, default: [:]][cacheKey] = image
         return image
     }
@@ -70,7 +70,7 @@ enum DigitFaceRenderer {
     /// it "ghosts"/double-exposes mid-flip) while still reading as
     /// translucent glass rather than a solid leaf card, so the card
     /// doesn't visibly flash to a different color for the flip's duration.
-    static func halfFace(for value: String, cardSize: CGSize, top: Bool, isDark: Bool, textColor: NSColor?, transparentBackground: Bool = false, fillColor: NSColor? = nil, fontName: String? = nil, isMonospacedSystemFont: Bool = false, tint: Color? = nil) -> CGImage {
+    static func halfFace(for value: String, cardSize: CGSize, top: Bool, isDark: Bool, textColor: NSColor?, transparentBackground: Bool = false, fillColor: NSColor? = nil, fontName: String? = nil, isMonospacedSystemFont: Bool = false) -> CGImage {
         let key = HalfKey(
             value: cacheKey(for: value, textColor: textColor),
             width: Int(cardSize.width.rounded()),
@@ -78,13 +78,13 @@ enum DigitFaceRenderer {
             top: top,
             isDark: isDark,
             transparentBackground: transparentBackground,
-            fillColor: fillColor?.description ?? tint.map { NSColor($0).description } ?? "leaf",
+            fillColor: fillColor?.description ?? "leaf",
             fontIdentifier: fontIdentifier(fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont)
         )
         if let image = halfCache[key] {
             return image
         }
-        let image = render(value: value, fullSize: cardSize, half: top ? .top : .bottom, isDark: isDark, textColor: textColor, transparentBackground: transparentBackground, fillColor: fillColor, fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont, tint: tint)
+        let image = render(value: value, fullSize: cardSize, half: top ? .top : .bottom, isDark: isDark, textColor: textColor, transparentBackground: transparentBackground, fillColor: fillColor, fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont)
         halfCache[key] = image
         return image
     }
@@ -95,13 +95,13 @@ enum DigitFaceRenderer {
     /// card, but into a bitmap that may only be the top or bottom half of
     /// that card — the glyph lands cut exactly at the hinge line, matching
     /// the physical two-housing split-flap card.
-    private static func render(value: String, fullSize: CGSize, half: Half?, isDark: Bool, textColor: NSColor?, transparentBackground: Bool = false, fillColor: NSColor? = nil, fontName: String? = nil, isMonospacedSystemFont: Bool = false, tint: Color? = nil) -> CGImage {
+    private static func render(value: String, fullSize: CGSize, half: Half?, isDark: Bool, textColor: NSColor?, transparentBackground: Bool = false, fillColor: NSColor? = nil, fontName: String? = nil, isMonospacedSystemFont: Bool = false) -> CGImage {
         let outputSize = half == nil ? fullSize : CGSize(width: fullSize.width, height: fullSize.height / 2)
         let nsImage = NSImage(size: outputSize)
         nsImage.lockFocus()
 
         if !transparentBackground {
-            (fillColor ?? NSColor(FlapColors.leaf(isDark: isDark, tint: tint))).setFill()
+            (fillColor ?? NSColor(FlapColors.leaf(isDark: isDark))).setFill()
             CGRect(origin: .zero, size: outputSize).fill()
         }
 

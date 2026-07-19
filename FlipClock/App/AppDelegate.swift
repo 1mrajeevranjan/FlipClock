@@ -10,6 +10,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private lazy var settingsWindowController = SettingsWindowController(settings: settings)
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        WidgetFont.registerAll()
         statusItemController = StatusItemController(timeProvider: timeProvider, settings: settings) { [weak self] in
             self?.settingsWindowController.show()
         }

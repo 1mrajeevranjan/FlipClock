@@ -21,9 +21,7 @@ struct MenuBarClockView: View {
             compact: true,
             meridiemStyle: settings.meridiemStyle,
             timeFormat: settings.timeFormat,
-            tintColor: settings.widgetTintEnabled ? settings.widgetTintColor : nil,
-            fontName: settings.widgetFont.postscriptName,
-            isMonospacedSystemFont: settings.widgetFont.isMonospacedSystem
+            fontName: settings.widgetFont.postscriptName
         )
         .preferredColorScheme(settings.theme.colorScheme)
     }
