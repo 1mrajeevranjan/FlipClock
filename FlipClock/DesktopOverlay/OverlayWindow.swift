@@ -13,7 +13,10 @@ final class OverlayWindow: NSPanel {
         )
         isOpaque = false
         backgroundColor = .clear
-        hasShadow = true
+        // Overridden to `true`/`false` on every layout pass by
+        // `OverlayWindowController.applySize` — see that call site for why
+        // the native shadow stays off outside full-screen too.
+        hasShadow = false
         level = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.desktopIconWindow)) + 1)
         collectionBehavior = [.canJoinAllSpaces, .stationary, .ignoresCycle]
         isMovableByWindowBackground = true

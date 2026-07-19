@@ -114,7 +114,15 @@ final class OverlayWindowController {
             return
         }
         window.isMovableByWindowBackground = true
-        window.hasShadow = true
+        // The native window shadow follows the window's rectangular
+        // backing bounds, not the rounded-rect SwiftUI content clipped
+        // inside it — with the glass panel now opaque enough to matter,
+        // that mismatch showed up as a faint square edge poking out past
+        // all four rounded corners. `WidgetGlassBackground`'s own
+        // `.shadow(...)` (applied after its `clipShape`) already gives the
+        // panel a correctly rounded shadow, so the native one is both
+        // redundant and wrong-shaped here.
+        window.hasShadow = false
 
         let contentSize = OverlayContentView.windowSize(
             scale: settings.overlaySize.scale,
