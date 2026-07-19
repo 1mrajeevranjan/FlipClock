@@ -98,7 +98,14 @@ final class VibrantHostingController<Content: View>: NSViewController {
     }
 
     private func applyGlassiness() {
-        let scrimAlpha = 1 - settings.popoverGlassiness
+        // "Reduce transparency" (System Settings > Accessibility > Display)
+        // is an OS-level accommodation, not just another app preference —
+        // it overrides the user's own glassiness slider rather than
+        // blending with it, same as `WidgetGlassBackground` does for the
+        // desktop overlay.
+        let scrimAlpha = NSWorkspace.shared.accessibilityDisplayShouldReduceTransparency
+            ? 1
+            : 1 - settings.popoverGlassiness
         scrim.layer?.backgroundColor = NSColor.windowBackgroundColor
             .withAlphaComponent(scrimAlpha)
             .cgColor

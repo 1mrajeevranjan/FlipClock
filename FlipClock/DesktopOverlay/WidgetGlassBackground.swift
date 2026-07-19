@@ -35,9 +35,25 @@ struct WidgetGlassBackground: View {
         fullyClear ? 0 : Self.cornerRadius(scale: scale)
     }
 
+    /// macOS HIG: when the user turns on "Reduce transparency"
+    /// (System Settings > Accessibility > Display), translucent materials
+    /// must be swapped for an opaque equivalent rather than staying
+    /// see-through — a live desktop-sampling blur is the single most
+    /// literal case that setting exists for.
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+
     var body: some View {
         if fullyClear {
             Color.clear
+        } else if reduceTransparency {
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                .fill(Color(nsColor: .windowBackgroundColor))
+                .shadow(
+                    color: .black.opacity(0.28),
+                    radius: (16 * scale).clamped(to: 8...26),
+                    x: 0,
+                    y: (6 * scale).clamped(to: 3...10)
+                )
         } else {
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                 .fill(.clear)
