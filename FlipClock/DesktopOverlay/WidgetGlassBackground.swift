@@ -3,9 +3,11 @@ import AppKit
 
 /// Frosted-glass container matching the default macOS desktop widget look
 /// (Calendar/Weather widgets in Notification Center): a behind-window
-/// vibrant blur clipped to a large rounded rect, with a faint inner
-/// highlight stroke, a size-proportional soft shadow, and the window's own
-/// drop shadow doing the rest.
+/// vibrant blur, masked to a large rounded rect on its own layer (not a
+/// SwiftUI overlay clip — see `VisualEffectBlur`), plus a size-proportional
+/// soft shadow. Deliberately has no stroke/highlight overlay — Apple's own
+/// widgets don't draw one, and adding one is what previously left a faint
+/// ring at the corners.
 struct WidgetGlassBackground: View {
     /// The widget's `overlaySize.scale` (0.325/0.65/1.3/1.95) — drives both
     /// corner radius and shadow so they scale with widget size instead of
@@ -37,45 +39,33 @@ struct WidgetGlassBackground: View {
         if fullyClear {
             Color.clear
         } else {
-            let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-            shape
-                .fill(.clear)
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                // A second, SwiftUI-native blur pass stacked on top of the
+                // live `NSVisualEffectView` sample below — Notification
+                // Center's own widgets run behind that panel's own heavy
+                // system blur in addition to any per-widget material, which
+                // this app has no access to; compositing a `.ultraThinMaterial`
+                // fill over the already-blurred desktop sample is the closest
+                // public-API equivalent, and is what finally smooths out the
+                // faint rock/water texture that a single `.behindWindow`
+                // pass alone still let through.
+                .fill(.ultraThinMaterial)
                 .background(
-                    // Pushed well past the old 0.22 — at this opacity the
-                    // behind-window blur itself (not just a tint over sharp
-                    // pixels) dominates what reads through, which is what
-                    // makes the desktop underneath look genuinely diffused
-                    // rather than merely darkened.
-                    VisualEffectBlur()
-                        .opacity(0.68)
-                        .clipShape(shape)
-                )
-                .overlay(
-                    // A directional highlight (bright upper-left, fading to
-                    // near-nothing lower-right) instead of a flat stroke —
-                    // reads as a light source catching the rim of a curved
-                    // glass edge rather than a drawn outline.
-                    shape.strokeBorder(
-                        LinearGradient(
-                            colors: [.white.opacity(0.55), .white.opacity(0.05)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
-                        lineWidth: 1.1
-                    )
-                )
-                .overlay(
-                    // Soft specular wash across the top third — the "light
-                    // leaking through" glass look — additive so it brightens
-                    // rather than flattening whatever's blurred beneath it.
-                    LinearGradient(
-                        colors: [.white.opacity(0.16), .white.opacity(0)],
-                        startPoint: .top,
-                        endPoint: .init(x: 0.5, y: 0.42)
-                    )
-                    .clipShape(shape)
-                    .blendMode(.plusLighter)
-                    .allowsHitTesting(false)
+                    // The corner rounding lives on the NSVisualEffectView's
+                    // own CALayer (see `VisualEffectBlur`), not a SwiftUI
+                    // `.clipShape` on top of it — clipping a live
+                    // behind-window blur from the outside leaves a faint
+                    // antialiasing fringe right at the curve, which is
+                    // exactly the hairline this replaces. Masking the
+                    // layer that's actually doing the sampling gives the
+                    // same clean edge macOS's own widgets have.
+                    //
+                    // Opacity near-1 (not the old 0.68) because Apple's
+                    // Notification Center widgets read as a solidly frosted,
+                    // fairly opaque material — strongly blurred and tinted,
+                    // not a faint see-through veil.
+                    VisualEffectBlur(cornerRadius: cornerRadius)
+                        .opacity(0.97)
                 )
                 .shadow(
                     color: .black.opacity(0.28),
@@ -104,15 +94,23 @@ struct WidgetGlassBackground: View {
 /// show) — `.hudWindow` reads as flat neutral gray regardless of what's
 /// behind the window, which is why the first pass looked wrong.
 private struct VisualEffectBlur: NSViewRepresentable {
+    let cornerRadius: CGFloat
+
     func makeNSView(context: Context) -> NSVisualEffectView {
         let view = DraggableVisualEffectView()
         view.blendingMode = .behindWindow
         view.material = .underWindowBackground
         view.state = .active
+        view.wantsLayer = true
+        view.layer?.cornerRadius = cornerRadius
+        view.layer?.cornerCurve = .continuous
+        view.layer?.masksToBounds = true
         return view
     }
 
-    func updateNSView(_ nsView: NSVisualEffectView, context: Context) {}
+    func updateNSView(_ nsView: NSVisualEffectView, context: Context) {
+        nsView.layer?.cornerRadius = cornerRadius
+    }
 }
 
 /// `NSVisualEffectView` returns `false` from `mouseDownCanMoveWindow` by
