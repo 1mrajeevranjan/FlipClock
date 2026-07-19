@@ -51,7 +51,21 @@ struct WidgetFont: Identifiable, Hashable {
         WidgetFont(id: "WhiteSquareRedYesBlackEightPingpong-Pingpong", label: "White Square Red Yes Black Eight — Pingpong", fileName: "WhiteSquareRedYesBlackEightPingpong-Pingpong.ttf", postscriptName: "WhiteSquareRedYesBlackEightPingpong-Pingpong"),
         WidgetFont(id: "WhiteSquareRedYesBlackEightWarsaw-Warsaw", label: "White Square Red Yes Black Eight — Warsaw", fileName: "WhiteSquareRedYesBlackEightWarsaw-Warsaw.ttf", postscriptName: "WhiteSquareRedYesBlackEightWarsaw-Warsaw"),
         WidgetFont(id: "WhiteSquareRedYesBlackEightZero-Zero", label: "White Square Red Yes Black Eight — Zero", fileName: "WhiteSquareRedYesBlackEightZero-Zero.ttf", postscriptName: "WhiteSquareRedYesBlackEightZero-Zero"),
-        WidgetFont(id: "YearBookMess", label: "Year Book Mess", fileName: "YrBkMess.TTF", postscriptName: "YearBookMess")
+        WidgetFont(id: "YearBookMess", label: "Year Book Mess", fileName: "YrBkMess.TTF", postscriptName: "YearBookMess"),
+        WidgetFont(id: "Abduction2002", label: "Abduction 2002", fileName: "abduction2002.ttf", postscriptName: "Abduction2002"),
+        WidgetFont(id: "ArcadeInterlaced", label: "Arcade — Interlaced", fileName: "ARCADE_I.TTF", postscriptName: "ArcadeInterlaced"),
+        WidgetFont(id: "ArcadeNormal", label: "Arcade — Normal", fileName: "ARCADE_N.TTF", postscriptName: "ArcadeNormal"),
+        WidgetFont(id: "ArcadeRounded", label: "Arcade — Rounded", fileName: "ARCADE_R.TTF", postscriptName: "ArcadeRounded"),
+        WidgetFont(id: "BladeRunnerMovieFont", label: "Blade Runner Movie Font", fileName: "BLADRMF_.TTF", postscriptName: "BladeRunnerMovieFont"),
+        WidgetFont(id: "ChintzyCPUBRK", label: "Chintzy CPU", fileName: "chintzy.ttf", postscriptName: "ChintzyCPUBRK"),
+        WidgetFont(id: "ChintzyCPUShadowBRK", label: "Chintzy CPU — Shadow", fileName: "chintzys.ttf", postscriptName: "ChintzyCPUShadowBRK"),
+        WidgetFont(id: "GameOfSquids", label: "Game Of Squids", fileName: "Game Of Squids.otf", postscriptName: "GameOfSquids"),
+        WidgetFont(id: "KGPrimaryItalics", label: "KG Primary Italics", fileName: "KGPrimaryItalics.ttf", postscriptName: "KGPrimaryItalics"),
+        WidgetFont(id: "KGPrimaryItalicsLined", label: "KG Primary Italics — Lined", fileName: "KGPrimaryItalicsLined.ttf", postscriptName: "KGPrimaryItalicsLined"),
+        WidgetFont(id: "LinearBeam05", label: "Linear Beam", fileName: "Linebeam.ttf", postscriptName: "LinearBeam05"),
+        WidgetFont(id: "Pullstar-Holinight", label: "Pullstar Holinight", fileName: "Pullstar-Holinight.ttf", postscriptName: "Pullstar-Holinight"),
+        WidgetFont(id: "SpaceAge", label: "Space Age", fileName: "space age.ttf", postscriptName: "SpaceAge"),
+        WidgetFont(id: "TRON", label: "Tron", fileName: "TRON.TTF", postscriptName: "TRON")
     ]
 
     static let all: [WidgetFont] = [.system] + bundled

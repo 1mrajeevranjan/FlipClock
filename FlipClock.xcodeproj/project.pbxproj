@@ -9,9 +9,14 @@
 /* Begin PBXBuildFile section */
 		002EA0377707E4F65F0DACF1 /* moon.png in Resources */ = {isa = PBXBuildFile; fileRef = 662CD1BF127064A4EF3EC6EC /* moon.png */; };
 		02A5B5C771F3CADF7B6AFAA7 /* FlipCardLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1B048EDDC054D8647424B07 /* FlipCardLayer.swift */; };
+		05DEC934AE57CCF5895B2D25 /* ARCADE_R.TTF in Resources */ = {isa = PBXBuildFile; fileRef = 802A44BC4930D0F1FC34E804 /* ARCADE_R.TTF */; };
 		066BBA76C5767ABF5935A9EC /* FlapColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F05D3D8AB3B3658A5974D0E /* FlapColors.swift */; };
+		068E981DC0577C7881827825 /* BLADRMF_.TTF in Resources */ = {isa = PBXBuildFile; fileRef = 95820B6E1DB27B499C2DAA5F /* BLADRMF_.TTF */; };
 		075757C9FEC228BFE02255D4 /* Sportfield Varsity-Outline1.otf in Resources */ = {isa = PBXBuildFile; fileRef = 00D00F499ACFDC4FD6C9F951 /* Sportfield Varsity-Outline1.otf */; };
+		13D4D9D178B0D26EC1913274 /* ARCADE_N.TTF in Resources */ = {isa = PBXBuildFile; fileRef = 65C518BF9B070A2A98DE8BB6 /* ARCADE_N.TTF */; };
+		1552153680EDAE840A2C9D2B /* ARCADE_I.TTF in Resources */ = {isa = PBXBuildFile; fileRef = 123AD78C1B67252697E8F91E /* ARCADE_I.TTF */; };
 		19A441A793D1B4A1194D4918 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02DDB38188F3CABDE8AF990C /* AppDelegate.swift */; };
+		1ABB169CB78335BA956DE48B /* Game Of Squids.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 84EEFA884CE122921803C149 /* Game Of Squids.ttf */; };
 		1DDF18C7AC5EA749D6EC8F6B /* WidgetGlassBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7433122D748E80051A23B7BD /* WidgetGlassBackground.swift */; };
 		220F76AD0CE46D72FEDEE229 /* Sportfield Varsity.otf in Resources */ = {isa = PBXBuildFile; fileRef = 76AE834CBCB2C51C0DE02C22 /* Sportfield Varsity.otf */; };
 		2582E8755006A0B3FA2F3063 /* Sportfield Varsity-Outline2.otf in Resources */ = {isa = PBXBuildFile; fileRef = 001227C8E08C263951B67D42 /* Sportfield Varsity-Outline2.otf */; };
@@ -19,21 +24,28 @@
 		2811B527FE03B0BFAB73B046 /* SecondClockStatusItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22AAEA71929350340A866A7B /* SecondClockStatusItemController.swift */; };
 		301E780BFE282310BCE1E919 /* Vlump Black.ttf in Resources */ = {isa = PBXBuildFile; fileRef = AB31DEDDADF92FBAAA7BF088 /* Vlump Black.ttf */; };
 		3404D70ADEABE3D5B96AFE49 /* Destroy All Humans!.otf in Resources */ = {isa = PBXBuildFile; fileRef = C3EAB38CFE04422718C3047D /* Destroy All Humans!.otf */; };
+		34DEF4B241287C9BD171F090 /* TRON.TTF in Resources */ = {isa = PBXBuildFile; fileRef = EE1FDD56434FA08A26814B3D /* TRON.TTF */; };
 		3DA8EB3A8D08B6D82BEE89A0 /* SplitFlapDigit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65A63215BD2AA8AE5332DF36 /* SplitFlapDigit.swift */; };
 		3F10BB5B3BBB26EC9CD50632 /* ClockTick.swift in Sources */ = {isa = PBXBuildFile; fileRef = 915EEE7160E430CB387D242E /* ClockTick.swift */; };
 		4511816071E0C80C3F673194 /* SplitFlapPairView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD2A120ACB0F42A007264D1C /* SplitFlapPairView.swift */; };
 		4B9E8E45D3828A20209486B4 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E79414097EB0F91E58961D38 /* SettingsView.swift */; };
 		4F83211EE8E7E1D2AB1DC4E8 /* Sportfield Varsity-Italic.otf in Resources */ = {isa = PBXBuildFile; fileRef = CB3B3C2DD6832C4407F90348 /* Sportfield Varsity-Italic.otf */; };
+		5A8891A7D93D1E1D1BD8B3FB /* KGPrimaryItalics.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 268CF845110A5784202E0DD8 /* KGPrimaryItalics.ttf */; };
 		5C1B69D5930DE43E3BCBFD50 /* Bring Me A Helicopter!.otf in Resources */ = {isa = PBXBuildFile; fileRef = C34727CD47DA893CF590CD5E /* Bring Me A Helicopter!.otf */; };
 		5EACEC3FC36487CFA104204E /* PopoverClockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 569EF2149D9DD94C311A6F46 /* PopoverClockView.swift */; };
 		5EB9FB47C5C4FFC780D6F0CE /* GFSCUS1D.ttf in Resources */ = {isa = PBXBuildFile; fileRef = BC155D6D5B8537159E016AEC /* GFSCUS1D.ttf */; };
 		64CC5AB390160626B67B5EFE /* MenuBarClockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16AC161B34E3FF7009C8F9FD /* MenuBarClockView.swift */; };
 		6CB5D1BC69D39AD6C10B65D4 /* RockFont.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 03659CC7943595F75AF50AFD /* RockFont.ttf */; };
+		6FB425BA9B762D2080B7B0D4 /* Pullstar-Holinight.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 26294A48122D93211F28E15D /* Pullstar-Holinight.ttf */; };
 		75FC8E691208165530B02821 /* WhiteSquareRedYesBlackEightZero-Zero.ttf in Resources */ = {isa = PBXBuildFile; fileRef = AF79222F73CC682D76B2C6E9 /* WhiteSquareRedYesBlackEightZero-Zero.ttf */; };
 		76B3109C1ABCE3C4998125FD /* WhiteSquareRedYesBlackEightWarsaw-Warsaw.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 3BECC1B4E84BEC1609AAA67B /* WhiteSquareRedYesBlackEightWarsaw-Warsaw.ttf */; };
 		779F863191CEC50106530C3A /* WhiteSquareRedYesBlackEightPingpong-Pingpong.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 36289D6564B3309ABB60855F /* WhiteSquareRedYesBlackEightPingpong-Pingpong.ttf */; };
 		7A1F48DB77650A681CCDE78A /* Dynamix.ttf in Resources */ = {isa = PBXBuildFile; fileRef = EFF07A7015305AA9257A835A /* Dynamix.ttf */; };
+		7B0E44FD1A241C201B75FD00 /* chintzys.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 950E63F93638F86B32529136 /* chintzys.ttf */; };
+		7D438319D81BDDF0A8C3F82D /* Game Of Squids.otf in Resources */ = {isa = PBXBuildFile; fileRef = FD27A64CB19D63C62E58408A /* Game Of Squids.otf */; };
 		7E2CF474D97571BAEF4A3759 /* Vlump.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 3FE91CB5C9D39516AFE000B6 /* Vlump.ttf */; };
+		8715624FD54347A806F275C1 /* KGPrimaryItalicsLined.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 610FBE1AA72EC47C519C2E8C /* KGPrimaryItalicsLined.ttf */; };
+		8CF69FF5774595D4ACE959B3 /* Linebeam.ttf in Resources */ = {isa = PBXBuildFile; fileRef = F91DF752E113AA6A5C453C24 /* Linebeam.ttf */; };
 		96705FB121D016A608DF8446 /* CalendarMonthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED3D59C1D26F59C0741E18C3 /* CalendarMonthView.swift */; };
 		9F29001BC6E87DC8BF62BF78 /* SplitFlapClockFace.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5A5A1BF8465AA952E2F3DBD /* SplitFlapClockFace.swift */; };
 		9F7538C626E342F9134E0162 /* Sportfield Varsity-Outline3.otf in Resources */ = {isa = PBXBuildFile; fileRef = 94A19CBE28C4467C06594807 /* Sportfield Varsity-Outline3.otf */; };
@@ -45,18 +57,21 @@
 		B170E1361D84026C0EE80D8A /* SecondClockMenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96A869DA91B1A0C42E527852 /* SecondClockMenuBarView.swift */; };
 		B5B2142D78AB041CCBB45B5B /* TimeProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = CED75368A307036F58F0332F /* TimeProvider.swift */; };
 		B7296591D2A8AA2A29EBEE6A /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C82BBCF4822EE69EB39A8D8C /* AppSettings.swift */; };
+		B9D618297F7CD605E224A50D /* space age.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A91D51A54F868D836DF9EEE5 /* space age.ttf */; };
 		BEE4478FD4D402324CFDBE0B /* WhiteSquareRedYesBlackEight-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = FFD7E50CEB556B656FB461A7 /* WhiteSquareRedYesBlackEight-Regular.ttf */; };
 		C9754D0A7822746BE4F0F162 /* FlipClockApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9382537EFD4FE15801C53C0E /* FlipClockApp.swift */; };
 		CD4212EE01B9C3D2FC4D595E /* OverlayWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EA3DA66A1F9A49A759B1825 /* OverlayWindow.swift */; };
 		D0448B25E61FFCC1FD18E9B7 /* StatusItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FEC2FADD24FCE8918E65F47 /* StatusItemController.swift */; };
 		DAB960062120E9ED90E69164 /* DateHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B45723FCF839EE6FCDF79CAA /* DateHeaderView.swift */; };
 		DC9C7F4FB4955BC7BA2B07E7 /* WidgetFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7E3F10687F2F80B1FA8F91E /* WidgetFont.swift */; };
+		E68EDA1FE502621924873DBE /* abduction2002.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B991B52C184F247E89C7B552 /* abduction2002.ttf */; };
 		E6960F41E21880F41D3C0C78 /* DigitDelta.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91EE622C614D16D2F0D9CB00 /* DigitDelta.swift */; };
 		E84902489E6F8CCF4F6B778C /* VibrantHostingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFD87184D792EF0F08700422 /* VibrantHostingController.swift */; };
 		E98342BF539CAE355C1D0DEE /* DigitFaceRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2C211AFAE6975DEBA1E8893 /* DigitFaceRenderer.swift */; };
 		EA2D3F3E2BD0B963F0FF8B8E /* Sportfield Varsity-Shadow.otf in Resources */ = {isa = PBXBuildFile; fileRef = 494FF96E602C234D3D76D3CF /* Sportfield Varsity-Shadow.otf */; };
 		EE537B85EB4AEE438540BE51 /* Bing Bam Boum.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C953BA2E9BB4C4B7E554970F /* Bing Bam Boum.ttf */; };
 		EEEABF7F45B297B58B3A3AAD /* Sportfield Varsity-Scrible.otf in Resources */ = {isa = PBXBuildFile; fileRef = 700B2677EE2AAF09F5FD974F /* Sportfield Varsity-Scrible.otf */; };
+		F0D9873087DB24086AA3386C /* chintzy.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B4FD4C1F3CAD814DFE7CCC14 /* chintzy.ttf */; };
 		F6851EAC55377D47BD073178 /* OverlayContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12A448C0C9D97B8982A4777C /* OverlayContentView.swift */; };
 		FDAFD582715C3CFD23F98019 /* YrBkMess.TTF in Resources */ = {isa = PBXBuildFile; fileRef = 117A7E39C1E35B6312E3AA2C /* YrBkMess.TTF */; };
 /* End PBXBuildFile section */
@@ -68,10 +83,13 @@
 		03659CC7943595F75AF50AFD /* RockFont.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = RockFont.ttf; sourceTree = "<group>"; };
 		0F05D3D8AB3B3658A5974D0E /* FlapColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlapColors.swift; sourceTree = "<group>"; };
 		117A7E39C1E35B6312E3AA2C /* YrBkMess.TTF */ = {isa = PBXFileReference; path = YrBkMess.TTF; sourceTree = "<group>"; };
+		123AD78C1B67252697E8F91E /* ARCADE_I.TTF */ = {isa = PBXFileReference; path = ARCADE_I.TTF; sourceTree = "<group>"; };
 		12A448C0C9D97B8982A4777C /* OverlayContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayContentView.swift; sourceTree = "<group>"; };
 		16AC161B34E3FF7009C8F9FD /* MenuBarClockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarClockView.swift; sourceTree = "<group>"; };
 		1CD4601C3340A6C28FDF8C3A /* OverlayWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayWindowController.swift; sourceTree = "<group>"; };
 		22AAEA71929350340A866A7B /* SecondClockStatusItemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecondClockStatusItemController.swift; sourceTree = "<group>"; };
+		26294A48122D93211F28E15D /* Pullstar-Holinight.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Pullstar-Holinight.ttf"; sourceTree = "<group>"; };
+		268CF845110A5784202E0DD8 /* KGPrimaryItalics.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = KGPrimaryItalics.ttf; sourceTree = "<group>"; };
 		36289D6564B3309ABB60855F /* WhiteSquareRedYesBlackEightPingpong-Pingpong.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "WhiteSquareRedYesBlackEightPingpong-Pingpong.ttf"; sourceTree = "<group>"; };
 		3BECC1B4E84BEC1609AAA67B /* WhiteSquareRedYesBlackEightWarsaw-Warsaw.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "WhiteSquareRedYesBlackEightWarsaw-Warsaw.ttf"; sourceTree = "<group>"; };
 		3EA3DA66A1F9A49A759B1825 /* OverlayWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayWindow.swift; sourceTree = "<group>"; };
@@ -79,25 +97,34 @@
 		494FF96E602C234D3D76D3CF /* Sportfield Varsity-Shadow.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Sportfield Varsity-Shadow.otf"; sourceTree = "<group>"; };
 		569EF2149D9DD94C311A6F46 /* PopoverClockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverClockView.swift; sourceTree = "<group>"; };
 		5FEC2FADD24FCE8918E65F47 /* StatusItemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusItemController.swift; sourceTree = "<group>"; };
+		610FBE1AA72EC47C519C2E8C /* KGPrimaryItalicsLined.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = KGPrimaryItalicsLined.ttf; sourceTree = "<group>"; };
 		65A63215BD2AA8AE5332DF36 /* SplitFlapDigit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitFlapDigit.swift; sourceTree = "<group>"; };
+		65C518BF9B070A2A98DE8BB6 /* ARCADE_N.TTF */ = {isa = PBXFileReference; path = ARCADE_N.TTF; sourceTree = "<group>"; };
 		662CD1BF127064A4EF3EC6EC /* moon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = moon.png; sourceTree = "<group>"; };
 		700B2677EE2AAF09F5FD974F /* Sportfield Varsity-Scrible.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Sportfield Varsity-Scrible.otf"; sourceTree = "<group>"; };
 		7433122D748E80051A23B7BD /* WidgetGlassBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetGlassBackground.swift; sourceTree = "<group>"; };
 		76AE834CBCB2C51C0DE02C22 /* Sportfield Varsity.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Sportfield Varsity.otf"; sourceTree = "<group>"; };
 		7E04EE7FD9784E7541D7296F /* sun.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = sun.png; sourceTree = "<group>"; };
+		802A44BC4930D0F1FC34E804 /* ARCADE_R.TTF */ = {isa = PBXFileReference; path = ARCADE_R.TTF; sourceTree = "<group>"; };
+		84EEFA884CE122921803C149 /* Game Of Squids.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Game Of Squids.ttf"; sourceTree = "<group>"; };
 		8800DAAFAC2F27DC741FF29C /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
 		8F25BC2B615F37FE8B111CBF /* angrybirds-regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "angrybirds-regular.ttf"; sourceTree = "<group>"; };
 		915EEE7160E430CB387D242E /* ClockTick.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClockTick.swift; sourceTree = "<group>"; };
 		91EE622C614D16D2F0D9CB00 /* DigitDelta.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigitDelta.swift; sourceTree = "<group>"; };
 		9382537EFD4FE15801C53C0E /* FlipClockApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlipClockApp.swift; sourceTree = "<group>"; };
 		94A19CBE28C4467C06594807 /* Sportfield Varsity-Outline3.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Sportfield Varsity-Outline3.otf"; sourceTree = "<group>"; };
+		950E63F93638F86B32529136 /* chintzys.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = chintzys.ttf; sourceTree = "<group>"; };
+		95820B6E1DB27B499C2DAA5F /* BLADRMF_.TTF */ = {isa = PBXFileReference; path = BLADRMF_.TTF; sourceTree = "<group>"; };
 		95C32DF3B238972ABB75917B /* Tennessee College.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Tennessee College.ttf"; sourceTree = "<group>"; };
 		96A869DA91B1A0C42E527852 /* SecondClockMenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecondClockMenuBarView.swift; sourceTree = "<group>"; };
+		A91D51A54F868D836DF9EEE5 /* space age.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "space age.ttf"; sourceTree = "<group>"; };
 		AB31DEDDADF92FBAAA7BF088 /* Vlump Black.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Vlump Black.ttf"; sourceTree = "<group>"; };
 		ABC77DD942B206F433DB7BBB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		AF79222F73CC682D76B2C6E9 /* WhiteSquareRedYesBlackEightZero-Zero.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "WhiteSquareRedYesBlackEightZero-Zero.ttf"; sourceTree = "<group>"; };
 		B45723FCF839EE6FCDF79CAA /* DateHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateHeaderView.swift; sourceTree = "<group>"; };
+		B4FD4C1F3CAD814DFE7CCC14 /* chintzy.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = chintzy.ttf; sourceTree = "<group>"; };
 		B5A5A1BF8465AA952E2F3DBD /* SplitFlapClockFace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitFlapClockFace.swift; sourceTree = "<group>"; };
+		B991B52C184F247E89C7B552 /* abduction2002.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = abduction2002.ttf; sourceTree = "<group>"; };
 		BC155D6D5B8537159E016AEC /* GFSCUS1D.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = GFSCUS1D.ttf; sourceTree = "<group>"; };
 		C34727CD47DA893CF590CD5E /* Bring Me A Helicopter!.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Bring Me A Helicopter!.otf"; sourceTree = "<group>"; };
 		C3EAB38CFE04422718C3047D /* Destroy All Humans!.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Destroy All Humans!.otf"; sourceTree = "<group>"; };
@@ -111,9 +138,12 @@
 		E79414097EB0F91E58961D38 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		E7E3F10687F2F80B1FA8F91E /* WidgetFont.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetFont.swift; sourceTree = "<group>"; };
 		ED3D59C1D26F59C0741E18C3 /* CalendarMonthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarMonthView.swift; sourceTree = "<group>"; };
+		EE1FDD56434FA08A26814B3D /* TRON.TTF */ = {isa = PBXFileReference; path = TRON.TTF; sourceTree = "<group>"; };
 		EFF07A7015305AA9257A835A /* Dynamix.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Dynamix.ttf; sourceTree = "<group>"; };
 		F08D12912A33B8C2196116CD /* FlipClock.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FlipClock.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F67C71982A5A6909643757C5 /* Sportfield Varsity-Grunge.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Sportfield Varsity-Grunge.otf"; sourceTree = "<group>"; };
+		F91DF752E113AA6A5C453C24 /* Linebeam.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Linebeam.ttf; sourceTree = "<group>"; };
+		FD27A64CB19D63C62E58408A /* Game Of Squids.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Game Of Squids.otf"; sourceTree = "<group>"; };
 		FFD7E50CEB556B656FB461A7 /* WhiteSquareRedYesBlackEight-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "WhiteSquareRedYesBlackEight-Regular.ttf"; sourceTree = "<group>"; };
 		FFD87184D792EF0F08700422 /* VibrantHostingController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VibrantHostingController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -140,6 +170,15 @@
 				1F3D7FD8A5FC942103AE5BE0 /* TimeEngine */,
 			);
 			path = FlipClock;
+			sourceTree = "<group>";
+		};
+		1BD16E072DF70A54751FDD0F /* kg_primary_italics */ = {
+			isa = PBXGroup;
+			children = (
+				268CF845110A5784202E0DD8 /* KGPrimaryItalics.ttf */,
+				610FBE1AA72EC47C519C2E8C /* KGPrimaryItalicsLined.ttf */,
+			);
+			path = kg_primary_italics;
 			sourceTree = "<group>";
 		};
 		1F3D7FD8A5FC942103AE5BE0 /* TimeEngine */ = {
@@ -186,6 +225,22 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		45E618BF07243DB3FA46680F /* tron */ = {
+			isa = PBXGroup;
+			children = (
+				EE1FDD56434FA08A26814B3D /* TRON.TTF */,
+			);
+			path = tron;
+			sourceTree = "<group>";
+		};
+		4AABE5D975B709A245510788 /* linear_beam */ = {
+			isa = PBXGroup;
+			children = (
+				F91DF752E113AA6A5C453C24 /* Linebeam.ttf */,
+			);
+			path = linear_beam;
+			sourceTree = "<group>";
+		};
 		4B879890229E4A14574339C2 /* vlump */ = {
 			isa = PBXGroup;
 			children = (
@@ -215,6 +270,14 @@
 				FFD87184D792EF0F08700422 /* VibrantHostingController.swift */,
 			);
 			path = Popover;
+			sourceTree = "<group>";
+		};
+		762C2BE88CEEF29854DA4761 /* space_age */ = {
+			isa = PBXGroup;
+			children = (
+				A91D51A54F868D836DF9EEE5 /* space age.ttf */,
+			);
+			path = space_age;
 			sourceTree = "<group>";
 		};
 		78946FEDA7DF751FD84F7236 /* App */ = {
@@ -258,6 +321,31 @@
 			path = Settings;
 			sourceTree = "<group>";
 		};
+		AC42CBD54AFE0F98AD026851 /* blade_runner_movie_font */ = {
+			isa = PBXGroup;
+			children = (
+				95820B6E1DB27B499C2DAA5F /* BLADRMF_.TTF */,
+			);
+			path = blade_runner_movie_font;
+			sourceTree = "<group>";
+		};
+		BAB2CFD6607283364F05B99B /* game_of_squids */ = {
+			isa = PBXGroup;
+			children = (
+				FD27A64CB19D63C62E58408A /* Game Of Squids.otf */,
+				84EEFA884CE122921803C149 /* Game Of Squids.ttf */,
+			);
+			path = game_of_squids;
+			sourceTree = "<group>";
+		};
+		BAB85EC170CD094539A36332 /* abduction_2002 */ = {
+			isa = PBXGroup;
+			children = (
+				B991B52C184F247E89C7B552 /* abduction2002.ttf */,
+			);
+			path = abduction_2002;
+			sourceTree = "<group>";
+		};
 		BDDD8F313ADA299C6681BD8D /* Fonts */ = {
 			isa = PBXGroup;
 			children = (
@@ -266,15 +354,44 @@
 				C3EAB38CFE04422718C3047D /* Destroy All Humans!.otf */,
 				EFF07A7015305AA9257A835A /* Dynamix.ttf */,
 				BC155D6D5B8537159E016AEC /* GFSCUS1D.ttf */,
+				26294A48122D93211F28E15D /* Pullstar-Holinight.ttf */,
 				03659CC7943595F75AF50AFD /* RockFont.ttf */,
 				95C32DF3B238972ABB75917B /* Tennessee College.ttf */,
+				BAB85EC170CD094539A36332 /* abduction_2002 */,
+				C20ADE7013A9CC283CDBEB9A /* arcade_ya */,
+				AC42CBD54AFE0F98AD026851 /* blade_runner_movie_font */,
 				E33F94F1CE450AAED94D7844 /* bring_me_a_helicopter */,
+				DBB794B4C07A8A6EF157C915 /* chintzy_cpu_brk */,
+				BAB2CFD6607283364F05B99B /* game_of_squids */,
+				1BD16E072DF70A54751FDD0F /* kg_primary_italics */,
+				4AABE5D975B709A245510788 /* linear_beam */,
+				762C2BE88CEEF29854DA4761 /* space_age */,
 				3785AB9724598EFB28FFAE2C /* sportfield_varsity */,
+				45E618BF07243DB3FA46680F /* tron */,
 				4B879890229E4A14574339C2 /* vlump */,
 				3D7167728DB9A6CFBBC39C51 /* white_square_red_yes_black_eight */,
 				0B578E2466EB5A623DA8AC90 /* year_book_mess */,
 			);
 			path = Fonts;
+			sourceTree = "<group>";
+		};
+		C20ADE7013A9CC283CDBEB9A /* arcade_ya */ = {
+			isa = PBXGroup;
+			children = (
+				123AD78C1B67252697E8F91E /* ARCADE_I.TTF */,
+				65C518BF9B070A2A98DE8BB6 /* ARCADE_N.TTF */,
+				802A44BC4930D0F1FC34E804 /* ARCADE_R.TTF */,
+			);
+			path = arcade_ya;
+			sourceTree = "<group>";
+		};
+		DBB794B4C07A8A6EF157C915 /* chintzy_cpu_brk */ = {
+			isa = PBXGroup;
+			children = (
+				B4FD4C1F3CAD814DFE7CCC14 /* chintzy.ttf */,
+				950E63F93638F86B32529136 /* chintzys.ttf */,
+			);
+			path = chintzy_cpu_brk;
 			sourceTree = "<group>";
 		};
 		E33F94F1CE450AAED94D7844 /* bring_me_a_helicopter */ = {
@@ -358,11 +475,21 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1552153680EDAE840A2C9D2B /* ARCADE_I.TTF in Resources */,
+				13D4D9D178B0D26EC1913274 /* ARCADE_N.TTF in Resources */,
+				05DEC934AE57CCF5895B2D25 /* ARCADE_R.TTF in Resources */,
+				068E981DC0577C7881827825 /* BLADRMF_.TTF in Resources */,
 				EE537B85EB4AEE438540BE51 /* Bing Bam Boum.ttf in Resources */,
 				5C1B69D5930DE43E3BCBFD50 /* Bring Me A Helicopter!.otf in Resources */,
 				3404D70ADEABE3D5B96AFE49 /* Destroy All Humans!.otf in Resources */,
 				7A1F48DB77650A681CCDE78A /* Dynamix.ttf in Resources */,
 				5EB9FB47C5C4FFC780D6F0CE /* GFSCUS1D.ttf in Resources */,
+				7D438319D81BDDF0A8C3F82D /* Game Of Squids.otf in Resources */,
+				1ABB169CB78335BA956DE48B /* Game Of Squids.ttf in Resources */,
+				5A8891A7D93D1E1D1BD8B3FB /* KGPrimaryItalics.ttf in Resources */,
+				8715624FD54347A806F275C1 /* KGPrimaryItalicsLined.ttf in Resources */,
+				8CF69FF5774595D4ACE959B3 /* Linebeam.ttf in Resources */,
+				6FB425BA9B762D2080B7B0D4 /* Pullstar-Holinight.ttf in Resources */,
 				6CB5D1BC69D39AD6C10B65D4 /* RockFont.ttf in Resources */,
 				A990731D2C2D3B17521DAF81 /* Sportfield Varsity-Grunge.otf in Resources */,
 				4F83211EE8E7E1D2AB1DC4E8 /* Sportfield Varsity-Italic.otf in Resources */,
@@ -372,6 +499,7 @@
 				EEEABF7F45B297B58B3A3AAD /* Sportfield Varsity-Scrible.otf in Resources */,
 				EA2D3F3E2BD0B963F0FF8B8E /* Sportfield Varsity-Shadow.otf in Resources */,
 				220F76AD0CE46D72FEDEE229 /* Sportfield Varsity.otf in Resources */,
+				34DEF4B241287C9BD171F090 /* TRON.TTF in Resources */,
 				28051F2EAB481FB6EF3EAF22 /* Tennessee College.ttf in Resources */,
 				301E780BFE282310BCE1E919 /* Vlump Black.ttf in Resources */,
 				7E2CF474D97571BAEF4A3759 /* Vlump.ttf in Resources */,
@@ -380,8 +508,12 @@
 				76B3109C1ABCE3C4998125FD /* WhiteSquareRedYesBlackEightWarsaw-Warsaw.ttf in Resources */,
 				75FC8E691208165530B02821 /* WhiteSquareRedYesBlackEightZero-Zero.ttf in Resources */,
 				FDAFD582715C3CFD23F98019 /* YrBkMess.TTF in Resources */,
+				E68EDA1FE502621924873DBE /* abduction2002.ttf in Resources */,
 				AA7EE6A6EB425AD0515606E9 /* angrybirds-regular.ttf in Resources */,
+				F0D9873087DB24086AA3386C /* chintzy.ttf in Resources */,
+				7B0E44FD1A241C201B75FD00 /* chintzys.ttf in Resources */,
 				002EA0377707E4F65F0DACF1 /* moon.png in Resources */,
+				B9D618297F7CD605E224A50D /* space age.ttf in Resources */,
 				AADCD9DA62CCC375945AD004 /* sun.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
