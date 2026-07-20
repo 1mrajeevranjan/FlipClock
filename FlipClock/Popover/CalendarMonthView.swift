@@ -79,6 +79,7 @@ struct CalendarMonthView: View {
                     }
                 }
                 .contentShape(Rectangle())
+                .help(tooltip(for: cellReminders))
                 .onTapGesture(count: 2) { addingReminderFor = cellDate }
                 .popover(isPresented: Binding(
                     get: { addingReminderFor == cellDate },
@@ -86,8 +87,8 @@ struct CalendarMonthView: View {
                 )) {
                     AddReminderView(
                         date: cellDate,
-                        onSave: { title in
-                            reminderStore.add(title: title, date: cellDate)
+                        onSave: { title, preciseDate in
+                            reminderStore.add(title: title, date: preciseDate)
                             addingReminderFor = nil
                         },
                         onCancel: { addingReminderFor = nil }
@@ -97,6 +98,22 @@ struct CalendarMonthView: View {
                 Color.clear.frame(width: 22, height: 22 + 2 + 5)
             }
         }
+    }
+
+    private static let tooltipTimeFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.timeStyle = .short
+        return f
+    }()
+
+    /// One line per reminder ("@ 3:12 PM — Ship the reminder feature"),
+    /// shown as the day cell's native hover tooltip — empty string means
+    /// no tooltip at all (SwiftUI's `.help` skips showing one).
+    private func tooltip(for reminders: [Reminder]) -> String {
+        reminders
+            .sorted { $0.date < $1.date }
+            .map { "@ \(Self.tooltipTimeFormatter.string(from: $0.date)) — \($0.title)" }
+            .joined(separator: "\n")
     }
 
     /// The actual `Date` a grid day number represents, combined from
