@@ -25,7 +25,11 @@ final class DesktopBackdropCapture: ObservableObject {
         stop()
         _ = CGRequestScreenCaptureAccess()
         refresh(window: window, blurRadius: blurRadius)
-        let timer = Timer(timeInterval: 1.0, repeats: true) { [weak self, weak window] _ in
+        // Desktop wallpaper/icons rarely change frame-to-frame — capturing
+        // + Gaussian-blurring every 1s was the app's single biggest CPU/
+        // battery cost for no visible benefit. 5s keeps the blur looking
+        // live without the constant screen-capture overhead.
+        let timer = Timer(timeInterval: 5.0, repeats: true) { [weak self, weak window] _ in
             guard let self, let window else { return }
             self.refresh(window: window, blurRadius: blurRadius)
         }
