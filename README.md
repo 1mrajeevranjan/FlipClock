@@ -21,8 +21,11 @@ A native macOS split-flap clock: menu bar clock, popover view with calendar, a f
 ## Features
 
 - Menu bar clock with live split-flap animation
-- Full popover clock with calendar and date header
-- Desktop overlay clock styled like a native macOS widget (rounded glass background, vibrant blur), positionable anywhere on screen or set to drift/bounce across it
+- Full popover clock with calendar, date header, and reminders
+- Desktop overlay clock styled like a native macOS widget — real captured-and-blurred desktop glass (not just system vibrancy), positionable anywhere on screen or set to drift/bounce across it, with an optional full-screen "liquid glass" mode
+- Full Color / Monochrome widget style, matching macOS's own desktop-widget color option
+- 37 bundled decorative digit fonts, plus a real image-based sun/moon AM/PM icon
+- **Reminders:** double-click any calendar date to add one (with a precise "@ time"); a pulsing badge marks the day and the widget; a "Due Today" banner appears in the popover; the menu bar clock pulses light/dark every 5s until you acknowledge it
 - Optional second menu bar clock in a different time zone
 - Configurable appearance, time format, overlay size, and AM/PM style
 - Launch-at-login support
@@ -70,31 +73,39 @@ FlipClock is a menu bar app (`LSUIElement`) — it has no Dock icon. Click the m
 | Tab | Controls |
 |---|---|
 | General | Launch at login, second clock |
-| Appearance | Theme, popover glassiness, AM/PM style |
-| Desktop Clock | Show/hide overlay, size, date row, float-across-screen |
+| Appearance | Theme, popover glassiness, AM/PM style, digit font |
+| Desktop Clock | Show/hide overlay, size, date row, color style (Full Color/Monochrome), float-across-screen |
 | Second Clock | Time zone for the secondary menu bar clock |
+
+**Reminders:** double-click any date in the popover calendar to add a reminder with a title and precise time. Days with a reminder show a pulsing dot (orange = upcoming within 24h, red = due today). Hovering a marked day shows what's scheduled. On the due day, the desktop widget and calendar both flash, and the menu bar clock pulses light/dark every 5 seconds until you check it off in the popover's "Due Today" banner.
 
 ## Project Structure
 
 ```text
 FlipClock/
   App/                  App entry point and AppKit bridge (AppDelegate, FlipClockApp)
-  DesktopOverlay/       Desktop overlay window, glass background, content view
-  FlipClock/            Split-flap rendering components (clock face, digits, flap layer)
+  DesktopOverlay/       Desktop overlay window, glass background, backdrop capture, content view
+  FlipClock/            Split-flap rendering components (clock face, digits, flap layer, fonts)
   MenuBar/              Menu bar clock views and status item controllers
   Popover/               Popover clock, calendar, vibrant hosting controller
+  Reminders/             Reminder model, store, add form, badge, due-today banner
   Settings/             Settings model (AppSettings), window, and SwiftUI view
   TimeEngine/           Tick generation and time/digit calculations
 ```
+
+See `architecture.md` for the full file-by-file map.
 
 ## Architecture
 
 - `TimeProvider` publishes clock ticks consumed across the app.
 - `SplitFlapClockFace` renders the animated split-flap clock face; menu bar, popover, and desktop overlay all share this one implementation at different scales.
 - `OverlayWindowController` owns the desktop overlay `NSPanel`, including size/position management and the float-across-screen drift animation.
-- `WidgetGlassBackground` provides the frosted-glass container (behind-window vibrant blur via `NSVisualEffectView`) that makes the overlay read as a native desktop widget.
-- `StatusItemController` owns the menu bar clock and its popover.
+- `WidgetGlassBackground` + `DesktopBackdropCapture` provide the widget's glass: a captured-and-blurred still of the actual desktop behind the window (real, tunable blur), falling back to live `NSVisualEffectView` vibrancy or an opaque fill (Reduce Transparency) when needed.
+- `StatusItemController` owns the menu bar clock, its popover, and the reminder pulse timer.
 - `AppSettings` is an `ObservableObject` that persists user preferences to `UserDefaults` and publishes changes via Combine.
+- `ReminderStore` is an `ObservableObject` that persists reminders (JSON in `UserDefaults`) and is shared by reference across the popover, widget, and menu bar.
+
+More detail — including design rationale, hard-won gotchas, and development history — lives in `architecture.md`, `design.md`, `memory.md`, and `phases.md`.
 
 ## Development Notes
 

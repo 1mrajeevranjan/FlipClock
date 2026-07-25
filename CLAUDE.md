@@ -2,11 +2,20 @@
 
 Project context for Claude Code when working in this repository.
 
+## Documentation map
+
+- `README.md` — user-facing features, setup, usage.
+- `architecture.md` — full module-by-module map (supersedes the old `architecture-map.md`).
+- `design.md` — visual design system: glassmorphism, typography, color tokens, reminder visual language.
+- `phases.md` — chronological development milestones.
+- `memory.md` — non-obvious lessons learned, narrated (the "why" behind gotchas below).
+- `rules.md` — the fuller enforceable-rules checklist this file summarizes.
+
 ## Overview
 
-FlipClock is a native macOS menu bar app (Swift + SwiftUI + AppKit) that renders an animated split-flap clock across three surfaces: a compact menu bar view, a popover with calendar, and a floating desktop overlay styled as a native widget (with an optional full-screen "liquid glass" mode). See `README.md` for user-facing features and setup.
+FlipClock is a native macOS menu bar app (Swift + SwiftUI + AppKit) that renders an animated split-flap clock across three surfaces: a compact menu bar view, a popover with calendar, and a floating desktop overlay styled as a native widget (with an optional full-screen "liquid glass" mode). A shared `ReminderStore` adds lightweight reminders (add via double-click on a calendar day) surfaced across all three: a pulsing badge on the calendar/widget, a "Due Today" banner in the popover, and a subtle light/dark pulse on the menu bar clock until acknowledged. See `README.md` for user-facing features and setup.
 
-The popover and desktop overlay default to a translucent "glass card" style (`glassCard: true` on `SplitFlapDigit`/`SplitFlapClockFace`) — digits render with no opaque card fill and sit on real vibrancy instead. The menu bar's compact rendering stays opaque (glass at 14×20pt in a status item isn't practical or legible). See the Known Gotchas below before touching anything glass-related — several of its behaviors are non-obvious `NSVisualEffectView`/CoreAnimation quirks, not stylistic choices.
+The popover and desktop overlay default to a translucent "glass card" style (`glassCard: true` on `SplitFlapDigit`/`SplitFlapClockFace`) — digits render with no opaque card fill and sit on real vibrancy instead. The desktop widget's own background panel goes further: `DesktopBackdropCapture` captures and Gaussian-blurs the actual desktop behind the window (refreshed every 5s) for stronger, tunable diffusion than `NSVisualEffectView` alone can produce, falling back to live vibrancy if capture isn't available. The menu bar's compact rendering stays opaque (glass at 14×20pt in a status item isn't practical or legible). See the Known Gotchas below before touching anything glass-related — several of its behaviors are non-obvious `NSVisualEffectView`/CoreAnimation quirks, not stylistic choices.
 
 ## Tech Stack
 
@@ -51,6 +60,10 @@ Only hand-edit `project.pbxproj` if `xcodegen` isn't available — it requires a
 - **A CALayer property assigned in a transaction that doesn't call `CATransaction.setDisableActions(true)`** also picks up CoreAnimation's own implicit action for that keypath, which runs *alongside* any explicit `CABasicAnimation` you add right after — two competing animations on the same property, at different durations/curves, composite into a visible glitch (looked like the flip-clock digit "double-exposing" mid-rotation). Always disable implicit actions in any transaction where you're driving the same property with an explicit animation.
 - **The animating flap in a "glass" card must stay opaque (or translucent-but-still-covering), never fully transparent**, even though the idle resting card is meant to be see-through — the flap sits on top of the stale static digit during rotation, and if it's transparent that old digit bleeds through and reads as a ghost/double-exposure. Only the resting card should be see-through; the flap gets its own translucent fill (`FlapColors.glassFlapFill`) tuned to look close to the resting tone without depending on a live blur sample (a static rasterized `CALayer` face can't sample one).
 - **Popovers are not desktop-level windows.** Giving a card its own `NSVisualEffectView.behindWindow` panel (as the desktop overlay does, to sample the real wallpaper) just grays things out flatly in a popover, because there's no meaningful desktop content directly behind a popover window. Popover content should instead render fully transparent (`transparentBackground: true`, no per-card blur panel — see `showOwnGlassPanel` on `SplitFlapDigit`/`SplitFlapClockFace`) and ride on the popover's own existing vibrancy (`VibrantHostingController`).
+- **`NSVisualEffectView`'s blur radius is fixed by its material and isn't a public API.** No amount of `.opacity()` tuning can push diffusion strength past it — this is why the desktop widget's glass kept reading "weaker" than native Notification Center widgets no matter how the opacity was tuned. `DesktopBackdropCapture` (capture + `CIGaussianBlur` with a radius we control) is the fix; don't try to solve blur-strength complaints by tuning `NSVisualEffectView` opacity again.
+- **`.preferredColorScheme()` doesn't reliably re-propagate to `@Environment(\.colorScheme)` reads on *updates* when hosted inside an `NSStatusItem` button.** Confirmed the hard way building the reminder pulse: the state genuinely changed every 5s (verified via `NSLog`), but nothing repainted. Fix: pass an explicit override parameter (`SplitFlapClockFace.isDarkOverride`) instead of relying on the environment, and force `statusItem.button?.needsDisplay = true` alongside any `NSHostingView.rootView` reassignment.
+- **A `.popover()` triggered from inside content already itself presented via `NSPopover` doesn't reliably present.** `CalendarMonthView`'s hover-preview card had to become a plain inline `.overlay()` instead of a nested popover for exactly this reason.
+- **`strings <binary>` cannot verify Swift code actually compiled**, and plain `print()` from a GUI app launched via `open` doesn't reach a capturable stream — use `NSLog()` + `log show --predicate 'process == "FlipClock"'` for debug output instead.
 
 ## Conventions
 
