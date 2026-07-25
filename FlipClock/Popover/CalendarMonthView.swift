@@ -9,6 +9,14 @@ struct CalendarMonthView: View {
     /// The day currently showing the "New Reminder" popover, or `nil` if
     /// none is open — set by a double-click on a day cell.
     @State private var addingReminderFor: Date? = nil
+    /// The day currently showing the hover preview popover — separate from
+    /// `addingReminderFor` so the two can never fight over the same
+    /// presentation state. `nil` means no hover card is showing.
+    @State private var hoveredDate: Date? = nil
+    /// Debounces hover-in so a fast mouse sweep across a whole week row
+    /// doesn't flash a popover open-then-closed on every cell it crosses —
+    /// only the cell the pointer actually settles on for a moment gets one.
+    @State private var hoverTask: Task<Void, Never>? = nil
 
     private let calendar = Calendar.current
     private let today = Calendar.current.startOfDay(for: Date())
@@ -55,6 +63,32 @@ struct CalendarMonthView: View {
                 }
             }
         }
+        // A `.popover` triggered from *inside* content that's already
+        // itself presented as a popover (this whole view lives inside
+        // `PopoverClockView`, hosted via `NSPopover`) doesn't reliably
+        // present — confirmed live, it silently did nothing on hover. This
+        // overlay is plain inline SwiftUI content in the same view tree,
+        // not a second presentation layer, so it can't fail that way.
+        .overlay(alignment: .top) {
+            if let hoveredDate, let reminders = hoveredReminders, !reminders.isEmpty {
+                ReminderHoverCard(date: hoveredDate, reminders: reminders)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .fill(.regularMaterial)
+                            .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
+                    )
+                    .offset(y: -8)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+                    .allowsHitTesting(false)
+                    .zIndex(1)
+            }
+        }
+        .animation(.easeOut(duration: 0.12), value: hoveredDate)
+    }
+
+    private var hoveredReminders: [Reminder]? {
+        guard let hoveredDate else { return nil }
+        return reminderStore.reminders(on: hoveredDate)
     }
 
     private func dayCell(_ day: Int?, column: Int) -> some View {
@@ -79,8 +113,19 @@ struct CalendarMonthView: View {
                     }
                 }
                 .contentShape(Rectangle())
-                .help(tooltip(for: cellReminders))
                 .onTapGesture(count: 2) { addingReminderFor = cellDate }
+                .onHover { isHovering in
+                    hoverTask?.cancel()
+                    guard isHovering, !cellReminders.isEmpty else {
+                        if hoveredDate == cellDate { hoveredDate = nil }
+                        return
+                    }
+                    hoverTask = Task {
+                        try? await Task.sleep(nanoseconds: 220_000_000)
+                        guard !Task.isCancelled else { return }
+                        hoveredDate = cellDate
+                    }
+                }
                 .popover(isPresented: Binding(
                     get: { addingReminderFor == cellDate },
                     set: { isPresented in if !isPresented { addingReminderFor = nil } }
@@ -98,22 +143,6 @@ struct CalendarMonthView: View {
                 Color.clear.frame(width: 22, height: 22 + 2 + 5)
             }
         }
-    }
-
-    private static let tooltipTimeFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.timeStyle = .short
-        return f
-    }()
-
-    /// One line per reminder ("@ 3:12 PM — Ship the reminder feature"),
-    /// shown as the day cell's native hover tooltip — empty string means
-    /// no tooltip at all (SwiftUI's `.help` skips showing one).
-    private func tooltip(for reminders: [Reminder]) -> String {
-        reminders
-            .sorted { $0.date < $1.date }
-            .map { "@ \(Self.tooltipTimeFormatter.string(from: $0.date)) — \($0.title)" }
-            .joined(separator: "\n")
     }
 
     /// The actual `Date` a grid day number represents, combined from
@@ -191,5 +220,52 @@ private extension Calendar {
     func startOfMonth(for date: Date) -> Date {
         let comps = dateComponents([.year, .month], from: date)
         return self.date(from: comps) ?? date
+    }
+}
+
+/// Hover preview for a day that has one or more reminders — read-only (no
+/// acknowledge/edit controls, those live in the "Due Today" banner and the
+/// double-click "New Reminder" form respectively). This is purely "what's
+/// on this day and when."
+private struct ReminderHoverCard: View {
+    let date: Date
+    let reminders: [Reminder]
+
+    private static let dateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateStyle = .medium
+        return f
+    }()
+
+    private static let timeFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.timeStyle = .short
+        return f
+    }()
+
+    private var sortedReminders: [Reminder] {
+        reminders.sorted { $0.date < $1.date }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(Self.dateFormatter.string(from: date))
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(.secondary)
+
+            ForEach(sortedReminders) { reminder in
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text("@ \(Self.timeFormatter.string(from: reminder.date))")
+                        .font(.system(size: 11, weight: .medium, design: .monospaced))
+                        .foregroundStyle(reminder.isAcknowledged ? .secondary : .primary)
+                    Text(reminder.title)
+                        .font(.system(size: 12))
+                        .foregroundStyle(.primary)
+                        .strikethrough(reminder.isAcknowledged)
+                }
+            }
+        }
+        .padding(12)
+        .frame(minWidth: 180, alignment: .leading)
     }
 }
