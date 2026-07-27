@@ -71,6 +71,13 @@ final class ReminderStore: ObservableObject {
         }
     }
 
+    /// Whether the desktop widget's top reminder banner should be showing
+    /// right now — used by `OverlayWindowController` to know when the
+    /// widget's window needs resizing for the banner appearing/leaving.
+    var hasReminderBanner: Bool {
+        !dueTodayUnacknowledged.isEmpty || !upcomingWithin24Hours.isEmpty
+    }
+
     private func load() {
         guard let data = UserDefaults.standard.data(forKey: key),
               let decoded = try? JSONDecoder().decode([Reminder].self, from: data) else { return }

@@ -10,7 +10,8 @@ Composition root only.
 | File | Responsibility |
 |---|---|
 | `App/FlipClockApp.swift` | `@main` entry; `Settings` scene wrapping `SettingsView` |
-| `App/AppDelegate.swift` | Owns shared `TimeProvider`/`AppSettings`/`ReminderStore`, constructs all surface controllers |
+| `Assets.xcassets/AppIcon.appiconset` | App icon (16–512pt, 1x/2x), generated from the repo-root `icon.png`; wired via `ASSETCATALOG_COMPILER_APPICON_NAME` in `project.yml` |
+| `App/AppDelegate.swift` | Owns shared `TimeProvider`/`AppSettings`/`ReminderStore`/`CountdownTimer`, constructs all surface controllers |
 
 ## TimeEngine/
 Pure model layer, no views. Leaf module — everything else depends on it.
@@ -28,10 +29,10 @@ Reusable split-flap primitives used identically by MenuBar, Popover, DesktopOver
 |---|---|
 | `SplitFlapClockFace.swift` | Full HH:MM:SS(+AMPM) face; `scale`/`compact`/`showPedestal`/`glassCard`/`isDarkOverride` params; `idealSize(...)` for analytic window sizing |
 | `SplitFlapPairView.swift` | Two digit cards (tens+ones) with gap |
-| `SplitFlapDigit.swift` | One flap card: static halves + hinge + animating flap; owns `glassCard`/`showOwnGlassPanel` |
+| `SplitFlapDigit.swift` | One flap card: static halves + animating flap; owns `glassCard`/`showOwnGlassPanel`. The hinge/seam line is *not* a separate overlay (it used to be, see `memory.md`) — it's baked half-and-half into the top/bottom halves' own rendered bitmaps via `DigitFaceRenderer`'s `hingeThickness` param, so it rotates and foreshortens with the flap during a flip instead of looking like it pulses thin/thick |
 | `FlipCardLayer.swift` | `NSViewRepresentable` driving the CALayer 3D flip animation |
 | `DigitFaceRenderer.swift` | Rasterizes/caches digit+label bitmaps via CoreText; also draws the sun/moon meridiem icon images (aspect-fit, half-card-aware) |
-| `FlapColors.swift` | Centralized color tokens |
+| `FlapColors.swift` | Centralized color tokens. `leafHinge(isDark:)` is solid/opaque (white on dark, black on light, matching `digit(isDark:)`'s contrast direction) — it used to be a translucent black tint at both themes, which read as a faint smudge rather than a clear seam line |
 | `WidgetFont.swift` | Bundled decorative-font catalog (37 fonts under `Fonts/`), PostScript-name-based registration via `CTFontManagerRegisterFontsForURL` |
 
 `isDarkOverride` on `SplitFlapClockFace` exists specifically for the menu bar reminder pulse — see Known Gotchas in `CLAUDE.md` for why `.preferredColorScheme()` alone isn't enough there.
@@ -60,6 +61,14 @@ Shared reminder data + UI fragments, consumed by Popover, DesktopOverlay, and Me
 
 One `ReminderStore` instance is created in `AppDelegate` and passed by reference everywhere; all three surfaces always agree on what's due/upcoming/acknowledged.
 
+## CountdownTimer/
+| File | Responsibility |
+|---|---|
+| `CountdownTimer.swift` | `ObservableObject` countdown — `inputMinutes`/`inputSeconds` set the duration, `start`/`pause`/`resume`/`reset` control it. Counts down against an absolute `endDate` (not a per-tick decrement) so a stalled run loop can't desync the displayed time from the real elapsed time. Finishes with `NSSound(named: "Glass")`, not a `UserNotifications` alert (would need notification-center registration this ad-hoc dev build doesn't have) |
+| `CountdownTimerView.swift` | Compact control shown in the popover: idle (minute/second steppers + Start), running/paused (MM:SS + Pause/Resume + Reset), finished (dismissable "Time's up!") |
+
+One `CountdownTimer` instance is created in `AppDelegate` and passed to `PopoverClockView` — popover-only, no menu bar or desktop widget surface.
+
 ## MenuBar/
 | File | Responsibility |
 |---|---|
@@ -70,7 +79,7 @@ One `ReminderStore` instance is created in `AppDelegate` and passed by reference
 ## Popover/
 | File | Responsibility |
 |---|---|
-| `PopoverClockView.swift` | Clock + `DateHeaderView` + `DueReminderBanner` (when something's due today) + `CalendarMonthView`, `showOwnGlassPanel: false` |
+| `PopoverClockView.swift` | Clock + `DateHeaderView` + `DueReminderBanner` (when something's due today) + `CountdownTimerView` + `CalendarMonthView`, `showOwnGlassPanel: false` |
 | `VibrantHostingController.swift` | Makes `NSVisualEffectView` the top-level content view to match `NSPopover` chrome |
 | `CalendarMonthView.swift` | Month grid; double-click a day → `AddReminderView` popover; reminder dot mark per day; hover → inline overlay reminder preview card (see gotcha below — **not** a second `.popover`) |
 | `DateHeaderView.swift` | Today's date header |
@@ -84,20 +93,20 @@ Floating, borderless `NSPanel` pinned near desktop-icon level, optional full-scr
 OverlayWindow (NSPanel subclass)
   └─ NSHostingController(OverlayContentView)   [wired in OverlayWindowController]
        └─ OverlayContentView (SwiftUI root)
+            ├─ ReminderTopBanner (private, conditional) — due/upcoming reminder title, above the clock
             ├─ SplitFlapClockFace (shared)         — HH:MM:SS(+AMPM)
-            ├─ DateFlapRow (private)                — optional weekday+date flap row
-            ├─ ReminderBadge overlay                — top-trailing corner, due/upcoming
+            ├─ DateFlapRow                          — optional weekday+date flap row
             └─ .background(WidgetGlassBackground)   — frosted glass panel
 ```
 
 | File | Responsibility |
 |---|---|
 | `OverlayWindow.swift` | `NSPanel` subclass: borderless, non-activating, transparent-backed, joins all Spaces, draggable by background. Native `hasShadow` is always off — see Known Gotchas |
-| `OverlayWindowController.swift` | Creates window, wires SwiftUI content, reacts to settings changes, drives float-drift timer, masks the window's content view to the same rounded rect as the glass panel |
-| `OverlayContentView.swift` | SwiftUI root: clock + optional date row + reminder badge, fixed padding, analytic `windowSize(...)` |
+| `OverlayWindowController.swift` | Creates window, wires SwiftUI content, reacts to settings changes, drives float-drift timer, masks the window's content view to the same rounded rect as the glass panel. Also observes `reminderStore.$reminders` to resize whenever the top banner needs to appear/disappear (`ReminderStore.hasReminderBanner`) |
+| `OverlayContentView.swift` | SwiftUI root: optional reminder banner + clock + optional date row, fixed padding, analytic `windowSize(...)`. Digit/date text color (`effectiveIsDark`) strictly follows `AppSettings.theme` (or system appearance for `.system`) — an earlier version derived it from the sampled backdrop brightness instead, which forced dark-mode text over a dark wallpaper even with the app set to Light, ignoring the user's actual theme choice. Reminder banner replaced the old top-trailing `ReminderBadge` corner dot, which couldn't show *what* the reminder was |
 | `WidgetGlassBackground.swift` | Rounded-rect glass container. Renders the `DesktopBackdropCapture` blurred image when available, falls back to `NSVisualEffectView` (`.underWindowBackground`) otherwise; Reduce-Transparency fallback to opaque `.windowBackgroundColor` |
 | `DesktopBackdropCapture.swift` | Captures the desktop behind the window (`CGWindowListCreateImage`, filtered to on-screen-below-window) and runs it through `CIGaussianBlur` on a background queue every 5s — this is what gives the widget stronger diffusion than a plain `NSVisualEffectView` can produce. Requires Screen Recording permission; falls back gracefully if denied |
-| `SecondClockOverlayContentView.swift` / `SecondClockOverlayWindowController.swift` | Companion desktop widget for `settings.secondTimezoneID` — same glass treatment, sizing, and day/date/year row as the primary widget (all driven by the same settings), plus a small timezone-name label above the clock. Its own `OverlayWindow` + `DesktopBackdropCapture` instance; toggled by `settings.showSecondClockOverlay`. Deliberately skips float-across-screen/fill-screen — companion widget, not the main clock |
+| `SecondClockOverlayContentView.swift` / `SecondClockOverlayWindowController.swift` | Companion desktop widget for `settings.secondTimezoneID` — same glass treatment, sizing, theme-driven text color, and day/date/year row as the primary widget (all driven by the same settings), plus a timezone-name label above the clock rendered as its own row of split-flap cards (`TimezoneFlapRow`, private) — same card size/gap constants as `DateFlapRow` but at 40% of the scale (`labelScaleFactor`, a caption should read smaller than the clock/date rows, not match them 1:1), one flip card per character grouped by word, chosen after a plain low-contrast `Text` label proved hard to read against the glass. Its own `OverlayWindow` + `DesktopBackdropCapture` instance; toggled by `settings.showSecondClockOverlay`; resizes on `secondTimezoneID` changes too (the label's width varies by city name). Deliberately skips float-across-screen/fill-screen and the reminder banner — companion widget, not the main clock |
 
 **Settings driving overlay appearance:** `showDesktopOverlay`, `overlaySize`, `showDateOnOverlay`, `timeFormat`, `meridiemStyle`, `theme`, `widgetColorStyle`, `floatAcrossScreen` (mutually exclusive with `fillScreen`), `fillScreen` (covers `NSScreen.main`, disables drag/shadow, corner radius→0, 1.6× extra scale). The second-clock widget additionally reads `secondTimezoneID` and is gated by `showSecondClockOverlay`.
 

@@ -78,13 +78,25 @@ struct SettingsView: View {
             TimezonePickerView(selection: $settings.secondTimezoneID)
                 .frame(width: 460, height: 520)
         }
+        .overlay(alignment: .top) {
+            // The window's native title is hidden (see
+            // `SettingsWindowController`) — AppKit only centers a titled
+            // window's title against a unified `NSToolbar`'s layout guide,
+            // and a plain `.fullSizeContentView` window with no toolbar
+            // left-aligns it right after the traffic lights instead.
+            // Drawing our own centered title directly into that same
+            // reserved band (`.ignoresSafeArea` lets it render there
+            // without pushing the tab row down further) gets both a
+            // centered title *and* zero gap under the traffic lights.
+            Text(selectedTab.label)
+                .font(.headline)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .frame(height: 28)
+                .ignoresSafeArea(edges: .top)
+                .allowsHitTesting(false)
+        }
     }
 
-    // The window's native title (see `SettingsWindowController`) already
-    // shows the selected tab's name flush with the traffic lights — a
-    // second, custom title `Text` here previously duplicated it lower down
-    // with dead space in between. The tab row is the only header content
-    // now.
     private var headerBar: some View {
         HStack(spacing: 2) {
             ForEach(SettingsTab.allCases) { tab in

@@ -24,6 +24,13 @@ final class SettingsWindowController {
                 defer: false
             )
             window.title = "General"
+            // AppKit only centers a titled window's title against a unified
+            // NSToolbar's layout guide — a plain `.fullSizeContentView`
+            // window with no toolbar (this one) left-aligns the title text
+            // right after the traffic lights instead. `SettingsView` draws
+            // its own centered title into that same reserved band via
+            // `.ignoresSafeArea`, so the native one stays hidden here.
+            window.titleVisibility = .hidden
             window.titlebarAppearsTransparent = true
             window.isMovableByWindowBackground = true
             window.isReleasedWhenClosed = false

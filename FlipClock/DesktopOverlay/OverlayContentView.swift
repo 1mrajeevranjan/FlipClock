@@ -20,6 +20,10 @@ struct OverlayContentView: View {
         (10 * scale).clamped(to: 7...14)
     }
 
+    static func bannerHeight(scale: CGFloat) -> CGFloat {
+        (16 * scale).clamped(to: 13...20)
+    }
+
     let timeProvider: TimeProvider
     @ObservedObject var settings: AppSettings
     @ObservedObject var backdropCapture: DesktopBackdropCapture
@@ -29,17 +33,36 @@ struct OverlayContentView: View {
     private var hasDueReminder: Bool { !reminderStore.dueTodayUnacknowledged.isEmpty }
     private var hasUpcomingReminder: Bool { !reminderStore.upcomingWithin24Hours.isEmpty }
 
+    /// Due-today reminders take priority over merely-upcoming ones for the
+    /// top banner — same escalation `ReminderBadge` uses (red = due now,
+    /// orange = coming up within 24h).
+    private var bannerGroup: (reminders: [Reminder], isDue: Bool)? {
+        if hasDueReminder { return (reminderStore.dueTodayUnacknowledged, true) }
+        if hasUpcomingReminder { return (reminderStore.upcomingWithin24Hours, false) }
+        return nil
+    }
+
+    /// Digit/frost tone strictly follows the app's theme setting (or the
+    /// system appearance, for `.system`) — same as every other surface.
+    /// This intentionally does *not* factor in the sampled backdrop
+    /// brightness: an earlier version derived it from
+    /// `DesktopBackdropCapture.isDarkBackground` instead, which meant a
+    /// dark wallpaper forced dark-mode text even with the app set to
+    /// Light, ignoring the user's actual theme choice.
+    private var effectiveIsDark: Bool { colorScheme == .dark }
+
     /// Total window content size for this view at a given scale/date
     /// visibility — computed analytically (see
     /// `SplitFlapClockFace.idealSize`) rather than measured via AppKit,
     /// since fitting-size queries aren't reliable on the same runloop turn
     /// the hosting view is attached to a window.
-    static func windowSize(scale: CGFloat, showDate: Bool, showMeridiem: Bool) -> CGSize {
+    static func windowSize(scale: CGFloat, showDate: Bool, showMeridiem: Bool, hasReminderBanner: Bool = false) -> CGSize {
         let face = SplitFlapClockFace.idealSize(scale: scale, compact: false, showPedestal: false, showMeridiem: showMeridiem)
         let dateSize = showDate ? dateRowSize(scale: scale) : .zero
         let contentPadding = padding(scale: scale)
+        let bannerHeight = hasReminderBanner ? Self.bannerHeight(scale: scale) + dateSpacing(scale: scale) : 0
         let width = max(face.width, dateSize.width) + contentPadding * 2
-        let height = face.height + (showDate ? dateSpacing(scale: scale) + dateSize.height : 0) + contentPadding * 2
+        let height = bannerHeight + face.height + (showDate ? dateSpacing(scale: scale) + dateSize.height : 0) + contentPadding * 2
         return CGSize(width: width, height: height)
     }
 
@@ -55,6 +78,10 @@ struct OverlayContentView: View {
 
     var body: some View {
         VStack(spacing: Self.dateSpacing(scale: settings.overlaySize.scale)) {
+            if let bannerGroup {
+                ReminderTopBanner(reminders: bannerGroup.reminders, isDue: bannerGroup.isDue, scale: effectiveScale)
+            }
+
             SplitFlapClockFace(
                 tick: timeProvider.tick,
                 scale: effectiveScale,
@@ -63,11 +90,12 @@ struct OverlayContentView: View {
                 meridiemStyle: settings.meridiemStyle,
                 timeFormat: settings.timeFormat,
                 glassCard: true,
-                fontName: settings.widgetFont.postscriptName
+                fontName: settings.widgetFont.postscriptName,
+                isDarkOverride: effectiveIsDark
             )
 
             if settings.showDateOnOverlay {
-                DateFlapRow(date: timeProvider.tick.date, scale: effectiveScale, isDark: colorScheme == .dark, glassCard: true, fontName: settings.widgetFont.postscriptName)
+                DateFlapRow(date: timeProvider.tick.date, scale: effectiveScale, isDark: effectiveIsDark, glassCard: true, fontName: settings.widgetFont.postscriptName)
             }
         }
         .padding(Self.padding(scale: settings.overlaySize.scale))
@@ -79,17 +107,35 @@ struct OverlayContentView: View {
         // instead of centering it, producing lopsided margins.
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(WidgetGlassBackground(scale: settings.overlaySize.scale, fullyClear: settings.fillScreen, backdropImage: backdropCapture.image, monochrome: settings.widgetColorStyle == .monochrome))
-        // Top-trailing badge for a reminder that's due today or landing
-        // within 24 hours — a corner dot rather than anything that
-        // disturbs the clock face itself, matching the "very subtle" nudge
-        // this was asked for.
-        .overlay(alignment: .topTrailing) {
-            if hasDueReminder || hasUpcomingReminder {
-                ReminderBadge(isDue: hasDueReminder, diameter: (10 * settings.overlaySize.scale).clamped(to: 8...16))
-                    .padding((10 * settings.overlaySize.scale).clamped(to: 8...16))
-            }
-        }
         .preferredColorScheme(settings.theme.colorScheme)
+    }
+}
+
+/// One-line reminder callout at the top of the desktop widget — replaces
+/// the old top-trailing corner dot with something the user can actually
+/// read without opening the popover. Due-today reminders show in red,
+/// merely-upcoming ones in orange, matching `ReminderBadge`'s escalation.
+private struct ReminderTopBanner: View {
+    let reminders: [Reminder]
+    let isDue: Bool
+    let scale: CGFloat
+
+    private var displayText: String {
+        guard let first = reminders.first else { return "" }
+        let extra = reminders.count - 1
+        return extra > 0 ? "\(first.title) +\(extra)" : first.title
+    }
+
+    var body: some View {
+        HStack(spacing: (6 * scale).clamped(to: 4...8)) {
+            Image(systemName: "bell.fill")
+                .font(.system(size: (11 * scale).clamped(to: 9...14)))
+            Text(displayText)
+                .font(.system(size: (12 * scale).clamped(to: 10...15), weight: .semibold))
+                .lineLimit(1)
+                .truncationMode(.tail)
+        }
+        .foregroundStyle(isDue ? Color.red : Color.orange)
     }
 }
 

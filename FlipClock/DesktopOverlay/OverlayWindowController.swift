@@ -8,6 +8,7 @@ import Combine
 final class OverlayWindowController {
     private let window: OverlayWindow
     private let settings: AppSettings
+    private let reminderStore: ReminderStore
     private let backdropCapture = DesktopBackdropCapture()
     private var cancellables = Set<AnyCancellable>()
 
@@ -32,6 +33,7 @@ final class OverlayWindowController {
 
     init(timeProvider: TimeProvider, settings: AppSettings, reminderStore: ReminderStore) {
         self.settings = settings
+        self.reminderStore = reminderStore
         window = OverlayWindow()
 
         let hostingController = NSHostingController(rootView: OverlayContentView(timeProvider: timeProvider, settings: settings, backdropCapture: backdropCapture, reminderStore: reminderStore))
@@ -98,6 +100,24 @@ final class OverlayWindowController {
                 self?.setFloating(floating)
             }
             .store(in: &cancellables)
+
+        // A reminder banner appearing/disappearing changes the widget's
+        // ideal height (see `OverlayContentView.windowSize`'s
+        // `hasReminderBanner` parameter) — resize whenever the due/
+        // upcoming set actually changes, not just on a timer, so the
+        // banner's arrival doesn't get clipped or leave dead space.
+        reminderStore.$reminders
+            .dropFirst()
+            // `@Published` fires from `willSet`, before `reminders` is
+            // actually updated — deferring to the next run-loop turn
+            // (as `settings.$overlaySize` does above, for the same
+            // reason) is what lets `hasReminderBanner` below read the
+            // real, current value instead of the stale pre-change one.
+            .receive(on: DispatchQueue.main)
+            .map { [weak reminderStore] _ in reminderStore?.hasReminderBanner ?? false }
+            .removeDuplicates()
+            .sink { [weak self] _ in self?.applySize(anchorTopRight: false) }
+            .store(in: &cancellables)
     }
 
     private func applySize(anchorTopRight: Bool) {
@@ -133,7 +153,8 @@ final class OverlayWindowController {
         let contentSize = OverlayContentView.windowSize(
             scale: settings.overlaySize.scale,
             showDate: settings.showDateOnOverlay,
-            showMeridiem: settings.timeFormat == .twelveHour
+            showMeridiem: settings.timeFormat == .twelveHour,
+            hasReminderBanner: reminderStore.hasReminderBanner
         )
         let previousTopLeft: NSPoint
         if let savedTopLeft = preFillScreenTopLeft {

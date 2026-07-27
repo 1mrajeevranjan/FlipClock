@@ -5,8 +5,13 @@ enum FlapColors {
         isDark ? Color(red: 0.07, green: 0.07, blue: 0.08) : Color(white: 0.93)
     }
 
+    /// Solid, fully opaque — not a translucent shadow tint. Matches
+    /// `digit(isDark:)`'s contrast direction (white on dark, black on
+    /// light) so the seam reads as a clear, deliberate separator line
+    /// rather than a faint smudge that changed with what happened to be
+    /// behind the glass.
     static func leafHinge(isDark: Bool) -> Color {
-        isDark ? Color.black.opacity(0.55) : Color.black.opacity(0.2)
+        isDark ? Color.white : Color.black
     }
 
     /// Opaque "frosted glass" fill for glass-style cards. Both the resting

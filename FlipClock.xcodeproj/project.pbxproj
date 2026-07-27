@@ -50,10 +50,12 @@
 		7E2CF474D97571BAEF4A3759 /* Vlump.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 3FE91CB5C9D39516AFE000B6 /* Vlump.ttf */; };
 		8715624FD54347A806F275C1 /* KGPrimaryItalicsLined.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 610FBE1AA72EC47C519C2E8C /* KGPrimaryItalicsLined.ttf */; };
 		8B2973DC33ED8E39177D0930 /* Reminder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 135E56F9C9038BA61C90310C /* Reminder.swift */; };
+		8CC693DD9A7A75280211D84A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BD8DAB5C74DA5D3A473DA9DC /* Assets.xcassets */; };
 		8CF69FF5774595D4ACE959B3 /* Linebeam.ttf in Resources */ = {isa = PBXBuildFile; fileRef = F91DF752E113AA6A5C453C24 /* Linebeam.ttf */; };
 		96705FB121D016A608DF8446 /* CalendarMonthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED3D59C1D26F59C0741E18C3 /* CalendarMonthView.swift */; };
 		9F29001BC6E87DC8BF62BF78 /* SplitFlapClockFace.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5A5A1BF8465AA952E2F3DBD /* SplitFlapClockFace.swift */; };
 		9F7538C626E342F9134E0162 /* Sportfield Varsity-Outline3.otf in Resources */ = {isa = PBXBuildFile; fileRef = 94A19CBE28C4467C06594807 /* Sportfield Varsity-Outline3.otf */; };
+		A7795FDB787B0D0D52B44FAC /* CountdownTimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AC7885A916410F16341805C /* CountdownTimerView.swift */; };
 		A990731D2C2D3B17521DAF81 /* Sportfield Varsity-Grunge.otf in Resources */ = {isa = PBXBuildFile; fileRef = F67C71982A5A6909643757C5 /* Sportfield Varsity-Grunge.otf */; };
 		AA7EE6A6EB425AD0515606E9 /* angrybirds-regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 8F25BC2B615F37FE8B111CBF /* angrybirds-regular.ttf */; };
 		AADCD9DA62CCC375945AD004 /* sun.png in Resources */ = {isa = PBXBuildFile; fileRef = 7E04EE7FD9784E7541D7296F /* sun.png */; };
@@ -65,6 +67,7 @@
 		B7296591D2A8AA2A29EBEE6A /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C82BBCF4822EE69EB39A8D8C /* AppSettings.swift */; };
 		B9D618297F7CD605E224A50D /* space age.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A91D51A54F868D836DF9EEE5 /* space age.ttf */; };
 		BEE4478FD4D402324CFDBE0B /* WhiteSquareRedYesBlackEight-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = FFD7E50CEB556B656FB461A7 /* WhiteSquareRedYesBlackEight-Regular.ttf */; };
+		C2E6D90C324F39DB722972EB /* CountdownTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2284429193024632E90DAB5 /* CountdownTimer.swift */; };
 		C9754D0A7822746BE4F0F162 /* FlipClockApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9382537EFD4FE15801C53C0E /* FlipClockApp.swift */; };
 		CD4212EE01B9C3D2FC4D595E /* OverlayWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EA3DA66A1F9A49A759B1825 /* OverlayWindow.swift */; };
 		D0448B25E61FFCC1FD18E9B7 /* StatusItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FEC2FADD24FCE8918E65F47 /* StatusItemController.swift */; };
@@ -111,6 +114,7 @@
 		65A63215BD2AA8AE5332DF36 /* SplitFlapDigit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitFlapDigit.swift; sourceTree = "<group>"; };
 		65C518BF9B070A2A98DE8BB6 /* ARCADE_N.TTF */ = {isa = PBXFileReference; path = ARCADE_N.TTF; sourceTree = "<group>"; };
 		662CD1BF127064A4EF3EC6EC /* moon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = moon.png; sourceTree = "<group>"; };
+		6AC7885A916410F16341805C /* CountdownTimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownTimerView.swift; sourceTree = "<group>"; };
 		700B2677EE2AAF09F5FD974F /* Sportfield Varsity-Scrible.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Sportfield Varsity-Scrible.otf"; sourceTree = "<group>"; };
 		72D54E078479B26DA8FDFF17 /* SecondClockOverlayWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecondClockOverlayWindowController.swift; sourceTree = "<group>"; };
 		7433122D748E80051A23B7BD /* WidgetGlassBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetGlassBackground.swift; sourceTree = "<group>"; };
@@ -140,6 +144,7 @@
 		B5A5A1BF8465AA952E2F3DBD /* SplitFlapClockFace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitFlapClockFace.swift; sourceTree = "<group>"; };
 		B991B52C184F247E89C7B552 /* abduction2002.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = abduction2002.ttf; sourceTree = "<group>"; };
 		BC155D6D5B8537159E016AEC /* GFSCUS1D.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = GFSCUS1D.ttf; sourceTree = "<group>"; };
+		BD8DAB5C74DA5D3A473DA9DC /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C1404A3D2475EEDC6D174181 /* DueReminderBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DueReminderBanner.swift; sourceTree = "<group>"; };
 		C34727CD47DA893CF590CD5E /* Bring Me A Helicopter!.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Bring Me A Helicopter!.otf"; sourceTree = "<group>"; };
 		C3EAB38CFE04422718C3047D /* Destroy All Humans!.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Destroy All Humans!.otf"; sourceTree = "<group>"; };
@@ -151,6 +156,7 @@
 		D5896ECD25212EC9A5CB044A /* ReminderBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderBadge.swift; sourceTree = "<group>"; };
 		DD2A120ACB0F42A007264D1C /* SplitFlapPairView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitFlapPairView.swift; sourceTree = "<group>"; };
 		E1B048EDDC054D8647424B07 /* FlipCardLayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlipCardLayer.swift; sourceTree = "<group>"; };
+		E2284429193024632E90DAB5 /* CountdownTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownTimer.swift; sourceTree = "<group>"; };
 		E79414097EB0F91E58961D38 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		E7E3F10687F2F80B1FA8F91E /* WidgetFont.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetFont.swift; sourceTree = "<group>"; };
 		ED3D59C1D26F59C0741E18C3 /* CalendarMonthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarMonthView.swift; sourceTree = "<group>"; };
@@ -188,8 +194,10 @@
 		14A48FBD465A57F0237AB0EC /* FlipClock */ = {
 			isa = PBXGroup;
 			children = (
+				BD8DAB5C74DA5D3A473DA9DC /* Assets.xcassets */,
 				ABC77DD942B206F433DB7BBB /* Info.plist */,
 				78946FEDA7DF751FD84F7236 /* App */,
+				CC25B1B024840F1A388F02AF /* CountdownTimer */,
 				4F495704C3D7B8E550F16FF0 /* DesktopOverlay */,
 				ED341D91060F5E0777EB0CA6 /* FlipClock */,
 				95A2E716741EC931D83540F9 /* MenuBar */,
@@ -417,6 +425,15 @@
 			path = arcade_ya;
 			sourceTree = "<group>";
 		};
+		CC25B1B024840F1A388F02AF /* CountdownTimer */ = {
+			isa = PBXGroup;
+			children = (
+				E2284429193024632E90DAB5 /* CountdownTimer.swift */,
+				6AC7885A916410F16341805C /* CountdownTimerView.swift */,
+			);
+			path = CountdownTimer;
+			sourceTree = "<group>";
+		};
 		DBB794B4C07A8A6EF157C915 /* chintzy_cpu_brk */ = {
 			isa = PBXGroup;
 			children = (
@@ -510,6 +527,7 @@
 				1552153680EDAE840A2C9D2B /* ARCADE_I.TTF in Resources */,
 				13D4D9D178B0D26EC1913274 /* ARCADE_N.TTF in Resources */,
 				05DEC934AE57CCF5895B2D25 /* ARCADE_R.TTF in Resources */,
+				8CC693DD9A7A75280211D84A /* Assets.xcassets in Resources */,
 				068E981DC0577C7881827825 /* BLADRMF_.TTF in Resources */,
 				EE537B85EB4AEE438540BE51 /* Bing Bam Boum.ttf in Resources */,
 				5C1B69D5930DE43E3BCBFD50 /* Bring Me A Helicopter!.otf in Resources */,
@@ -562,6 +580,8 @@
 				B7296591D2A8AA2A29EBEE6A /* AppSettings.swift in Sources */,
 				96705FB121D016A608DF8446 /* CalendarMonthView.swift in Sources */,
 				3F10BB5B3BBB26EC9CD50632 /* ClockTick.swift in Sources */,
+				C2E6D90C324F39DB722972EB /* CountdownTimer.swift in Sources */,
+				A7795FDB787B0D0D52B44FAC /* CountdownTimerView.swift in Sources */,
 				DAB960062120E9ED90E69164 /* DateHeaderView.swift in Sources */,
 				0A59D6179E919B1B5C9BEC5C /* DesktopBackdropCapture.swift in Sources */,
 				E6960F41E21880F41D3C0C78 /* DigitDelta.swift in Sources */,

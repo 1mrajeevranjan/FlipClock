@@ -4,6 +4,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let timeProvider = TimeProvider()
     let settings = AppSettings()
     let reminderStore = ReminderStore()
+    let timerModel = CountdownTimer()
 
     private var statusItemController: StatusItemController?
     private var secondClockStatusItemController: SecondClockStatusItemController?
@@ -13,7 +14,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         WidgetFont.registerAll()
-        statusItemController = StatusItemController(timeProvider: timeProvider, settings: settings, reminderStore: reminderStore) { [weak self] in
+        statusItemController = StatusItemController(timeProvider: timeProvider, settings: settings, reminderStore: reminderStore, timerModel: timerModel) { [weak self] in
             self?.settingsWindowController.show()
         }
         secondClockStatusItemController = SecondClockStatusItemController(timeProvider: timeProvider, settings: settings)

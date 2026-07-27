@@ -24,6 +24,7 @@ struct PopoverClockView: View {
     let timeProvider: TimeProvider
     @ObservedObject var settings: AppSettings
     @ObservedObject var reminderStore: ReminderStore
+    @ObservedObject var timerModel: CountdownTimer
 
     var body: some View {
         VStack(spacing: 18) {
@@ -34,6 +35,8 @@ struct PopoverClockView: View {
                     reminderStore.acknowledge(reminder)
                 }
             }
+
+            CountdownTimerView(timerModel: timerModel)
             // `showOwnGlassPanel: false` — this view already sits on
             // `VibrantHostingController`'s own blur; a second independent
             // `NSVisualEffectView` per card just grays everything out

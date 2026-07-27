@@ -58,6 +58,9 @@ struct SplitFlapDigit: View {
     }
 
     private var cornerRadius: CGFloat { compact ? 2 : 6 }
+    /// Total seam-line thickness at rest — split between the top and
+    /// bottom halves' baked-in slivers (see `DigitFaceRenderer.render`).
+    private var hingeThickness: CGFloat { compact ? 1.5 : 3.5 }
 
     private var cardShape: UnevenRoundedRectangle {
         UnevenRoundedRectangle(
@@ -81,14 +84,12 @@ struct SplitFlapDigit: View {
             }
 
             VStack(spacing: 0) {
-                HalfCard(image: DigitFaceRenderer.halfFace(for: topValue, cardSize: cardSize, top: true, isDark: isDark, textColor: textColor, transparentBackground: glassCard, fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont))
+                HalfCard(image: DigitFaceRenderer.halfFace(for: topValue, cardSize: cardSize, top: true, isDark: isDark, textColor: textColor, transparentBackground: glassCard, fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont, hingeThickness: hingeThickness))
                     .frame(width: cardSize.width, height: cardSize.height / 2)
-                HalfCard(image: DigitFaceRenderer.halfFace(for: bottomValue, cardSize: cardSize, top: false, isDark: isDark, textColor: textColor, transparentBackground: glassCard, fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont))
+                HalfCard(image: DigitFaceRenderer.halfFace(for: bottomValue, cardSize: cardSize, top: false, isDark: isDark, textColor: textColor, transparentBackground: glassCard, fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont, hingeThickness: hingeThickness))
                     .frame(width: cardSize.width, height: cardSize.height / 2)
             }
             .clipShape(cardShape)
-
-            HingeLine(width: cardSize.width, isDark: isDark, compact: compact)
 
             // The animating leaf always renders opaque — it needs to fully
             // mask the static half underneath while it's mid-rotation, or
@@ -98,7 +99,7 @@ struct SplitFlapDigit: View {
             // resting halves, so the opaque flap is visually indistinct
             // from the resting card and the flip doesn't change the card's
             // appearance at all.
-            FlipCardLayer(value: value, cardSize: cardSize, isDark: isDark, glassCard: glassCard, fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont) {
+            FlipCardLayer(value: value, cardSize: cardSize, isDark: isDark, glassCard: glassCard, fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont, hingeThickness: hingeThickness) {
                 bottomValue = value
             }
             .frame(width: cardSize.width, height: cardSize.height)
@@ -158,21 +159,5 @@ private struct HalfCard: View {
     var body: some View {
         Image(decorative: image, scale: 1)
             .resizable()
-    }
-}
-
-/// The seam between the two half-cards — a single flat rule, no
-/// shadow/highlight bands (those read as a smudge, not a fold).
-private struct HingeLine: View {
-    let width: CGFloat
-    let isDark: Bool
-    let compact: Bool
-
-    private var coreHeight: CGFloat { compact ? 1.5 : 3.5 }
-
-    var body: some View {
-        Rectangle()
-            .fill(FlapColors.leafHinge(isDark: isDark))
-            .frame(width: width, height: coreHeight)
     }
 }

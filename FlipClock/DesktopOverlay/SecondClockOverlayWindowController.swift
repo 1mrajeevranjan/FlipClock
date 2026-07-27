@@ -52,6 +52,17 @@ final class SecondClockOverlayWindowController {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.applySize(anchorTopRight: false) }
             .store(in: &cancellables)
+
+        // The timezone label is now rendered as its own row of flip cards
+        // (see `SecondClockOverlayContentView.TimezoneFlapRow`) — its width
+        // varies with the chosen timezone's city name, so a new selection
+        // needs the window resized same as any other layout-affecting
+        // setting change.
+        settings.$secondTimezoneID
+            .dropFirst()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.applySize(anchorTopRight: false) }
+            .store(in: &cancellables)
     }
 
     private func applySize(anchorTopRight: Bool) {
@@ -61,7 +72,8 @@ final class SecondClockOverlayWindowController {
         let contentSize = SecondClockOverlayContentView.windowSize(
             scale: settings.overlaySize.scale,
             showDate: settings.showDateOnOverlay,
-            showMeridiem: settings.timeFormat == .twelveHour
+            showMeridiem: settings.timeFormat == .twelveHour,
+            timezoneLabel: SecondClockOverlayContentView.timezoneLabel(for: settings.secondTimezoneID)
         )
         let previousTopLeft = NSPoint(x: window.frame.minX, y: window.frame.maxY)
         window.setContentSize(contentSize)

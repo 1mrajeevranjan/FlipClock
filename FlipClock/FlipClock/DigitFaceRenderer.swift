@@ -28,6 +28,7 @@ enum DigitFaceRenderer {
         let transparentBackground: Bool
         let fillColor: String
         let fontIdentifier: String
+        let hingeThickness: Int
     }
 
     /// Cache-key component for the font — without this, switching fonts
@@ -70,7 +71,16 @@ enum DigitFaceRenderer {
     /// it "ghosts"/double-exposes mid-flip) while still reading as
     /// translucent glass rather than a solid leaf card, so the card
     /// doesn't visibly flash to a different color for the flip's duration.
-    static func halfFace(for value: String, cardSize: CGSize, top: Bool, isDark: Bool, textColor: NSColor?, transparentBackground: Bool = false, fillColor: NSColor? = nil, fontName: String? = nil, isMonospacedSystemFont: Bool = false) -> CGImage {
+    ///
+    /// `hingeThickness` bakes half of the seam line into this image's
+    /// outer edge (the edge that abuts the card's other half) instead of
+    /// drawing it as a separate fixed overlay on top of everything —
+    /// baked-in means it rotates and foreshortens together with the rest
+    /// of the flap's content during the flip, rather than a static
+    /// independent rectangle whose apparent overlap with the rotating
+    /// layer's edge changed every frame and read as the line's thickness
+    /// visibly pulsing mid-flip.
+    static func halfFace(for value: String, cardSize: CGSize, top: Bool, isDark: Bool, textColor: NSColor?, transparentBackground: Bool = false, fillColor: NSColor? = nil, fontName: String? = nil, isMonospacedSystemFont: Bool = false, hingeThickness: CGFloat = 0) -> CGImage {
         let key = HalfKey(
             value: cacheKey(for: value, textColor: textColor),
             width: Int(cardSize.width.rounded()),
@@ -79,12 +89,13 @@ enum DigitFaceRenderer {
             isDark: isDark,
             transparentBackground: transparentBackground,
             fillColor: fillColor?.description ?? "leaf",
-            fontIdentifier: fontIdentifier(fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont)
+            fontIdentifier: fontIdentifier(fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont),
+            hingeThickness: Int((hingeThickness * 10).rounded())
         )
         if let image = halfCache[key] {
             return image
         }
-        let image = render(value: value, fullSize: cardSize, half: top ? .top : .bottom, isDark: isDark, textColor: textColor, transparentBackground: transparentBackground, fillColor: fillColor, fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont)
+        let image = render(value: value, fullSize: cardSize, half: top ? .top : .bottom, isDark: isDark, textColor: textColor, transparentBackground: transparentBackground, fillColor: fillColor, fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont, hingeThickness: hingeThickness)
         halfCache[key] = image
         return image
     }
@@ -95,7 +106,7 @@ enum DigitFaceRenderer {
     /// card, but into a bitmap that may only be the top or bottom half of
     /// that card — the glyph lands cut exactly at the hinge line, matching
     /// the physical two-housing split-flap card.
-    private static func render(value: String, fullSize: CGSize, half: Half?, isDark: Bool, textColor: NSColor?, transparentBackground: Bool = false, fillColor: NSColor? = nil, fontName: String? = nil, isMonospacedSystemFont: Bool = false) -> CGImage {
+    private static func render(value: String, fullSize: CGSize, half: Half?, isDark: Bool, textColor: NSColor?, transparentBackground: Bool = false, fillColor: NSColor? = nil, fontName: String? = nil, isMonospacedSystemFont: Bool = false, hingeThickness: CGFloat = 0) -> CGImage {
         let outputSize = half == nil ? fullSize : CGSize(width: fullSize.width, height: fullSize.height / 2)
         let nsImage = NSImage(size: outputSize)
         nsImage.lockFocus()
@@ -140,6 +151,28 @@ enum DigitFaceRenderer {
             context.textPosition = CGPoint(x: originX, y: originY)
             CTLineDraw(line, context)
         }
+
+        // Half of the seam line, drawn at this half's outer edge (the one
+        // that abuts the card's other half) — the top half draws its
+        // sliver at y=0 (its bottom edge), the bottom half at
+        // y=outputSize.height (its top edge). The two halves' slivers sum
+        // to the same total thickness a single fixed overlay would have
+        // drawn at rest, but because each sliver is part of the bitmap
+        // that actually rotates during the flip, it foreshortens in lockstep
+        // with everything else instead of independently.
+        if let half, hingeThickness > 0 {
+            NSColor(FlapColors.leafHinge(isDark: isDark)).setFill()
+            let sliver = hingeThickness / 2
+            let hingeRect: CGRect
+            switch half {
+            case .top:
+                hingeRect = CGRect(x: 0, y: 0, width: outputSize.width, height: sliver)
+            case .bottom:
+                hingeRect = CGRect(x: 0, y: outputSize.height - sliver, width: outputSize.width, height: sliver)
+            }
+            hingeRect.fill()
+        }
+
         nsImage.unlockFocus()
 
         guard let cgImage = nsImage.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
