@@ -34,10 +34,10 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
 
     var windowSize: CGSize {
         switch self {
-        case .general: return CGSize(width: 430, height: 220)
-        case .appearance: return CGSize(width: 470, height: 340)
-        case .desktopClock: return CGSize(width: 470, height: 340)
-        case .secondClock: return CGSize(width: 470, height: 285)
+        case .general: return CGSize(width: 430, height: 184)
+        case .appearance: return CGSize(width: 470, height: 304)
+        case .desktopClock: return CGSize(width: 470, height: 304)
+        case .secondClock: return CGSize(width: 470, height: 260)
         }
     }
 }
@@ -56,7 +56,7 @@ struct SettingsView: View {
         VStack(spacing: 0) {
             headerBar
                 .padding(.horizontal, 16)
-                .padding(.top, 6)
+                .padding(.top, 4)
                 .padding(.bottom, 6)
 
             ScrollView {
@@ -80,38 +80,34 @@ struct SettingsView: View {
         }
     }
 
+    // The window's native title (see `SettingsWindowController`) already
+    // shows the selected tab's name flush with the traffic lights — a
+    // second, custom title `Text` here previously duplicated it lower down
+    // with dead space in between. The tab row is the only header content
+    // now.
     private var headerBar: some View {
-        VStack(spacing: 6) {
-            ZStack {
-                Text(selectedTab.label)
-                    .font(.headline)
-                    .frame(maxWidth: .infinity, alignment: .center)
-            }
-            .frame(height: 26)
-
-            HStack(spacing: 2) {
-                ForEach(SettingsTab.allCases) { tab in
-                    Button {
-                        selectedTab = tab
-                    } label: {
-                        VStack(spacing: 3) {
-                            Image(systemName: tab.icon)
-                            Text(tab.label)
-                                .font(.caption2)
-                                .lineLimit(1)
-                        }
-                        .frame(width: 96, height: 40)
+        HStack(spacing: 2) {
+            ForEach(SettingsTab.allCases) { tab in
+                Button {
+                    selectedTab = tab
+                } label: {
+                    VStack(spacing: 3) {
+                        Image(systemName: tab.icon)
+                        Text(tab.label)
+                            .font(.caption2)
+                            .lineLimit(1)
                     }
-                    .buttonStyle(.borderless)
-                    .foregroundStyle(selectedTab == tab ? .white : .primary)
-                    .background(
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(selectedTab == tab ? Color.accentColor : Color.clear)
-                    )
+                    .frame(width: 96, height: 40)
                 }
+                .buttonStyle(.borderless)
+                .foregroundStyle(selectedTab == tab ? .white : .primary)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(selectedTab == tab ? Color.accentColor : Color.clear)
+                )
             }
-            .frame(maxWidth: .infinity, alignment: .center)
         }
+        .frame(maxWidth: .infinity, alignment: .center)
     }
 
     @ViewBuilder
@@ -137,21 +133,6 @@ struct SettingsView: View {
                     }
                 }
                 .pickerStyle(.segmented)
-            }
-
-            settingsCard("Glass") {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Popover glass effect")
-                    HStack(spacing: 10) {
-                        Text("Solid")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        Slider(value: $settings.popoverGlassiness, in: 0...1)
-                        Text("Clear")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                }
             }
 
             settingsCard("Font") {
@@ -191,8 +172,13 @@ struct SettingsView: View {
                 Toggle("Fill screen", isOn: $settings.fillScreen)
             }
         case .secondClock:
-            settingsCard("Menu bar clock") {
-                Toggle("Enable second clock", isOn: $settings.showSecondClock)
+            settingsCard("Show second clock") {
+                Picker("Display", selection: secondClockDisplayBinding) {
+                    ForEach(SecondClockDisplay.allCases) { option in
+                        Text(option.label).tag(option)
+                    }
+                }
+                .pickerStyle(.segmented)
             }
 
             settingsCard("Timezone") {
@@ -205,10 +191,17 @@ struct SettingsView: View {
                     Button("Choose Timezone") {
                         showingTimezonePicker = true
                     }
-                    .disabled(!settings.showSecondClock)
+                    .disabled(settings.secondClockDisplay == .off)
                 }
             }
         }
+    }
+
+    private var secondClockDisplayBinding: Binding<SecondClockDisplay> {
+        Binding(
+            get: { settings.secondClockDisplay },
+            set: { settings.secondClockDisplay = $0 }
+        )
     }
 
     @ViewBuilder
@@ -230,12 +223,32 @@ private struct TimezonePickerView: View {
     @Binding var selection: String
     @State private var filterText = ""
 
+    // `TimeZone.knownTimeZoneIdentifiers` is the full IANA database macOS
+    // ships (every zone `NSTimeZone`/`systemsetup -listtimezones` knows
+    // about) — sorted here by actual UTC offset (ascending), the order the
+    // user asked for, rather than the default alphabetical-by-identifier
+    // order which groups zones by region name instead of by time.
+    private var sortedIdentifiers: [String] {
+        TimeZone.knownTimeZoneIdentifiers.sorted { lhs, rhs in
+            let lhsOffset = TimeZone(identifier: lhs)?.secondsFromGMT() ?? 0
+            let rhsOffset = TimeZone(identifier: rhs)?.secondsFromGMT() ?? 0
+            if lhsOffset != rhsOffset { return lhsOffset < rhsOffset }
+            return lhs < rhs
+        }
+    }
+
     private var timezones: [String] {
-        let all = TimeZone.knownTimeZoneIdentifiers.sorted()
-        guard !filterText.isEmpty else { return all }
-        return all.filter {
+        guard !filterText.isEmpty else { return sortedIdentifiers }
+        return sortedIdentifiers.filter {
             $0.localizedCaseInsensitiveContains(filterText)
         }
+    }
+
+    private func offsetLabel(for identifier: String) -> String {
+        guard let seconds = TimeZone(identifier: identifier)?.secondsFromGMT() else { return "" }
+        let hours = seconds / 3600
+        let minutes = abs(seconds / 60) % 60
+        return String(format: "UTC%+03d:%02d", hours, minutes)
     }
 
     var body: some View {
@@ -248,10 +261,16 @@ private struct TimezonePickerView: View {
 
             List(selection: $selection) {
                 ForEach(timezones, id: \.self) { zone in
-                    Text(zone)
-                        .lineLimit(1)
-                        .truncationMode(.middle)
-                        .tag(zone)
+                    HStack {
+                        Text(zone)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                        Spacer()
+                        Text(offsetLabel(for: zone))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    .tag(zone)
                 }
             }
 

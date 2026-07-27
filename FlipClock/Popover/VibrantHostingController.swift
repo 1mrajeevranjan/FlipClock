@@ -84,9 +84,6 @@ final class VibrantHostingController<Content: View>: NSViewController {
                 self.applyAppearance(to: effectView)
             }
             .store(in: &cancellables)
-        settings.$popoverGlassiness
-            .sink { [weak self] _ in self?.applyGlassiness() }
-            .store(in: &cancellables)
     }
 
     private func applyAppearance(to effectView: NSVisualEffectView) {
@@ -98,14 +95,11 @@ final class VibrantHostingController<Content: View>: NSViewController {
     }
 
     private func applyGlassiness() {
-        // "Reduce transparency" (System Settings > Accessibility > Display)
-        // is an OS-level accommodation, not just another app preference —
-        // it overrides the user's own glassiness slider rather than
-        // blending with it, same as `WidgetGlassBackground` does for the
-        // desktop overlay.
-        let scrimAlpha = NSWorkspace.shared.accessibilityDisplayShouldReduceTransparency
-            ? 1
-            : 1 - settings.popoverGlassiness
+        // Fixed to fully clear glass (no scrim). "Reduce transparency"
+        // (System Settings > Accessibility > Display) is an OS-level
+        // accommodation, not an app preference — it still overrides this,
+        // same as `WidgetGlassBackground` does for the desktop overlay.
+        let scrimAlpha: CGFloat = NSWorkspace.shared.accessibilityDisplayShouldReduceTransparency ? 1 : 0
         scrim.layer?.backgroundColor = NSColor.windowBackgroundColor
             .withAlphaComponent(scrimAlpha)
             .cgColor

@@ -41,6 +41,7 @@
 		6CB5D1BC69D39AD6C10B65D4 /* RockFont.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 03659CC7943595F75AF50AFD /* RockFont.ttf */; };
 		6FB425BA9B762D2080B7B0D4 /* Pullstar-Holinight.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 26294A48122D93211F28E15D /* Pullstar-Holinight.ttf */; };
 		75FC8E691208165530B02821 /* WhiteSquareRedYesBlackEightZero-Zero.ttf in Resources */ = {isa = PBXBuildFile; fileRef = AF79222F73CC682D76B2C6E9 /* WhiteSquareRedYesBlackEightZero-Zero.ttf */; };
+		767AC13761BF3B9411377F1E /* SecondClockOverlayContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91C2E7F077573AE79F1C7530 /* SecondClockOverlayContentView.swift */; };
 		76B3109C1ABCE3C4998125FD /* WhiteSquareRedYesBlackEightWarsaw-Warsaw.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 3BECC1B4E84BEC1609AAA67B /* WhiteSquareRedYesBlackEightWarsaw-Warsaw.ttf */; };
 		779F863191CEC50106530C3A /* WhiteSquareRedYesBlackEightPingpong-Pingpong.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 36289D6564B3309ABB60855F /* WhiteSquareRedYesBlackEightPingpong-Pingpong.ttf */; };
 		7A1F48DB77650A681CCDE78A /* Dynamix.ttf in Resources */ = {isa = PBXBuildFile; fileRef = EFF07A7015305AA9257A835A /* Dynamix.ttf */; };
@@ -58,6 +59,7 @@
 		AADCD9DA62CCC375945AD004 /* sun.png in Resources */ = {isa = PBXBuildFile; fileRef = 7E04EE7FD9784E7541D7296F /* sun.png */; };
 		ABAFF924E0D4AA14F4E3003A /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8800DAAFAC2F27DC741FF29C /* SettingsWindowController.swift */; };
 		AC742C4A93D9C9D45A481588 /* OverlayWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CD4601C3340A6C28FDF8C3A /* OverlayWindowController.swift */; };
+		AE2A8EB82443B5249DF45E74 /* SecondClockOverlayWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72D54E078479B26DA8FDFF17 /* SecondClockOverlayWindowController.swift */; };
 		B170E1361D84026C0EE80D8A /* SecondClockMenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96A869DA91B1A0C42E527852 /* SecondClockMenuBarView.swift */; };
 		B5B2142D78AB041CCBB45B5B /* TimeProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = CED75368A307036F58F0332F /* TimeProvider.swift */; };
 		B7296591D2A8AA2A29EBEE6A /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C82BBCF4822EE69EB39A8D8C /* AppSettings.swift */; };
@@ -110,6 +112,7 @@
 		65C518BF9B070A2A98DE8BB6 /* ARCADE_N.TTF */ = {isa = PBXFileReference; path = ARCADE_N.TTF; sourceTree = "<group>"; };
 		662CD1BF127064A4EF3EC6EC /* moon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = moon.png; sourceTree = "<group>"; };
 		700B2677EE2AAF09F5FD974F /* Sportfield Varsity-Scrible.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Sportfield Varsity-Scrible.otf"; sourceTree = "<group>"; };
+		72D54E078479B26DA8FDFF17 /* SecondClockOverlayWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecondClockOverlayWindowController.swift; sourceTree = "<group>"; };
 		7433122D748E80051A23B7BD /* WidgetGlassBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetGlassBackground.swift; sourceTree = "<group>"; };
 		75F26A8260DC39BEC3E247F3 /* AddReminderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddReminderView.swift; sourceTree = "<group>"; };
 		76AE834CBCB2C51C0DE02C22 /* Sportfield Varsity.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Sportfield Varsity.otf"; sourceTree = "<group>"; };
@@ -119,6 +122,7 @@
 		8800DAAFAC2F27DC741FF29C /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
 		8F25BC2B615F37FE8B111CBF /* angrybirds-regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "angrybirds-regular.ttf"; sourceTree = "<group>"; };
 		915EEE7160E430CB387D242E /* ClockTick.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClockTick.swift; sourceTree = "<group>"; };
+		91C2E7F077573AE79F1C7530 /* SecondClockOverlayContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecondClockOverlayContentView.swift; sourceTree = "<group>"; };
 		91EE622C614D16D2F0D9CB00 /* DigitDelta.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigitDelta.swift; sourceTree = "<group>"; };
 		9382537EFD4FE15801C53C0E /* FlipClockApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlipClockApp.swift; sourceTree = "<group>"; };
 		94A19CBE28C4467C06594807 /* Sportfield Varsity-Outline3.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Sportfield Varsity-Outline3.otf"; sourceTree = "<group>"; };
@@ -282,6 +286,8 @@
 				12A448C0C9D97B8982A4777C /* OverlayContentView.swift */,
 				3EA3DA66A1F9A49A759B1825 /* OverlayWindow.swift */,
 				1CD4601C3340A6C28FDF8C3A /* OverlayWindowController.swift */,
+				91C2E7F077573AE79F1C7530 /* SecondClockOverlayContentView.swift */,
+				72D54E078479B26DA8FDFF17 /* SecondClockOverlayWindowController.swift */,
 				7433122D748E80051A23B7BD /* WidgetGlassBackground.swift */,
 			);
 			path = DesktopOverlay;
@@ -573,6 +579,8 @@
 				D0F8A5633C87FBE5502EB6D7 /* ReminderBadge.swift in Sources */,
 				DB13156575EEFA035F2AB15B /* ReminderStore.swift in Sources */,
 				B170E1361D84026C0EE80D8A /* SecondClockMenuBarView.swift in Sources */,
+				767AC13761BF3B9411377F1E /* SecondClockOverlayContentView.swift in Sources */,
+				AE2A8EB82443B5249DF45E74 /* SecondClockOverlayWindowController.swift in Sources */,
 				2811B527FE03B0BFAB73B046 /* SecondClockStatusItemController.swift in Sources */,
 				4B9E8E45D3828A20209486B4 /* SettingsView.swift in Sources */,
 				ABAFF924E0D4AA14F4E3003A /* SettingsWindowController.swift in Sources */,

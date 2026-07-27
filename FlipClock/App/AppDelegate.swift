@@ -8,6 +8,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItemController: StatusItemController?
     private var secondClockStatusItemController: SecondClockStatusItemController?
     private var overlayWindowController: OverlayWindowController?
+    private var secondClockOverlayWindowController: SecondClockOverlayWindowController?
     private lazy var settingsWindowController = SettingsWindowController(settings: settings)
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -17,5 +18,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         secondClockStatusItemController = SecondClockStatusItemController(timeProvider: timeProvider, settings: settings)
         overlayWindowController = OverlayWindowController(timeProvider: timeProvider, settings: settings, reminderStore: reminderStore)
+        secondClockOverlayWindowController = SecondClockOverlayWindowController(timeProvider: timeProvider, settings: settings)
     }
 }

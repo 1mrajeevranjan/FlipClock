@@ -42,10 +42,10 @@ Preferences store + SwiftUI settings UI.
 | File | Responsibility |
 |---|---|
 | `AppSettings.swift` | `ObservableObject`, UserDefaults-backed. Enums: `AppTheme`, `OverlaySize` (half/full/double/triple → scale 0.325/0.65/1.3/1.95), `TimeFormat`, `MeridiemStyle` (text/icon — icon renders bundled sun.png/moon.png), `WidgetColorStyle` (full/monochrome) |
-| `SettingsView.swift` | Tabbed settings UI (General / Appearance / Desktop Clock / Second Clock); each tab resizes the window instead of leaving blank space |
-| `SettingsWindowController.swift` | Self-managed `NSWindow` host (works around `LSUIElement` `Settings` scene issues) |
+| `SettingsView.swift` | Tabbed settings UI (General / Appearance / Desktop Clock / Second Clock); each tab resizes the window instead of leaving blank space. Second Clock's "Show second clock" segmented control (Off/Menu Bar/Desktop Widget/Both) edits `AppSettings.secondClockDisplay`, a UI-only computed property over the two underlying `showSecondClock`/`showSecondClockOverlay` booleans |
+| `SettingsWindowController.swift` | Self-managed `NSWindow` host (works around `LSUIElement` `Settings` scene issues); native title (flush with the traffic lights) shows the selected tab's name — `SettingsView` no longer draws its own duplicate heading below it |
 
-**Persisted settings today:** `showDesktopOverlay`, `launchAtLogin`, `theme`, `popoverGlassiness`, `overlaySize`, `meridiemStyle`, `showSecondClock`, `secondTimezoneID`, `timeFormat`, `showDateOnOverlay`, `floatAcrossScreen`, `fillScreen`, `widgetFont`, `widgetColorStyle`.
+**Persisted settings today:** `showDesktopOverlay`, `launchAtLogin`, `theme`, `overlaySize`, `meridiemStyle`, `showSecondClock`, `secondTimezoneID`, `showSecondClockOverlay`, `timeFormat`, `showDateOnOverlay`, `floatAcrossScreen`, `fillScreen`, `widgetFont`, `widgetColorStyle`.
 
 ## Reminders/
 Shared reminder data + UI fragments, consumed by Popover, DesktopOverlay, and MenuBar.
@@ -97,8 +97,9 @@ OverlayWindow (NSPanel subclass)
 | `OverlayContentView.swift` | SwiftUI root: clock + optional date row + reminder badge, fixed padding, analytic `windowSize(...)` |
 | `WidgetGlassBackground.swift` | Rounded-rect glass container. Renders the `DesktopBackdropCapture` blurred image when available, falls back to `NSVisualEffectView` (`.underWindowBackground`) otherwise; Reduce-Transparency fallback to opaque `.windowBackgroundColor` |
 | `DesktopBackdropCapture.swift` | Captures the desktop behind the window (`CGWindowListCreateImage`, filtered to on-screen-below-window) and runs it through `CIGaussianBlur` on a background queue every 5s — this is what gives the widget stronger diffusion than a plain `NSVisualEffectView` can produce. Requires Screen Recording permission; falls back gracefully if denied |
+| `SecondClockOverlayContentView.swift` / `SecondClockOverlayWindowController.swift` | Companion desktop widget for `settings.secondTimezoneID` — same glass treatment, sizing, and day/date/year row as the primary widget (all driven by the same settings), plus a small timezone-name label above the clock. Its own `OverlayWindow` + `DesktopBackdropCapture` instance; toggled by `settings.showSecondClockOverlay`. Deliberately skips float-across-screen/fill-screen — companion widget, not the main clock |
 
-**Settings driving overlay appearance:** `showDesktopOverlay`, `overlaySize`, `showDateOnOverlay`, `timeFormat`, `meridiemStyle`, `theme`, `widgetColorStyle`, `floatAcrossScreen` (mutually exclusive with `fillScreen`), `fillScreen` (covers `NSScreen.main`, disables drag/shadow, corner radius→0, 1.6× extra scale).
+**Settings driving overlay appearance:** `showDesktopOverlay`, `overlaySize`, `showDateOnOverlay`, `timeFormat`, `meridiemStyle`, `theme`, `widgetColorStyle`, `floatAcrossScreen` (mutually exclusive with `fillScreen`), `fillScreen` (covers `NSScreen.main`, disables drag/shadow, corner radius→0, 1.6× extra scale). The second-clock widget additionally reads `secondTimezoneID` and is gated by `showSecondClockOverlay`.
 
 **Current hardcoded visual constants:**
 - **Corner radius:** `WidgetGlassBackground.cornerRadius(scale:)` = `(34 * scale).clamped(to: 14...40)`, forced to `0` in full-screen.

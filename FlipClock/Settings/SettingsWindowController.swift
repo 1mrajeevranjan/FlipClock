@@ -24,7 +24,6 @@ final class SettingsWindowController {
                 defer: false
             )
             window.title = "General"
-            window.titleVisibility = .hidden
             window.titlebarAppearsTransparent = true
             window.isMovableByWindowBackground = true
             window.isReleasedWhenClosed = false

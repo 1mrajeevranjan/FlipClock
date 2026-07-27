@@ -104,6 +104,37 @@ enum MeridiemStyle: String, CaseIterable, Identifiable {
     }
 }
 
+/// Where the second (extra-timezone) clock appears — UI-only grouping over
+/// `AppSettings.showSecondClock`/`showSecondClockOverlay` so the settings
+/// screen offers one choice instead of two toggles whose four combinations
+/// (both off, only one on, both on) weren't obviously distinct controls.
+enum SecondClockDisplay: String, CaseIterable, Identifiable {
+    case off, menuBar, widget, both
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .off: return "Off"
+        case .menuBar: return "Menu Bar"
+        case .widget: return "Desktop Widget"
+        case .both: return "Both"
+        }
+    }
+
+    var showsInMenuBar: Bool { self == .menuBar || self == .both }
+    var showsAsWidget: Bool { self == .widget || self == .both }
+
+    init(showsInMenuBar: Bool, showsAsWidget: Bool) {
+        switch (showsInMenuBar, showsAsWidget) {
+        case (false, false): self = .off
+        case (true, false): self = .menuBar
+        case (false, true): self = .widget
+        case (true, true): self = .both
+        }
+    }
+}
+
 enum WidgetColorStyle: String, CaseIterable, Identifiable {
     case full, monochrome
 
@@ -137,13 +168,6 @@ final class AppSettings: ObservableObject {
         didSet { UserDefaults.standard.set(theme.rawValue, forKey: Keys.theme) }
     }
 
-    /// 0 = solid (opaque), 1 = fully clear glass. Drives the scrim opacity
-    /// layered over the popover's `NSVisualEffectView` in
-    /// `VibrantHostingController`.
-    @Published var popoverGlassiness: Double {
-        didSet { UserDefaults.standard.set(popoverGlassiness, forKey: Keys.popoverGlassiness) }
-    }
-
     @Published var overlaySize: OverlaySize {
         didSet { UserDefaults.standard.set(overlaySize.rawValue, forKey: Keys.overlaySize) }
     }
@@ -160,6 +184,24 @@ final class AppSettings: ObservableObject {
     /// menu-bar clock.
     @Published var secondTimezoneID: String {
         didSet { UserDefaults.standard.set(secondTimezoneID, forKey: Keys.secondTimezoneID) }
+    }
+
+    /// When true, a second desktop widget shows `secondTimezoneID`'s time —
+    /// same glass-widget treatment as the primary desktop clock, labeled
+    /// with the timezone name.
+    @Published var showSecondClockOverlay: Bool {
+        didSet { UserDefaults.standard.set(showSecondClockOverlay, forKey: Keys.showSecondClockOverlay) }
+    }
+
+    /// Single settings-UI-facing view over `showSecondClock` +
+    /// `showSecondClockOverlay` — not itself persisted, just a convenience
+    /// for presenting "Off/Menu Bar/Desktop Widget/Both" as one control.
+    var secondClockDisplay: SecondClockDisplay {
+        get { SecondClockDisplay(showsInMenuBar: showSecondClock, showsAsWidget: showSecondClockOverlay) }
+        set {
+            showSecondClock = newValue.showsInMenuBar
+            showSecondClockOverlay = newValue.showsAsWidget
+        }
     }
 
     @Published var timeFormat: TimeFormat {
@@ -209,11 +251,11 @@ final class AppSettings: ObservableObject {
         static let showDesktopOverlay = "showDesktopOverlay"
         static let launchAtLogin = "launchAtLogin"
         static let theme = "theme"
-        static let popoverGlassiness = "popoverGlassiness"
         static let overlaySize = "overlaySize"
         static let meridiemStyle = "meridiemStyle"
         static let showSecondClock = "showSecondClock"
         static let secondTimezoneID = "secondTimezoneID"
+        static let showSecondClockOverlay = "showSecondClockOverlay"
         static let timeFormat = "timeFormat"
         static let showDateOnOverlay = "showDateOnOverlay"
         static let floatAcrossScreen = "floatAcrossScreen"
@@ -227,11 +269,11 @@ final class AppSettings: ObservableObject {
         showDesktopOverlay = defaults.object(forKey: Keys.showDesktopOverlay) as? Bool ?? true
         launchAtLogin = defaults.object(forKey: Keys.launchAtLogin) as? Bool ?? false
         theme = (defaults.string(forKey: Keys.theme)).flatMap(AppTheme.init(rawValue:)) ?? .system
-        popoverGlassiness = defaults.object(forKey: Keys.popoverGlassiness) as? Double ?? 0.7
         overlaySize = (defaults.string(forKey: Keys.overlaySize)).flatMap(OverlaySize.init(rawValue:)) ?? .full
         meridiemStyle = (defaults.string(forKey: Keys.meridiemStyle)).flatMap(MeridiemStyle.init(rawValue:)) ?? .text
         showSecondClock = defaults.object(forKey: Keys.showSecondClock) as? Bool ?? false
         secondTimezoneID = defaults.string(forKey: Keys.secondTimezoneID) ?? "UTC"
+        showSecondClockOverlay = defaults.object(forKey: Keys.showSecondClockOverlay) as? Bool ?? false
         timeFormat = (defaults.string(forKey: Keys.timeFormat)).flatMap(TimeFormat.init(rawValue:)) ?? .twelveHour
         showDateOnOverlay = defaults.object(forKey: Keys.showDateOnOverlay) as? Bool ?? true
         floatAcrossScreen = defaults.object(forKey: Keys.floatAcrossScreen) as? Bool ?? false

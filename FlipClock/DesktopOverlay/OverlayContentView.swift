@@ -93,54 +93,36 @@ struct OverlayContentView: View {
     }
 }
 
-private struct DateFlapRow: View {
+/// Day/date/year flap row shared by the primary desktop widget and the
+/// second-timezone desktop widget — `timeZone` defaults to the system one
+/// so existing call sites are unaffected; the second-clock widget passes
+/// its own chosen timezone so the weekday/date reflect that zone's date,
+/// not the system's (they can disagree near midnight).
+struct DateFlapRow: View {
     let date: Date
     let scale: CGFloat
     let isDark: Bool
     var glassCard: Bool = false
     var fontName: String? = nil
+    var timeZone: TimeZone = .current
 
-    private static let weekdayFormatter: DateFormatter = {
+    private func formatter(_ dateFormat: String) -> DateFormatter {
         let f = DateFormatter()
         f.locale = .current
-        f.timeZone = .current
-        f.dateFormat = "EEEE"
+        f.timeZone = timeZone
+        f.dateFormat = dateFormat
         return f
-    }()
-
-    private static let monthFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.locale = .current
-        f.timeZone = .current
-        f.dateFormat = "MMM"
-        return f
-    }()
-
-    private static let dayFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.locale = .current
-        f.timeZone = .current
-        f.dateFormat = "dd"
-        return f
-    }()
-
-    private static let yearFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.locale = .current
-        f.timeZone = .current
-        f.dateFormat = "yyyy"
-        return f
-    }()
+    }
 
     private var weekdayCharacters: [String] {
-        Array(Self.weekdayFormatter.string(from: date).uppercased()).map(String.init)
+        Array(formatter("EEEE").string(from: date).uppercased()).map(String.init)
     }
 
     private var dateGroups: [[String]] {
         [
-            Array(Self.monthFormatter.string(from: date).uppercased()).map(String.init),
-            Array(Self.dayFormatter.string(from: date)).map(String.init),
-            Array(Self.yearFormatter.string(from: date)).map(String.init)
+            Array(formatter("MMM").string(from: date).uppercased()).map(String.init),
+            Array(formatter("dd").string(from: date)).map(String.init),
+            Array(formatter("yyyy").string(from: date)).map(String.init)
         ]
     }
 
@@ -153,7 +135,9 @@ private struct DateFlapRow: View {
     private var rowGap: CGFloat { 6 * scale }
 
     private var weekdayColor: NSColor? {
-        Calendar.current.component(.weekday, from: date) == 1 ? .systemRed : nil
+        var calendar = Calendar.current
+        calendar.timeZone = timeZone
+        return calendar.component(.weekday, from: date) == 1 ? .systemRed : nil
     }
 
     var body: some View {
