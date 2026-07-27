@@ -2,7 +2,15 @@
 
 Chronological log of major milestones, newest first. See `git log` for the exact commit-level history — this is the "why phases happened" summary, not a changelog duplicate.
 
-## Phase 7 — Reminders (current)
+## Phase 8 — Settings window polish (current)
+
+- Sliding tab-selection pill in `SettingsView`'s custom header, replacing four independently-fading per-button backgrounds.
+- Long debugging arc chasing an animation asymmetry (pill "bounces" on General↔Appearance, slides cleanly on other pairs) through several plausible-but-wrong fixes — `matchedGeometryEffect`, `.overlay()` → `ZStack` restructuring, an animated `NSWindow` resize with pinned hosting view — before the real cause (`.animation(_:value:)`/`matchedGeometryEffect` animating a view's entire layout-derived position, not just the intended property) was isolated by tracking the pill's full bounding box at 60fps instead of just its x-position. Fixed with an explicit `@State` scalar offset animated via `withAnimation`. Full trail in `memory.md`.
+- Settings window resize switched to unanimated — an animated `NSWindow` frame independently misplaces top-aligned `NSHostingView` content mid-grow.
+- Replaced `GroupBox`-based settings cards with a plain custom `VStack`+background (GroupBox's hidden internal padding survives even a custom `GroupBoxStyle`).
+- Hairline `Divider` added between the tab row and card content; header/content split into `ZStack` siblings instead of `.overlay()`.
+
+## Phase 7 — Reminders
 
 - `Reminders/` module: `Reminder` model, `ReminderStore` (UserDefaults-JSON), shared across popover/widget/menu bar.
 - Add via double-click on a calendar day; precise "@ time" picker (not just the moment double-clicked).

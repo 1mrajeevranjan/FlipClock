@@ -12,6 +12,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
     private let settings: AppSettings
     private let reminderStore: ReminderStore
     private let timerModel: CountdownTimer
+    private let stopwatch: Stopwatch
     private let onOpenSettings: () -> Void
     private var hosting: NSHostingView<MenuBarClockView>?
     private var cancellables = Set<AnyCancellable>()
@@ -25,11 +26,12 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
     }
     private var pulseTimer: Timer?
 
-    init(timeProvider: TimeProvider, settings: AppSettings, reminderStore: ReminderStore, timerModel: CountdownTimer, onOpenSettings: @escaping () -> Void) {
+    init(timeProvider: TimeProvider, settings: AppSettings, reminderStore: ReminderStore, timerModel: CountdownTimer, stopwatch: Stopwatch, onOpenSettings: @escaping () -> Void) {
         self.timeProvider = timeProvider
         self.settings = settings
         self.reminderStore = reminderStore
         self.timerModel = timerModel
+        self.stopwatch = stopwatch
         self.onOpenSettings = onOpenSettings
         self.pulseColorScheme = nil
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
@@ -46,7 +48,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         popover.behavior = .transient
         popover.delegate = self
         popover.contentViewController = VibrantHostingController(
-            rootView: PopoverClockView(timeProvider: timeProvider, settings: settings, reminderStore: reminderStore, timerModel: timerModel),
+            rootView: PopoverClockView(timeProvider: timeProvider, settings: settings, reminderStore: reminderStore, timerModel: timerModel, stopwatch: stopwatch),
             settings: settings
         )
 

@@ -29,7 +29,7 @@ A native macOS split-flap clock: menu bar clock, popover view with calendar, a f
 - Optional second menu bar clock in a different time zone
 - Configurable appearance, time format, overlay size, and AM/PM style
 - Launch-at-login support
-- Settings window that resizes per tab instead of leaving blank space
+- Settings window that resizes per tab instead of leaving blank space, with a sliding tab-selection pill
 
 ## Requirements
 
@@ -113,6 +113,7 @@ More detail — including design rationale, hard-won gotchas, and development hi
 - Date and time rendering share the same split-flap face renderer for visual consistency.
 - The desktop overlay window sits just above the desktop-icon layer and below normal app windows, so it's covered by any foreground app window — this is intentional, matching how system widgets behave.
 - `NSWindow.frame` reports/stores whole-point origins. Any animation that accumulates a sub-pixel-per-tick offset (like the float-across-screen drift) must track its own precise position rather than reading it back from `window.frame` each tick, or the fractional progress gets silently truncated away every frame.
+- Settings window's tab-selection pill is driven by an explicit `@State` offset animated via `withAnimation`, not `.animation(_:value:)` or `matchedGeometryEffect` — both of those animate the pill's *entire* layout-derived position, so a transient re-layout during a large tab-to-tab content-height change got eased into a visible diagonal arc on some tab pairs but not others. Animating a single scalar keeps every pair identical. The settings window's resize is also unanimated for the same reason (an animated `NSWindow` frame around a hosted SwiftUI view transiently misplaces top-aligned content while it grows).
 
 ## Contributing
 

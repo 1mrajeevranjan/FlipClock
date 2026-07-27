@@ -14,6 +14,7 @@ final class CountdownTimer: ObservableObject {
     @Published private(set) var remainingSeconds: Int = 0
     @Published private(set) var isRunning: Bool = false
     @Published private(set) var isFinished: Bool = false
+    @Published var inputHours: Int = 0
     @Published var inputMinutes: Int = 5
     @Published var inputSeconds: Int = 0
 
@@ -21,7 +22,7 @@ final class CountdownTimer: ObservableObject {
     private var endDate: Date?
 
     func start() {
-        let total = inputMinutes * 60 + inputSeconds
+        let total = inputHours * 3600 + inputMinutes * 60 + inputSeconds
         guard total > 0 else { return }
         remainingSeconds = total
         isFinished = false

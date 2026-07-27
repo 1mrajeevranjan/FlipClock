@@ -24,6 +24,7 @@
 		28051F2EAB481FB6EF3EAF22 /* Tennessee College.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 95C32DF3B238972ABB75917B /* Tennessee College.ttf */; };
 		2811B527FE03B0BFAB73B046 /* SecondClockStatusItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22AAEA71929350340A866A7B /* SecondClockStatusItemController.swift */; };
 		301E780BFE282310BCE1E919 /* Vlump Black.ttf in Resources */ = {isa = PBXBuildFile; fileRef = AB31DEDDADF92FBAAA7BF088 /* Vlump Black.ttf */; };
+		32590B17D319F0615DAF2456 /* StopwatchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D513FAB362F234EA067BCF70 /* StopwatchView.swift */; };
 		3404D70ADEABE3D5B96AFE49 /* Destroy All Humans!.otf in Resources */ = {isa = PBXBuildFile; fileRef = C3EAB38CFE04422718C3047D /* Destroy All Humans!.otf */; };
 		34DEF4B241287C9BD171F090 /* TRON.TTF in Resources */ = {isa = PBXBuildFile; fileRef = EE1FDD56434FA08A26814B3D /* TRON.TTF */; };
 		3AB38857C79E08B3BF2ADBC6 /* DueReminderBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1404A3D2475EEDC6D174181 /* DueReminderBanner.swift */; };
@@ -69,15 +70,18 @@
 		BEE4478FD4D402324CFDBE0B /* WhiteSquareRedYesBlackEight-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = FFD7E50CEB556B656FB461A7 /* WhiteSquareRedYesBlackEight-Regular.ttf */; };
 		C2E6D90C324F39DB722972EB /* CountdownTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2284429193024632E90DAB5 /* CountdownTimer.swift */; };
 		C9754D0A7822746BE4F0F162 /* FlipClockApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9382537EFD4FE15801C53C0E /* FlipClockApp.swift */; };
+		CB610DD5CD71165948A6FC47 /* Stopwatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91E5E1421B48CA58FC8F8606 /* Stopwatch.swift */; };
 		CD4212EE01B9C3D2FC4D595E /* OverlayWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EA3DA66A1F9A49A759B1825 /* OverlayWindow.swift */; };
 		D0448B25E61FFCC1FD18E9B7 /* StatusItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FEC2FADD24FCE8918E65F47 /* StatusItemController.swift */; };
 		D0F8A5633C87FBE5502EB6D7 /* ReminderBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5896ECD25212EC9A5CB044A /* ReminderBadge.swift */; };
+		D7C8F4FC0959420C060B315B /* TimeWheelPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EB9AA3719A25F93A36D7124 /* TimeWheelPicker.swift */; };
 		DAB960062120E9ED90E69164 /* DateHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B45723FCF839EE6FCDF79CAA /* DateHeaderView.swift */; };
 		DB13156575EEFA035F2AB15B /* ReminderStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99B38BBE6721287DFCDD38D1 /* ReminderStore.swift */; };
 		DC9C7F4FB4955BC7BA2B07E7 /* WidgetFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7E3F10687F2F80B1FA8F91E /* WidgetFont.swift */; };
 		E68EDA1FE502621924873DBE /* abduction2002.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B991B52C184F247E89C7B552 /* abduction2002.ttf */; };
 		E6960F41E21880F41D3C0C78 /* DigitDelta.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91EE622C614D16D2F0D9CB00 /* DigitDelta.swift */; };
 		E84902489E6F8CCF4F6B778C /* VibrantHostingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFD87184D792EF0F08700422 /* VibrantHostingController.swift */; };
+		E882AC4CA03986B5C8006A24 /* FlipTimeDisplay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0360FB1231F7D7C408271646 /* FlipTimeDisplay.swift */; };
 		E98342BF539CAE355C1D0DEE /* DigitFaceRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2C211AFAE6975DEBA1E8893 /* DigitFaceRenderer.swift */; };
 		EA2D3F3E2BD0B963F0FF8B8E /* Sportfield Varsity-Shadow.otf in Resources */ = {isa = PBXBuildFile; fileRef = 494FF96E602C234D3D76D3CF /* Sportfield Varsity-Shadow.otf */; };
 		EE537B85EB4AEE438540BE51 /* Bing Bam Boum.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C953BA2E9BB4C4B7E554970F /* Bing Bam Boum.ttf */; };
@@ -91,6 +95,7 @@
 		001227C8E08C263951B67D42 /* Sportfield Varsity-Outline2.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Sportfield Varsity-Outline2.otf"; sourceTree = "<group>"; };
 		00D00F499ACFDC4FD6C9F951 /* Sportfield Varsity-Outline1.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Sportfield Varsity-Outline1.otf"; sourceTree = "<group>"; };
 		02DDB38188F3CABDE8AF990C /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		0360FB1231F7D7C408271646 /* FlipTimeDisplay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlipTimeDisplay.swift; sourceTree = "<group>"; };
 		03659CC7943595F75AF50AFD /* RockFont.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = RockFont.ttf; sourceTree = "<group>"; };
 		0F05D3D8AB3B3658A5974D0E /* FlapColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlapColors.swift; sourceTree = "<group>"; };
 		117A7E39C1E35B6312E3AA2C /* YrBkMess.TTF */ = {isa = PBXFileReference; path = YrBkMess.TTF; sourceTree = "<group>"; };
@@ -108,6 +113,7 @@
 		3FE91CB5C9D39516AFE000B6 /* Vlump.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Vlump.ttf; sourceTree = "<group>"; };
 		494FF96E602C234D3D76D3CF /* Sportfield Varsity-Shadow.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Sportfield Varsity-Shadow.otf"; sourceTree = "<group>"; };
 		569EF2149D9DD94C311A6F46 /* PopoverClockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverClockView.swift; sourceTree = "<group>"; };
+		5EB9AA3719A25F93A36D7124 /* TimeWheelPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeWheelPicker.swift; sourceTree = "<group>"; };
 		5FB871E136E63543744A1304 /* DesktopBackdropCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopBackdropCapture.swift; sourceTree = "<group>"; };
 		5FEC2FADD24FCE8918E65F47 /* StatusItemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusItemController.swift; sourceTree = "<group>"; };
 		610FBE1AA72EC47C519C2E8C /* KGPrimaryItalicsLined.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = KGPrimaryItalicsLined.ttf; sourceTree = "<group>"; };
@@ -127,6 +133,7 @@
 		8F25BC2B615F37FE8B111CBF /* angrybirds-regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "angrybirds-regular.ttf"; sourceTree = "<group>"; };
 		915EEE7160E430CB387D242E /* ClockTick.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClockTick.swift; sourceTree = "<group>"; };
 		91C2E7F077573AE79F1C7530 /* SecondClockOverlayContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecondClockOverlayContentView.swift; sourceTree = "<group>"; };
+		91E5E1421B48CA58FC8F8606 /* Stopwatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stopwatch.swift; sourceTree = "<group>"; };
 		91EE622C614D16D2F0D9CB00 /* DigitDelta.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigitDelta.swift; sourceTree = "<group>"; };
 		9382537EFD4FE15801C53C0E /* FlipClockApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlipClockApp.swift; sourceTree = "<group>"; };
 		94A19CBE28C4467C06594807 /* Sportfield Varsity-Outline3.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Sportfield Varsity-Outline3.otf"; sourceTree = "<group>"; };
@@ -153,6 +160,7 @@
 		CB3B3C2DD6832C4407F90348 /* Sportfield Varsity-Italic.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Sportfield Varsity-Italic.otf"; sourceTree = "<group>"; };
 		CED75368A307036F58F0332F /* TimeProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeProvider.swift; sourceTree = "<group>"; };
 		D2C211AFAE6975DEBA1E8893 /* DigitFaceRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigitFaceRenderer.swift; sourceTree = "<group>"; };
+		D513FAB362F234EA067BCF70 /* StopwatchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StopwatchView.swift; sourceTree = "<group>"; };
 		D5896ECD25212EC9A5CB044A /* ReminderBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderBadge.swift; sourceTree = "<group>"; };
 		DD2A120ACB0F42A007264D1C /* SplitFlapPairView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitFlapPairView.swift; sourceTree = "<group>"; };
 		E1B048EDDC054D8647424B07 /* FlipCardLayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlipCardLayer.swift; sourceTree = "<group>"; };
@@ -430,6 +438,10 @@
 			children = (
 				E2284429193024632E90DAB5 /* CountdownTimer.swift */,
 				6AC7885A916410F16341805C /* CountdownTimerView.swift */,
+				0360FB1231F7D7C408271646 /* FlipTimeDisplay.swift */,
+				91E5E1421B48CA58FC8F8606 /* Stopwatch.swift */,
+				D513FAB362F234EA067BCF70 /* StopwatchView.swift */,
+				5EB9AA3719A25F93A36D7124 /* TimeWheelPicker.swift */,
 			);
 			path = CountdownTimer;
 			sourceTree = "<group>";
@@ -590,6 +602,7 @@
 				066BBA76C5767ABF5935A9EC /* FlapColors.swift in Sources */,
 				02A5B5C771F3CADF7B6AFAA7 /* FlipCardLayer.swift in Sources */,
 				C9754D0A7822746BE4F0F162 /* FlipClockApp.swift in Sources */,
+				E882AC4CA03986B5C8006A24 /* FlipTimeDisplay.swift in Sources */,
 				64CC5AB390160626B67B5EFE /* MenuBarClockView.swift in Sources */,
 				F6851EAC55377D47BD073178 /* OverlayContentView.swift in Sources */,
 				CD4212EE01B9C3D2FC4D595E /* OverlayWindow.swift in Sources */,
@@ -608,7 +621,10 @@
 				3DA8EB3A8D08B6D82BEE89A0 /* SplitFlapDigit.swift in Sources */,
 				4511816071E0C80C3F673194 /* SplitFlapPairView.swift in Sources */,
 				D0448B25E61FFCC1FD18E9B7 /* StatusItemController.swift in Sources */,
+				CB610DD5CD71165948A6FC47 /* Stopwatch.swift in Sources */,
+				32590B17D319F0615DAF2456 /* StopwatchView.swift in Sources */,
 				B5B2142D78AB041CCBB45B5B /* TimeProvider.swift in Sources */,
+				D7C8F4FC0959420C060B315B /* TimeWheelPicker.swift in Sources */,
 				E84902489E6F8CCF4F6B778C /* VibrantHostingController.swift in Sources */,
 				DC9C7F4FB4955BC7BA2B07E7 /* WidgetFont.swift in Sources */,
 				1DDF18C7AC5EA749D6EC8F6B /* WidgetGlassBackground.swift in Sources */,

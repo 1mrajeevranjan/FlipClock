@@ -60,7 +60,8 @@ struct SplitFlapDigit: View {
     private var cornerRadius: CGFloat { compact ? 2 : 6 }
     /// Total seam-line thickness at rest — split between the top and
     /// bottom halves' baked-in slivers (see `DigitFaceRenderer.render`).
-    private var hingeThickness: CGFloat { compact ? 1.5 : 3.5 }
+    /// 20% thinner than the original 1.5/3.5.
+    private var hingeThickness: CGFloat { compact ? 1.2 : 2.8 }
 
     private var cardShape: UnevenRoundedRectangle {
         UnevenRoundedRectangle(
