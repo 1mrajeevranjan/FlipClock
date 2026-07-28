@@ -61,6 +61,26 @@ final class FlapAnimatingNSView: NSView {
 
     private let flapLayer = CALayer()
     private var cardSize: CGSize = .zero
+    /// Guards against re-entrant flips. A source value that changes faster
+    /// than one flip cycle takes (~0.33s) — the stopwatch's centisecond
+    /// digit ticks every 30ms — used to retrigger `playFlip` mid-rotation,
+    /// which zeroed the in-flight `CABasicAnimation`'s transform via
+    /// `CATransaction.setDisableActions(true)` without removing the
+    /// animation itself, so the old and new animations both stayed
+    /// attached to the layer under different keys, fighting over the same
+    /// "transform.rotation.x" property. Because `startPhase2`'s completion
+    /// block — the only place that clears `flapLayer.isHidden` and calls
+    /// `onLanded` — only fires when a `CABasicAnimation` finishes
+    /// naturally, an interrupted flip never reached it, and the digit
+    /// could freeze permanently mid-rotation the instant ticking stopped
+    /// (confirmed: stopwatch Reset while running left the sec/ms cards
+    /// visibly stuck mid-flip indefinitely). Coalescing rapid retriggers
+    /// into "remember the latest target, play it once the current flip
+    /// lands" instead of restarting guarantees exactly one animation pair
+    /// is ever in flight, so every flip completes and clears its own state
+    /// cleanly before the next one begins.
+    private var isFlipping = false
+    private var pendingValue: String?
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -103,6 +123,15 @@ final class FlapAnimatingNSView: NSView {
 
     func playFlip(oldValue: String, newValue: String) {
         guard cardSize.width > 0, cardSize.height > 0 else { return }
+        guard !isFlipping else {
+            pendingValue = newValue
+            return
+        }
+        beginFlip(from: oldValue, to: newValue)
+    }
+
+    private func beginFlip(from oldValue: String, to newValue: String) {
+        isFlipping = true
 
         CATransaction.begin()
         CATransaction.setDisableActions(true)
@@ -158,8 +187,19 @@ final class FlapAnimatingNSView: NSView {
         // explicit animation below drives the transform.
         CATransaction.setDisableActions(true)
         CATransaction.setCompletionBlock { [weak self] in
-            self?.flapLayer.isHidden = true
-            self?.onLanded?()
+            guard let self else { return }
+            self.flapLayer.isHidden = true
+            self.isFlipping = false
+            self.onLanded?()
+            // A newer value arrived while this flip was still rotating —
+            // play it now that the layer has cleanly landed, rather than
+            // in the middle of the animation that was already running.
+            if let next = self.pendingValue, next != newValue {
+                self.pendingValue = nil
+                self.beginFlip(from: newValue, to: next)
+            } else {
+                self.pendingValue = nil
+            }
         }
         flapLayer.transform = CATransform3DIdentity
         let anim = CABasicAnimation(keyPath: "transform.rotation.x")

@@ -152,11 +152,25 @@ struct DateFlapRow: View {
     var fontName: String? = nil
     var timeZone: TimeZone = .current
 
+    // `DateFlapRow` is rebuilt every second (it's driven by `timeProvider.tick`),
+    // and `body` reads `weekdayCharacters`/`dateGroups` — each of which used to
+    // allocate a fresh `DateFormatter` per call, 4 allocations/second forever
+    // while the overlay is visible, for values that only actually change once
+    // a day. `DateFormatter` is expensive to construct (locale/calendar/
+    // timezone resolution); caching by format string and just updating the
+    // (cheap) timeZone property keeps this to one allocation per format ever.
+    private static var formatterCache: [String: DateFormatter] = [:]
+
     private func formatter(_ dateFormat: String) -> DateFormatter {
+        if let cached = Self.formatterCache[dateFormat] {
+            cached.timeZone = timeZone
+            return cached
+        }
         let f = DateFormatter()
         f.locale = .current
         f.timeZone = timeZone
         f.dateFormat = dateFormat
+        Self.formatterCache[dateFormat] = f
         return f
     }
 
@@ -181,10 +195,12 @@ struct DateFlapRow: View {
     private var rowGap: CGFloat { 6 * scale }
 
     private var weekdayColor: NSColor? {
-        var calendar = Calendar.current
+        var calendar = Self.baseCalendar
         calendar.timeZone = timeZone
         return calendar.component(.weekday, from: date) == 1 ? .systemRed : nil
     }
+
+    private static let baseCalendar = Calendar.current
 
     var body: some View {
         VStack(spacing: rowGap) {

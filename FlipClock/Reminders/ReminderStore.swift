@@ -12,8 +12,12 @@ final class ReminderStore: ObservableObject {
 
     private let calendar = Calendar.current
     private let key = "reminders"
+    /// Injectable so tests can pass an isolated `UserDefaults(suiteName:)`
+    /// instead of touching the real user's `.standard`.
+    private let defaults: UserDefaults
 
-    init() {
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
         load()
     }
 
@@ -79,13 +83,13 @@ final class ReminderStore: ObservableObject {
     }
 
     private func load() {
-        guard let data = UserDefaults.standard.data(forKey: key),
+        guard let data = defaults.data(forKey: key),
               let decoded = try? JSONDecoder().decode([Reminder].self, from: data) else { return }
         reminders = decoded
     }
 
     private func save() {
         guard let data = try? JSONEncoder().encode(reminders) else { return }
-        UserDefaults.standard.set(data, forKey: key)
+        defaults.set(data, forKey: key)
     }
 }

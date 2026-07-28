@@ -58,6 +58,16 @@ xcodebuild -project FlipClock.xcodeproj \
   build
 ```
 
+### Running tests
+
+```bash
+xcodebuild test -project FlipClock.xcodeproj \
+  -scheme FlipClock \
+  -destination 'platform=macOS'
+```
+
+`FlipClockTests` covers the app's logic and persistence layers (time/digit math, settings, reminders, the countdown timer and stopwatch), including stress tests for rapid start/stop/reset cycling and bulk reminder operations, plus a performance suite (`PerformanceTests.swift`) covering per-tick time math, the desktop widget's capture-gating logic, and persistence throughput under load. It never touches your real preferences — `AppSettings` and `ReminderStore` are tested against isolated `UserDefaults(suiteName:)` instances, not `.standard`.
+
 ### Regenerating the Xcode project
 
 The project is defined in `project.yml` and the generated `FlipClock.xcodeproj` is checked into the repo. After adding, removing, or renaming source files, regenerate the project rather than hand-editing `project.pbxproj`:

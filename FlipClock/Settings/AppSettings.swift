@@ -153,44 +153,50 @@ enum WidgetColorStyle: String, CaseIterable, Identifiable {
 /// `SettingsView`) and plain AppKit controllers (`OverlayWindowController`)
 /// can react to changes.
 final class AppSettings: ObservableObject {
+    /// Injectable so tests can pass an isolated `UserDefaults(suiteName:)`
+    /// instead of touching the real user's `.standard` — every persisted
+    /// property below reads/writes through this rather than
+    /// `UserDefaults.standard` directly.
+    private let defaults: UserDefaults
+
     @Published var showDesktopOverlay: Bool {
-        didSet { UserDefaults.standard.set(showDesktopOverlay, forKey: Keys.showDesktopOverlay) }
+        didSet { defaults.set(showDesktopOverlay, forKey: Keys.showDesktopOverlay) }
     }
 
     @Published var launchAtLogin: Bool {
         didSet {
-            UserDefaults.standard.set(launchAtLogin, forKey: Keys.launchAtLogin)
+            defaults.set(launchAtLogin, forKey: Keys.launchAtLogin)
             applyLaunchAtLogin()
         }
     }
 
     @Published var theme: AppTheme {
-        didSet { UserDefaults.standard.set(theme.rawValue, forKey: Keys.theme) }
+        didSet { defaults.set(theme.rawValue, forKey: Keys.theme) }
     }
 
     @Published var overlaySize: OverlaySize {
-        didSet { UserDefaults.standard.set(overlaySize.rawValue, forKey: Keys.overlaySize) }
+        didSet { defaults.set(overlaySize.rawValue, forKey: Keys.overlaySize) }
     }
 
     @Published var meridiemStyle: MeridiemStyle {
-        didSet { UserDefaults.standard.set(meridiemStyle.rawValue, forKey: Keys.meridiemStyle) }
+        didSet { defaults.set(meridiemStyle.rawValue, forKey: Keys.meridiemStyle) }
     }
 
     @Published var showSecondClock: Bool {
-        didSet { UserDefaults.standard.set(showSecondClock, forKey: Keys.showSecondClock) }
+        didSet { defaults.set(showSecondClock, forKey: Keys.showSecondClock) }
     }
 
     /// `TimeZone` identifier (e.g. "America/New_York") for the second
     /// menu-bar clock.
     @Published var secondTimezoneID: String {
-        didSet { UserDefaults.standard.set(secondTimezoneID, forKey: Keys.secondTimezoneID) }
+        didSet { defaults.set(secondTimezoneID, forKey: Keys.secondTimezoneID) }
     }
 
     /// When true, a second desktop widget shows `secondTimezoneID`'s time —
     /// same glass-widget treatment as the primary desktop clock, labeled
     /// with the timezone name.
     @Published var showSecondClockOverlay: Bool {
-        didSet { UserDefaults.standard.set(showSecondClockOverlay, forKey: Keys.showSecondClockOverlay) }
+        didSet { defaults.set(showSecondClockOverlay, forKey: Keys.showSecondClockOverlay) }
     }
 
     /// Single settings-UI-facing view over `showSecondClock` +
@@ -205,18 +211,18 @@ final class AppSettings: ObservableObject {
     }
 
     @Published var timeFormat: TimeFormat {
-        didSet { UserDefaults.standard.set(timeFormat.rawValue, forKey: Keys.timeFormat) }
+        didSet { defaults.set(timeFormat.rawValue, forKey: Keys.timeFormat) }
     }
 
     @Published var showDateOnOverlay: Bool {
-        didSet { UserDefaults.standard.set(showDateOnOverlay, forKey: Keys.showDateOnOverlay) }
+        didSet { defaults.set(showDateOnOverlay, forKey: Keys.showDateOnOverlay) }
     }
 
     /// When true, the desktop clock slowly drifts and bounces around the
     /// screen on its own (like a DVD-logo screensaver) instead of sitting
     /// still where dragged.
     @Published var floatAcrossScreen: Bool {
-        didSet { UserDefaults.standard.set(floatAcrossScreen, forKey: Keys.floatAcrossScreen) }
+        didSet { defaults.set(floatAcrossScreen, forKey: Keys.floatAcrossScreen) }
     }
 
     /// When true, the desktop overlay window covers the entire screen
@@ -227,7 +233,7 @@ final class AppSettings: ObservableObject {
     /// drift to).
     @Published var fillScreen: Bool {
         didSet {
-            UserDefaults.standard.set(fillScreen, forKey: Keys.fillScreen)
+            defaults.set(fillScreen, forKey: Keys.fillScreen)
             if fillScreen { floatAcrossScreen = false }
         }
     }
@@ -236,7 +242,7 @@ final class AppSettings: ObservableObject {
     /// `WidgetFont.all` — that list can grow without invalidating
     /// previously-saved preferences the way an enum `rawValue` would.
     @Published var widgetFont: WidgetFont {
-        didSet { UserDefaults.standard.set(widgetFont.id, forKey: Keys.widgetFont) }
+        didSet { defaults.set(widgetFont.id, forKey: Keys.widgetFont) }
     }
 
     /// Mirrors macOS's own desktop-widget "Full Color / Monochrome" style
@@ -244,7 +250,7 @@ final class AppSettings: ObservableObject {
     /// the widget reads as grayscale-tinted glass instead of a color
     /// photo diffused behind it.
     @Published var widgetColorStyle: WidgetColorStyle {
-        didSet { UserDefaults.standard.set(widgetColorStyle.rawValue, forKey: Keys.widgetColorStyle) }
+        didSet { defaults.set(widgetColorStyle.rawValue, forKey: Keys.widgetColorStyle) }
     }
 
     private enum Keys {
@@ -264,8 +270,8 @@ final class AppSettings: ObservableObject {
         static let widgetColorStyle = "widgetColorStyle"
     }
 
-    init() {
-        let defaults = UserDefaults.standard
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
         showDesktopOverlay = defaults.object(forKey: Keys.showDesktopOverlay) as? Bool ?? true
         launchAtLogin = defaults.object(forKey: Keys.launchAtLogin) as? Bool ?? false
         theme = (defaults.string(forKey: Keys.theme)).flatMap(AppTheme.init(rawValue:)) ?? .system

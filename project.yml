@@ -44,3 +44,23 @@ targets:
         CFBundleShortVersionString: "1.0"
         CFBundleVersion: "1"
         NSHumanReadableCopyright: ""
+  FlipClockTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: FlipClockTests
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.rajeevranjan.flipclock.tests
+        GENERATE_INFOPLIST_FILE: YES
+    dependencies:
+      - target: FlipClock
+schemes:
+  FlipClock:
+    build:
+      targets:
+        FlipClock: all
+        FlipClockTests: [test]
+    test:
+      targets:
+        - FlipClockTests

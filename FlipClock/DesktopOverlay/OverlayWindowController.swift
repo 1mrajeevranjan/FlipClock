@@ -201,9 +201,15 @@ final class OverlayWindowController {
         if visible {
             window.orderFront(nil)
             startBackdropCaptureIfNeeded()
+            setFloating(settings.floatAcrossScreen)
         } else {
             window.orderOut(nil)
             backdropCapture.stop()
+            // Hiding the overlay must also stop the float-drift timer —
+            // otherwise it keeps stepping `stepFloat()` at 30Hz forever on a
+            // window nobody can see, the same wasted-CPU/battery pattern
+            // already fixed once in `DesktopBackdropCapture`.
+            setFloating(false)
         }
     }
 
@@ -228,7 +234,10 @@ final class OverlayWindowController {
         // positioning while it's on; turning it off hands control back to
         // the user's drag.
         window.isMovableByWindowBackground = !floating
-        guard floating else {
+        // Never actually run the drift timer while the overlay is hidden —
+        // `setVisible` re-applies the user's real `floatAcrossScreen`
+        // preference when it shows the window again.
+        guard floating, settings.showDesktopOverlay else {
             floatPosition = nil
             return
         }
