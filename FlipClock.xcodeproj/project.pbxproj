@@ -567,7 +567,12 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					3486491F75606E2E23752AE7 = {
-						ProvisioningStyle = Automatic;
+						DevelopmentTeam = SG8NYPLMNY;
+						ProvisioningStyle = Manual;
+					};
+					78DA7C30478052BF0F406397 = {
+						DevelopmentTeam = SG8NYPLMNY;
+						ProvisioningStyle = Manual;
 					};
 				};
 			};
@@ -720,7 +725,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = SG8NYPLMNY;
 				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -793,8 +801,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGNING_ALLOWED = YES;
+				CODE_SIGNING_REQUIRED = YES;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = SG8NYPLMNY;
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = FlipClock/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -873,7 +885,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = SG8NYPLMNY;
 				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -890,8 +905,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGNING_ALLOWED = YES;
+				CODE_SIGNING_REQUIRED = YES;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = SG8NYPLMNY;
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = FlipClock/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (

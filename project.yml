@@ -35,7 +35,18 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.rajeevranjan.flipclock
         ENABLE_HARDENED_RUNTIME: YES
-        CODE_SIGN_STYLE: Automatic
+        # A real signing identity (not ad-hoc "Sign to Run Locally") is
+        # required for TCC grants (Screen Recording, etc.) to survive a
+        # rebuild — ad-hoc signing hashes the binary itself into the
+        # designated requirement, so every rebuild looks like a brand-new
+        # app to macOS and every permission has to be re-granted. Manual
+        # (not Automatic) signing since this is a personal, direct-run app
+        # with no App Store provisioning profile to manage.
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGN_IDENTITY: "Apple Development"
+        DEVELOPMENT_TEAM: SG8NYPLMNY
+        CODE_SIGNING_REQUIRED: YES
+        CODE_SIGNING_ALLOWED: YES
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     info:
       path: FlipClock/Info.plist
@@ -53,6 +64,13 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.rajeevranjan.flipclock.tests
         GENERATE_INFOPLIST_FILE: YES
+        # Must match the host app's signing exactly — the test bundle is
+        # dlopen'd into the app process, and macOS refuses to map a bundle
+        # whose Team ID differs from the loading process ("mapping process
+        # and mapped file (non-platform) have different Team IDs").
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGN_IDENTITY: "Apple Development"
+        DEVELOPMENT_TEAM: SG8NYPLMNY
     dependencies:
       - target: FlipClock
 schemes:
