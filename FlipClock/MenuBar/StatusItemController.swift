@@ -145,9 +145,20 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
     private func showMenu() {
         guard let button = statusItem.button else { return }
         let menu = NSMenu()
+        // No manual icon here: macOS auto-adds a gear to any "Settings…"
+        // item with the standard ⌘, key equivalent — setting our own
+        // attributedTitle on top of that doubled up the gear glyph.
         menu.addItem(withTitle: "Settings…", action: #selector(openSettings), keyEquivalent: ",").target = self
+
+        let moreItem = menu.addItem(withTitle: "More", action: nil, keyEquivalent: "")
+        moreItem.attributedTitle = Self.iconTitle("More", symbol: "ellipsis.circle")
+        moreItem.submenu = makeMoreMenu()
+
         menu.addItem(.separator())
-        menu.addItem(withTitle: "Quit", action: #selector(quit), keyEquivalent: "q").target = self
+
+        let quitItem = menu.addItem(withTitle: "Quit", action: #selector(quit), keyEquivalent: "q")
+        quitItem.target = self
+        quitItem.attributedTitle = Self.iconTitle("Quit", symbol: "power")
         // popUp(positioning:at:in:) shows a one-off context menu without
         // assigning statusItem.menu, which would otherwise permanently
         // override left-click (popover) behavior.
@@ -161,4 +172,66 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
     @objc private func quit() {
         NSApp.terminate(nil)
     }
+
+    private func makeMoreMenu() -> NSMenu {
+        let submenu = NSMenu()
+        func item(_ title: String, symbol: String, action: Selector) {
+            let menuItem = submenu.addItem(withTitle: title, action: action, keyEquivalent: "")
+            menuItem.target = self
+            if let attributed = Self.iconTitle(title, symbol: symbol) {
+                menuItem.attributedTitle = attributed
+            }
+        }
+        item("About", symbol: "info.circle", action: #selector(showAbout))
+        item("Support & Feedback", symbol: "bubble.left", action: #selector(showSupport))
+        submenu.addItem(.separator())
+        item("Tips", symbol: "lightbulb", action: #selector(showTips))
+        item("FAQ", symbol: "questionmark.circle", action: #selector(showFAQ))
+        item("Website", symbol: "globe", action: #selector(showWebsite))
+        submenu.addItem(.separator())
+        item("Rate App", symbol: "star", action: #selector(rateApp))
+        item("Share App", symbol: "square.and.arrow.up", action: #selector(shareApp))
+        item("More Apps by Me", symbol: "square.stack.3d.up", action: #selector(showMoreApps))
+        return submenu
+    }
+
+    /// Assigning a rasterized SF Symbol to `NSMenuItem.image` renders as
+    /// blank on this toolchain (a macOS 27 SDK beta) — confirmed by dumping
+    /// the actual rasterized bitmap to a PNG and inspecting it directly: the
+    /// pixel data is a perfectly valid, correctly drawn icon, and the
+    /// `NSMenuItem` it's assigned to is enabled, yet nothing paints in the
+    /// menu. That's a dead end in AppKit's icon-slot rendering, not
+    /// something fixable from here. `NSMenuItem.title`, by contrast,
+    /// renders correctly (proven by every label in this same menu already
+    /// being visible), so the icon is instead embedded as an
+    /// `NSTextAttachment` inside `attributedTitle`, riding the text-drawing
+    /// path instead of the broken image-slot path.
+    private static func iconTitle(_ title: String, symbol: String, pointSize: CGFloat = 13) -> NSAttributedString? {
+        let config = NSImage.SymbolConfiguration(pointSize: pointSize, weight: .regular)
+        guard let icon = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)?
+            .withSymbolConfiguration(config) else { return nil }
+
+        let attachment = NSTextAttachment()
+        attachment.image = icon
+        // Nudge down from the text baseline so the glyph optically centers
+        // against the menu's label instead of sitting high against its cap height.
+        attachment.bounds = NSRect(x: 0, y: -(icon.size.height - 13) / 2 - 2, width: icon.size.width, height: icon.size.height)
+
+        let result = NSMutableAttributedString(attachment: attachment)
+        result.append(NSAttributedString(string: "  " + title, attributes: [.font: NSFont.menuFont(ofSize: 0)]))
+        return result
+    }
+
+    @objc private func showAbout() {
+        NSApp.orderFrontStandardAboutPanel(nil)
+    }
+
+    // TODO: wire to real destinations once available.
+    @objc private func showSupport() {}
+    @objc private func showTips() {}
+    @objc private func showFAQ() {}
+    @objc private func showWebsite() {}
+    @objc private func rateApp() {}
+    @objc private func shareApp() {}
+    @objc private func showMoreApps() {}
 }
