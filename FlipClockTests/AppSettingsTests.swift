@@ -119,34 +119,44 @@ final class AppSettingsTests: XCTestCase {
         XCTAssertEqual(settings.widgetFont.id, WidgetFont.system.id)
     }
 
-    // MARK: - System widget style
+    // MARK: - System widget dimming
 
-    /// The raw values are macOS's, matching the order of its own "Widget
-    /// style" popup, so they're the one thing here that can't be derived from
-    /// anything in this repo — pin them.
-    func testSystemWidgetAppearanceRawValuesMatchMacOSPopupOrder() {
-        XCTAssertEqual(SystemWidgetAppearance.automatic.rawValue, 0)
-        XCTAssertEqual(SystemWidgetAppearance.monochrome.rawValue, 1)
-        XCTAssertEqual(SystemWidgetAppearance.fullColor.rawValue, 2)
+    /// These raw values are macOS's own and are NOT in the popup's visual
+    /// order (which reads Automatically, Always, Never). They were established
+    /// by driving the real System Settings control and reading the stored
+    /// number back after each choice; guessing from menu order puts Never and
+    /// Always exactly backwards, which silently inverts the whole feature.
+    func testSystemWidgetDimmingRawValuesMatchWhatMacOSActuallyStores() {
+        XCTAssertEqual(SystemWidgetDimming.always.rawValue, 0)
+        XCTAssertEqual(SystemWidgetDimming.never.rawValue, 1)
+        XCTAssertEqual(SystemWidgetDimming.automatic.rawValue, 2)
     }
 
-    func testOnlyExplicitMonochromeDrainsColor() {
-        XCTAssertTrue(SystemWidgetAppearance.monochrome.drainsColor)
-        XCTAssertFalse(SystemWidgetAppearance.fullColor.drainsColor)
-        // Automatic is the system deciding per-context; guessing at it from
-        // outside would be wrong more often than right.
-        XCTAssertFalse(SystemWidgetAppearance.automatic.drainsColor)
+    func testOnlyNeverKeepsTheWidgetVivid() {
+        XCTAssertFalse(SystemWidgetDimming.never.drainsColor)
+        XCTAssertTrue(SystemWidgetDimming.always.drainsColor)
+        // Automatic means "dim while an app is in front", which for a desktop
+        // widget is nearly always — it groups with always, not with never.
+        XCTAssertTrue(SystemWidgetDimming.automatic.drainsColor)
     }
 
-    func testAppMonochromeForcesGrayscaleRegardlessOfSystemStyle() {
-        let settings = AppSettings(defaults: defaults)
-        settings.widgetColorStyle = .monochrome
-        XCTAssertTrue(settings.widgetDrainsColor, "the app's own Monochrome pick must win even when macOS is in full colour")
+    /// The app's Monochrome pick and the system's dimming are deliberately
+    /// different strengths: the first is an explicit request for greyscale,
+    /// the second only flattens. Measuring a real dimmed widget showed its
+    /// glass still in colour, so dimming must not drain to grey.
+    func testAppMonochromeGoesFullGreyscaleButDimmingOnlyFlattens() {
+        XCTAssertEqual(WidgetGlassBackground.saturation(monochrome: true, dimmed: false), 0)
+        XCTAssertEqual(WidgetGlassBackground.saturation(monochrome: true, dimmed: true), 0)
+
+        let dimmedSat = WidgetGlassBackground.saturation(monochrome: false, dimmed: true)
+        let vividSat = WidgetGlassBackground.saturation(monochrome: false, dimmed: false)
+        XCTAssertGreaterThan(dimmedSat, 0, "dimming must keep the backdrop in colour, like the system's own widgets")
+        XCTAssertLessThan(dimmedSat, vividSat, "dimming must still be visibly flatter than vivid")
     }
 
-    func testFullColorLeavesTheDecisionToMacOS() {
-        let settings = AppSettings(defaults: defaults)
-        settings.widgetColorStyle = .full
-        XCTAssertEqual(settings.widgetDrainsColor, settings.systemWidgetAppearance.drainsColor)
+    func testDimmingDeepensTheScrimRatherThanLeavingItUnchanged() {
+        let vivid = WidgetGlassBackground.scrim(isDark: false, dimmed: false)
+        let dimmed = WidgetGlassBackground.scrim(isDark: false, dimmed: true)
+        XCTAssertNotEqual(vivid, dimmed)
     }
 }

@@ -437,8 +437,8 @@ struct SettingsView: View {
                 // Monochrome: "Full Color" is selected and nothing happens,
                 // because the system style is deliberately allowed to win so
                 // the widget tracks the native ones beside it.
-                if settings.systemWidgetAppearance.drainsColor, settings.widgetColorStyle == .full {
-                    Text("macOS is set to monochrome widgets, so this widget follows it. Change it in System Settings › Desktop & Dock › Widget style.")
+                if settings.systemWidgetDimming.drainsColor, settings.widgetColorStyle == .full {
+                    Text("macOS is dimming desktop widgets, so this widget follows it. Change it in System Settings › Desktop & Dock › “Dim widgets on desktop”.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)

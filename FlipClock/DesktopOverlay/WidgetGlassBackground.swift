@@ -25,10 +25,20 @@ struct WidgetGlassBackground: View {
     /// (or forever, if Screen Recording access was denied), in which case
     /// this falls back to the live `NSVisualEffectView` blur below.
     var backdropImage: CGImage? = nil
-    /// Mirrors macOS's own desktop-widget "Full Color / Monochrome" style
-    /// picker — desaturates the glass entirely (backdrop blur, gloss rim
-    /// tint stays neutral either way since it's already grayscale white).
+    /// The app's own "Monochrome" pick — drains the glass to true greyscale.
+    /// A deliberate user choice, so it goes all the way, unlike `dimmed`.
     var monochrome: Bool = false
+
+    /// Mirrors macOS dimming its desktop widgets (see `SystemWidgetDimming`).
+    ///
+    /// Deliberately *not* full greyscale. Measuring a real widget while the
+    /// system had it dimmed showed its glass still carrying the vibrancy
+    /// boost — saturation 0.34 against the wallpaper's 0.09. What macOS dims
+    /// is the widget's *content*, not the backdrop behind it. Draining the
+    /// glass to grey here overshot badly and read as a different material
+    /// entirely, so this just pulls the vibrancy back toward the raw wallpaper
+    /// and deepens the scrim a little: flatter, still glass.
+    var dimmed: Bool = false
 
     /// `34 * scale`, clamped to `14...40`. The default `.full` size
     /// (`scale = 0.65`) now renders at `22pt` — smaller than the old flat
@@ -61,14 +71,24 @@ struct WidgetGlassBackground: View {
     /// intuitive choice for "frosted" — pushed the panel the wrong way, to
     /// 142. macOS darkens widget glass so content stays legible over a bright
     /// photo, and that slight deepening is a real part of the look.
-    static func scrim(isDark: Bool) -> Color {
-        Color.black.opacity(isDark ? 0.20 : 0.05)
+    static func scrim(isDark: Bool, dimmed: Bool) -> Color {
+        let base = isDark ? 0.20 : 0.05
+        return Color.black.opacity(dimmed ? base + 0.08 : base)
     }
 
     /// See the `.saturation` call site — real widget glass runs its backdrop
     /// hotter than the desktop behind it, and matching that is what separates
     /// "vibrant glass" from "a blurry screenshot of the wallpaper".
     static let vibrancy: Double = 1.35
+
+    /// Dimmed still keeps the backdrop in colour (see `dimmed`); it just stops
+    /// boosting it, landing near the wallpaper's own saturation.
+    static let dimmedVibrancy: Double = 0.75
+
+    static func saturation(monochrome: Bool, dimmed: Bool) -> Double {
+        if monochrome { return 0 }
+        return dimmed ? dimmedVibrancy : vibrancy
+    }
 
     var body: some View {
         if fullyClear {
@@ -126,7 +146,7 @@ struct WidgetGlassBackground: View {
                                     // does its own sampling and washed the panel
                                     // out entirely when tried before) keeps the
                                     // strength tunable and predictable.
-                                    .overlay(Self.scrim(isDark: isDark))
+                                    .overlay(Self.scrim(isDark: isDark, dimmed: dimmed))
                             } else {
                                 // The corner rounding lives on the
                                 // NSVisualEffectView's own CALayer (see
@@ -153,7 +173,7 @@ struct WidgetGlassBackground: View {
                     // sits at ~0.31 saturation and the widget's glass at ~0.42,
                     // a ~1.35x boost. That colour lift is most of what reads as
                     // "vibrancy" rather than "a blurry screenshot".
-                    .saturation(monochrome ? 0 : Self.vibrancy)
+                    .saturation(Self.saturation(monochrome: monochrome, dimmed: dimmed))
                 )
                 .overlay(
                     // The glossy rim macOS's own widgets have: a bright

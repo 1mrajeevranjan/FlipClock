@@ -148,33 +148,41 @@ enum WidgetColorStyle: String, CaseIterable, Identifiable {
     }
 }
 
-/// macOS's own System Settings > Desktop & Dock > Widgets > "Widget style"
-/// picker, which the real Notification Center widgets follow — switching it
-/// to Monochrome drains the colour out of Calendar/Weather/Battery, and a
-/// desktop widget that stays full-colour next to them immediately looks
-/// foreign. Stored by the system in the `com.apple.widgets` domain under
-/// `widgetAppearance`, numbered in the popup's own order.
-enum SystemWidgetAppearance: Int {
-    case automatic = 0
-    case monochrome = 1
-    case fullColor = 2
+/// macOS's System Settings > Desktop & Dock > Widgets > "Dim widgets on
+/// desktop" control, which the real desktop widgets follow. Dimmed is the
+/// washed-out, desaturated state Calendar/Weather/Battery drop into; undimmed
+/// is the vivid, near-opaque one. A desktop widget that stays vivid while the
+/// system's own are dimmed immediately looks foreign next to them.
+///
+/// The raw values are macOS's and are **not** in the popup's visual order —
+/// verified by driving the real control and reading the stored number back
+/// after each choice, which is the only way to get this right. Guessing from
+/// menu order gives Never and Always exactly backwards.
+enum SystemWidgetDimming: Int {
+    case always = 0
+    case never = 1
+    case automatic = 2
 
     static let domain = "com.apple.widgets"
     static let key = "widgetAppearance"
 
-    /// Only an explicit Monochrome choice desaturates. `automatic` is left
-    /// colourful deliberately: it's the system deciding per-context, and
-    /// guessing at that from outside would land wrong more often than not.
-    var drainsColor: Bool { self == .monochrome }
+    /// `automatic` is grouped with `always` rather than with `never`: it means
+    /// "dim while an app is in front", and for a desktop widget that's nearly
+    /// all the time — in testing the system's own widgets rendered dimmed
+    /// under `automatic` in every state that could be captured, including with
+    /// the Finder frontmost. There's no public API for the live dim state, so
+    /// matching the common case beats leaving the widget vivid and obviously
+    /// out of place.
+    var drainsColor: Bool { self != .never }
 
     /// Reads the live system value. `CFPreferencesAppSynchronize` first
     /// because this is another process's domain — without it the value is
     /// served from a cache captured at first read and never sees the user
     /// changing the setting.
-    static func current() -> SystemWidgetAppearance {
+    static func current() -> SystemWidgetDimming {
         CFPreferencesAppSynchronize(domain as CFString)
         guard let raw = CFPreferencesCopyAppValue(key as CFString, domain as CFString) as? Int,
-              let value = SystemWidgetAppearance(rawValue: raw) else { return .fullColor }
+              let value = SystemWidgetDimming(rawValue: raw) else { return .automatic }
         return value
     }
 }
@@ -284,17 +292,18 @@ final class AppSettings: ObservableObject {
         didSet { defaults.set(widgetColorStyle.rawValue, forKey: Keys.widgetColorStyle) }
     }
 
-    /// Mirror of the system-wide widget style (see `SystemWidgetAppearance`),
-    /// refreshed by `startWatchingSystemWidgetAppearance()`. Not persisted —
-    /// it belongs to macOS, not to this app.
-    @Published private(set) var systemWidgetAppearance: SystemWidgetAppearance = .fullColor
+    /// Mirror of the system's widget-dimming setting (see
+    /// `SystemWidgetDimming`), refreshed by
+    /// `startWatchingSystemWidgetAppearance()`. Not persisted — it belongs to
+    /// macOS, not to this app.
+    @Published private(set) var systemWidgetDimming: SystemWidgetDimming = .automatic
 
     /// What the widget glass should actually do, combining the app's own
     /// picker with the system one. The app's Monochrome setting forces
     /// grayscale; otherwise the system's choice wins, so the widget tracks
     /// the native ones sitting next to it on the desktop.
     var widgetDrainsColor: Bool {
-        widgetColorStyle == .monochrome || systemWidgetAppearance.drainsColor
+        widgetColorStyle == .monochrome || systemWidgetDimming.drainsColor
     }
 
     /// There's no public notification for the widget-style picker changing,
@@ -306,12 +315,12 @@ final class AppSettings: ObservableObject {
     private var systemAppearanceTimer: Timer?
 
     func startWatchingSystemWidgetAppearance() {
-        systemWidgetAppearance = SystemWidgetAppearance.current()
+        systemWidgetDimming = SystemWidgetDimming.current()
         guard systemAppearanceTimer == nil else { return }
         let timer = Timer(timeInterval: 3, repeats: true) { [weak self] _ in
             guard let self else { return }
-            let current = SystemWidgetAppearance.current()
-            if current != self.systemWidgetAppearance { self.systemWidgetAppearance = current }
+            let current = SystemWidgetDimming.current()
+            if current != self.systemWidgetDimming { self.systemWidgetDimming = current }
         }
         RunLoop.main.add(timer, forMode: .common)
         systemAppearanceTimer = timer
@@ -358,7 +367,7 @@ final class AppSettings: ObservableObject {
         // Seed it here as well as in the watcher: the watcher only runs while
         // a widget is actually on screen, but Settings can be opened without
         // one, and a stale default there would show the wrong explanation.
-        systemWidgetAppearance = SystemWidgetAppearance.current()
+        systemWidgetDimming = SystemWidgetDimming.current()
     }
 
     private func applyLaunchAtLogin() {
