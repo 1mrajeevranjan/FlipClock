@@ -433,6 +433,17 @@ struct SettingsView: View {
                 }
                 .pickerStyle(.segmented)
 
+                // Without this the picker looks broken while macOS is set to
+                // Monochrome: "Full Color" is selected and nothing happens,
+                // because the system style is deliberately allowed to win so
+                // the widget tracks the native ones beside it.
+                if settings.systemWidgetAppearance.drainsColor, settings.widgetColorStyle == .full {
+                    Text("macOS is set to monochrome widgets, so this widget follows it. Change it in System Settings › Desktop & Dock › Widget style.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
                 Toggle("Show day, date, month, year", isOn: $settings.showDateOnOverlay)
                 Toggle("Float across the screen", isOn: $settings.floatAcrossScreen)
                     .disabled(settings.fillScreen)

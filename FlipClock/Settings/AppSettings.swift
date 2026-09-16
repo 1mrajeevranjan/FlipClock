@@ -148,6 +148,37 @@ enum WidgetColorStyle: String, CaseIterable, Identifiable {
     }
 }
 
+/// macOS's own System Settings > Desktop & Dock > Widgets > "Widget style"
+/// picker, which the real Notification Center widgets follow — switching it
+/// to Monochrome drains the colour out of Calendar/Weather/Battery, and a
+/// desktop widget that stays full-colour next to them immediately looks
+/// foreign. Stored by the system in the `com.apple.widgets` domain under
+/// `widgetAppearance`, numbered in the popup's own order.
+enum SystemWidgetAppearance: Int {
+    case automatic = 0
+    case monochrome = 1
+    case fullColor = 2
+
+    static let domain = "com.apple.widgets"
+    static let key = "widgetAppearance"
+
+    /// Only an explicit Monochrome choice desaturates. `automatic` is left
+    /// colourful deliberately: it's the system deciding per-context, and
+    /// guessing at that from outside would land wrong more often than not.
+    var drainsColor: Bool { self == .monochrome }
+
+    /// Reads the live system value. `CFPreferencesAppSynchronize` first
+    /// because this is another process's domain — without it the value is
+    /// served from a cache captured at first read and never sees the user
+    /// changing the setting.
+    static func current() -> SystemWidgetAppearance {
+        CFPreferencesAppSynchronize(domain as CFString)
+        guard let raw = CFPreferencesCopyAppValue(key as CFString, domain as CFString) as? Int,
+              let value = SystemWidgetAppearance(rawValue: raw) else { return .fullColor }
+        return value
+    }
+}
+
 /// Single source of truth for user-facing preferences, backed by
 /// UserDefaults and exposed as Combine-observable so both SwiftUI (via
 /// `SettingsView`) and plain AppKit controllers (`OverlayWindowController`)
@@ -253,6 +284,44 @@ final class AppSettings: ObservableObject {
         didSet { defaults.set(widgetColorStyle.rawValue, forKey: Keys.widgetColorStyle) }
     }
 
+    /// Mirror of the system-wide widget style (see `SystemWidgetAppearance`),
+    /// refreshed by `startWatchingSystemWidgetAppearance()`. Not persisted —
+    /// it belongs to macOS, not to this app.
+    @Published private(set) var systemWidgetAppearance: SystemWidgetAppearance = .fullColor
+
+    /// What the widget glass should actually do, combining the app's own
+    /// picker with the system one. The app's Monochrome setting forces
+    /// grayscale; otherwise the system's choice wins, so the widget tracks
+    /// the native ones sitting next to it on the desktop.
+    var widgetDrainsColor: Bool {
+        widgetColorStyle == .monochrome || systemWidgetAppearance.drainsColor
+    }
+
+    /// There's no public notification for the widget-style picker changing,
+    /// so this polls — slowly, and only while a widget is actually on screen.
+    /// Gating on visibility rather than on the feature flag alone is the rule
+    /// this codebase already learned twice (see `DesktopBackdropCapture` and
+    /// `OverlayWindowController`'s float timer): a timer tied to a setting but
+    /// not to whether anything can be seen just burns battery forever.
+    private var systemAppearanceTimer: Timer?
+
+    func startWatchingSystemWidgetAppearance() {
+        systemWidgetAppearance = SystemWidgetAppearance.current()
+        guard systemAppearanceTimer == nil else { return }
+        let timer = Timer(timeInterval: 3, repeats: true) { [weak self] _ in
+            guard let self else { return }
+            let current = SystemWidgetAppearance.current()
+            if current != self.systemWidgetAppearance { self.systemWidgetAppearance = current }
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        systemAppearanceTimer = timer
+    }
+
+    func stopWatchingSystemWidgetAppearance() {
+        systemAppearanceTimer?.invalidate()
+        systemAppearanceTimer = nil
+    }
+
     private enum Keys {
         static let showDesktopOverlay = "showDesktopOverlay"
         static let launchAtLogin = "launchAtLogin"
@@ -286,6 +355,10 @@ final class AppSettings: ObservableObject {
         fillScreen = defaults.object(forKey: Keys.fillScreen) as? Bool ?? false
         widgetFont = (defaults.string(forKey: Keys.widgetFont)).map(WidgetFont.byID) ?? .system
         widgetColorStyle = (defaults.string(forKey: Keys.widgetColorStyle)).flatMap(WidgetColorStyle.init(rawValue:)) ?? .full
+        // Seed it here as well as in the watcher: the watcher only runs while
+        // a widget is actually on screen, but Settings can be opened without
+        // one, and a stale default there would show the wrong explanation.
+        systemWidgetAppearance = SystemWidgetAppearance.current()
     }
 
     private func applyLaunchAtLogin() {

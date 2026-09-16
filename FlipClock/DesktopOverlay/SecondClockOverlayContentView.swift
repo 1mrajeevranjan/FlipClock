@@ -89,7 +89,7 @@ struct SecondClockOverlayContentView: View {
         }
         .padding(OverlayContentView.padding(scale: effectiveScale))
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(WidgetGlassBackground(scale: effectiveScale, backdropImage: backdropCapture.image, monochrome: settings.widgetColorStyle == .monochrome))
+        .background(WidgetGlassBackground(scale: effectiveScale, backdropImage: backdropCapture.image, monochrome: settings.widgetDrainsColor))
         .preferredColorScheme(settings.theme.colorScheme)
     }
 }

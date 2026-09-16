@@ -202,6 +202,7 @@ final class OverlayWindowController {
             window.orderFront(nil)
             startBackdropCaptureIfNeeded()
             setFloating(settings.floatAcrossScreen)
+            settings.startWatchingSystemWidgetAppearance()
         } else {
             window.orderOut(nil)
             backdropCapture.stop()
@@ -210,6 +211,10 @@ final class OverlayWindowController {
             // window nobody can see, the same wasted-CPU/battery pattern
             // already fixed once in `DesktopBackdropCapture`.
             setFloating(false)
+            // Only this window's own visibility is known here, so the second
+            // clock's overlay may still need the watcher — it re-starts it in
+            // its own `setVisible`, and starting twice is a no-op.
+            if !settings.showSecondClockOverlay { settings.stopWatchingSystemWidgetAppearance() }
         }
     }
 

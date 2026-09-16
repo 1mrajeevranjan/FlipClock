@@ -106,9 +106,11 @@ final class SecondClockOverlayWindowController {
         if visible {
             window.orderFront(nil)
             startBackdropCaptureIfNeeded()
+            settings.startWatchingSystemWidgetAppearance()
         } else {
             window.orderOut(nil)
             backdropCapture.stop()
+            if !settings.showDesktopOverlay { settings.stopWatchingSystemWidgetAppearance() }
         }
     }
 

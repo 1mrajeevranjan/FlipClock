@@ -118,4 +118,35 @@ final class AppSettingsTests: XCTestCase {
         let settings = AppSettings(defaults: defaults)
         XCTAssertEqual(settings.widgetFont.id, WidgetFont.system.id)
     }
+
+    // MARK: - System widget style
+
+    /// The raw values are macOS's, matching the order of its own "Widget
+    /// style" popup, so they're the one thing here that can't be derived from
+    /// anything in this repo — pin them.
+    func testSystemWidgetAppearanceRawValuesMatchMacOSPopupOrder() {
+        XCTAssertEqual(SystemWidgetAppearance.automatic.rawValue, 0)
+        XCTAssertEqual(SystemWidgetAppearance.monochrome.rawValue, 1)
+        XCTAssertEqual(SystemWidgetAppearance.fullColor.rawValue, 2)
+    }
+
+    func testOnlyExplicitMonochromeDrainsColor() {
+        XCTAssertTrue(SystemWidgetAppearance.monochrome.drainsColor)
+        XCTAssertFalse(SystemWidgetAppearance.fullColor.drainsColor)
+        // Automatic is the system deciding per-context; guessing at it from
+        // outside would be wrong more often than right.
+        XCTAssertFalse(SystemWidgetAppearance.automatic.drainsColor)
+    }
+
+    func testAppMonochromeForcesGrayscaleRegardlessOfSystemStyle() {
+        let settings = AppSettings(defaults: defaults)
+        settings.widgetColorStyle = .monochrome
+        XCTAssertTrue(settings.widgetDrainsColor, "the app's own Monochrome pick must win even when macOS is in full colour")
+    }
+
+    func testFullColorLeavesTheDecisionToMacOS() {
+        let settings = AppSettings(defaults: defaults)
+        settings.widgetColorStyle = .full
+        XCTAssertEqual(settings.widgetDrainsColor, settings.systemWidgetAppearance.drainsColor)
+    }
 }
