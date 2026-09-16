@@ -117,7 +117,12 @@ final class SecondClockOverlayWindowController {
             backdropCapture.stop()
             return
         }
-        let blurRadius = (30 * settings.overlaySize.scale).clamped(to: 16...50)
+        // Tuned against real macOS widget glass by measuring high-frequency
+        // detail energy in screenshots: at 30pt the backdrop washed out to a
+        // flat colour field (energy ~0.34) while Notification Center's own
+        // widgets sit around 1.0-1.7, still showing the wallpaper's large-scale
+        // structure through the frost. ~16pt lands in that range.
+        let blurRadius = (16 * settings.overlaySize.scale).clamped(to: 9...28)
         backdropCapture.start(window: window, blurRadius: blurRadius)
     }
 }

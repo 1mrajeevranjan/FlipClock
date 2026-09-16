@@ -50,6 +50,16 @@ struct WidgetGlassBackground: View {
     /// see-through — a live desktop-sampling blur is the single most
     /// literal case that setting exists for.
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var isDark: Bool { colorScheme == .dark }
+
+    /// Strength picked by measuring real widget glass against the wallpaper
+    /// behind it in screenshots — Notification Center's widgets lift a dark
+    /// backdrop by roughly this much rather than passing it straight through.
+    static func scrim(isDark: Bool) -> Color {
+        isDark ? Color.black.opacity(0.18) : Color.white.opacity(0.22)
+    }
 
     var body: some View {
         if fullyClear {
@@ -97,6 +107,17 @@ struct WidgetGlassBackground: View {
                                     .aspectRatio(contentMode: .fill)
                                     .frame(width: proxy.size.width, height: proxy.size.height)
                                     .clipped()
+                                    // The blurred wallpaper alone reads as dark
+                                    // smoked glass, not frosted glass. macOS's
+                                    // own widgets lay a translucent scrim over
+                                    // the blur — that's what gives them their
+                                    // milky lift and keeps content legible over
+                                    // a dark wallpaper. A flat white/black pair
+                                    // (rather than a SwiftUI `Material`, which
+                                    // does its own sampling and washed the panel
+                                    // out entirely when tried before) keeps the
+                                    // strength tunable and predictable.
+                                    .overlay(Self.scrim(isDark: isDark))
                             } else {
                                 // The corner rounding lives on the
                                 // NSVisualEffectView's own CALayer (see

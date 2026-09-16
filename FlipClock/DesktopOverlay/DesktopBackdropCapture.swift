@@ -124,6 +124,13 @@ final class DesktopBackdropCapture: ObservableObject {
             width: frame.width,
             height: frame.height
         )
+        // Capture at the display's real pixel density. Requesting a
+        // point-sized image on a Retina screen hands back a half-resolution
+        // backdrop that then gets upscaled 2x to fill the widget — and that
+        // upscale smooths away far more detail than the Gaussian does, which
+        // is why shrinking the blur radius barely changed how diffuse the
+        // panel looked. The radius is in pixels, so it scales with the image.
+        let pixelScale = screen.backingScaleFactor
 
         captureTask?.cancel()
         captureTask = Task { [weak self] in
@@ -131,12 +138,19 @@ final class DesktopBackdropCapture: ObservableObject {
             do {
                 let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
                 guard let display = content.displays.first(where: { $0.displayID == displayID.uint32Value }) else { return }
+                // Only our own window is excluded. Excluding every window (to
+                // capture strictly the desktop behind the overlay) reads better
+                // in principle but fails outright here — SCK returns -3811
+                // "Failed to start stream" for a filter that excludes
+                // everything. The occlusion gate in `shouldCapture` already
+                // skips the case this would have covered, since a widget that's
+                // fully behind another window isn't being composited anyway.
                 let ourWindow = content.windows.first { $0.windowID == windowID }
                 let filter = SCContentFilter(display: display, excludingWindows: ourWindow.map { [$0] } ?? [])
                 let config = SCStreamConfiguration()
                 config.sourceRect = captureRect
-                config.width = max(1, Int(captureRect.width))
-                config.height = max(1, Int(captureRect.height))
+                config.width = max(1, Int(captureRect.width * pixelScale))
+                config.height = max(1, Int(captureRect.height * pixelScale))
                 config.showsCursor = false
                 config.scalesToFit = false
 
@@ -144,7 +158,7 @@ final class DesktopBackdropCapture: ObservableObject {
                 try Task.checkCancellation()
 
                 let source = CIImage(cgImage: raw)
-                guard let blurred = self.blur(source, radius: blurRadius),
+                guard let blurred = self.blur(source, radius: blurRadius * pixelScale),
                       let output = self.ciContext.createCGImage(blurred, from: source.extent) else { return }
 
                 await MainActor.run { [weak self] in
@@ -160,12 +174,18 @@ final class DesktopBackdropCapture: ObservableObject {
 
     private func blur(_ image: CIImage, radius: CGFloat) -> CIImage? {
         guard let filter = CIFilter(name: "CIGaussianBlur") else { return nil }
-        filter.setValue(image, forKey: kCIInputImageKey)
+        // `clampedToExtent()` matters more than it looks: without it the blur
+        // samples transparent black from beyond the image bounds, so the
+        // result's alpha falls off towards every edge (measured at ~52% in the
+        // outer 10px vs ~99% in the middle). On screen that turned the widget's
+        // whole rim semi-transparent, letting the sharp unblurred desktop leak
+        // through exactly where the frosted edge should be — the single biggest
+        // reason this didn't read like a native widget's glass.
+        filter.setValue(image.clampedToExtent(), forKey: kCIInputImageKey)
         filter.setValue(radius, forKey: kCIInputRadiusKey)
         guard let output = filter.outputImage else { return nil }
-        // Gaussian blur expands the image's extent outward by roughly the
-        // radius — cropping back to the source rect avoids a shrunken/
-        // semi-transparent fringe at the edges.
+        // Clamping makes the blur output infinite in extent — crop back to the
+        // source rect so it lines up with the widget's bounds.
         return output.cropped(to: image.extent)
     }
 }

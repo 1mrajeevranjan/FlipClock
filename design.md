@@ -29,6 +29,12 @@ Two blur strategies, used per-context:
 
 Why not `NSVisualEffectView` alone for the widget: its blur radius is fixed by the material and isn't a public API, so no opacity tuning can push diffusion strength past what native macOS widgets show. The captured+blurred image is the only way to get a real, tunable blur radius.
 
+**Three things that have to be right together, or the panel stops reading as glass.** Each was found by measuring screenshots against real Notification Center widgets (mean |Laplacian| over the glass, masking out the flip cards, as a stand-in for "how diffuse does this look"; native widgets sit around 1.0–1.7):
+
+1. **`clampedToExtent()` before the Gaussian.** Without it Core Image samples transparent black past the image bounds, so the blurred result's alpha falls off towards every edge — measured ~52% in the outer 10px against ~99% in the middle. On screen the widget's whole rim went semi-transparent and leaked the sharp, unblurred desktop through exactly where the frosted edge belongs.
+2. **Capture at `screen.backingScaleFactor`, not in points.** A point-sized request hands back a half-resolution backdrop that gets upscaled 2x into the widget, and that upscale smooths away more detail than the Gaussian does — which is why shrinking the blur radius appeared to do nothing until this was fixed. The radius is in pixels, so it scales with the image.
+3. **A translucent scrim over the blur** (`WidgetGlassBackground.scrim`). Blurred wallpaper on its own reads as dark smoked glass; macOS's widgets lay a scrim over theirs, which is what produces the milky lift and keeps content legible over a dark wallpaper. A flat white/black pair rather than a SwiftUI `Material` — see the anti-patterns below for why.
+
 **Corner radius formula:** `(34 * scale).clamped(to: 14...40)`, `0` in full-screen mode. Tracks `overlaySize` per Apple's Widget HIG guidance that a widget's corner radius should scale with its container rather than stay a flat constant.
 
 **Padding formula:** `(16 * scale).clamped(to: 11...22)` — HIG's standard 16pt widget margin, scaled and clamped so the smallest widget size doesn't crowd its edges.
