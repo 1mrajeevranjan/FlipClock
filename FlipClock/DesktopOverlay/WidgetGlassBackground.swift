@@ -54,12 +54,21 @@ struct WidgetGlassBackground: View {
 
     private var isDark: Bool { colorScheme == .dark }
 
-    /// Strength picked by measuring real widget glass against the wallpaper
-    /// behind it in screenshots — Notification Center's widgets lift a dark
-    /// backdrop by roughly this much rather than passing it straight through.
+    /// Measured off real widget glass rather than guessed: sampling a
+    /// Notification Center widget against the wallpaper band running right
+    /// beside it, the widget comes out *darker* than the desktop behind it
+    /// (mean luminance 110 against 124), not lighter. A white scrim — the
+    /// intuitive choice for "frosted" — pushed the panel the wrong way, to
+    /// 142. macOS darkens widget glass so content stays legible over a bright
+    /// photo, and that slight deepening is a real part of the look.
     static func scrim(isDark: Bool) -> Color {
-        isDark ? Color.black.opacity(0.18) : Color.white.opacity(0.22)
+        Color.black.opacity(isDark ? 0.20 : 0.05)
     }
+
+    /// See the `.saturation` call site — real widget glass runs its backdrop
+    /// hotter than the desktop behind it, and matching that is what separates
+    /// "vibrant glass" from "a blurry screenshot of the wallpaper".
+    static let vibrancy: Double = 1.35
 
     var body: some View {
         if fullyClear {
@@ -136,7 +145,15 @@ struct WidgetGlassBackground: View {
                         }
                     }
                     .clipShape(shape)
-                    .saturation(monochrome ? 0 : 1)
+                    // Passing the backdrop through at saturation 1 is what kept
+                    // this reading as a flat grey-brown panel next to the real
+                    // thing. `NSVisualEffectView`'s materials don't just blur,
+                    // they push saturation up — measured against the wallpaper
+                    // band beside a Notification Center widget, the wallpaper
+                    // sits at ~0.31 saturation and the widget's glass at ~0.42,
+                    // a ~1.35x boost. That colour lift is most of what reads as
+                    // "vibrancy" rather than "a blurry screenshot".
+                    .saturation(monochrome ? 0 : Self.vibrancy)
                 )
                 .overlay(
                     // The glossy rim macOS's own widgets have: a bright

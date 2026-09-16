@@ -122,7 +122,7 @@ final class SecondClockOverlayWindowController {
         // flat colour field (energy ~0.34) while Notification Center's own
         // widgets sit around 1.0-1.7, still showing the wallpaper's large-scale
         // structure through the frost. ~16pt lands in that range.
-        let blurRadius = (16 * settings.overlaySize.scale).clamped(to: 9...28)
+        let blurRadius = (4 * settings.overlaySize.scale).clamped(to: 2.5...8)
         backdropCapture.start(window: window, blurRadius: blurRadius)
     }
 }

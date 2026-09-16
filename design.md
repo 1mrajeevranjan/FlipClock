@@ -29,11 +29,22 @@ Two blur strategies, used per-context:
 
 Why not `NSVisualEffectView` alone for the widget: its blur radius is fixed by the material and isn't a public API, so no opacity tuning can push diffusion strength past what native macOS widgets show. The captured+blurred image is the only way to get a real, tunable blur radius.
 
-**Three things that have to be right together, or the panel stops reading as glass.** Each was found by measuring screenshots against real Notification Center widgets (mean |Laplacian| over the glass, masking out the flip cards, as a stand-in for "how diffuse does this look"; native widgets sit around 1.0–1.7):
+**Four things that have to be right together, or the panel stops reading as glass.**
+
+How to measure rather than eyeball it: the Weather widget's bottom edge and the desktop widget's top edge sit over the same horizontal band of wallpaper, so a clean strip from each (no text, no flip cards — crop them and *look* before trusting the numbers) is a controlled comparison. Take mean |Laplacian| for diffusion, mean RGB for tone, `(max-min)/max` for saturation. Current match, against the wallpaper band beside them:
+
+| | diffusion | luminance | RGB | saturation |
+|---|---|---|---|---|
+| native Weather widget | 1.06 | 106.2 | 139, 98, 81 | 0.416 |
+| this widget | 0.88 | 107.4 | 138, 99, 85 | 0.389 |
+| bare wallpaper | 4.98 | 109.1 | 139, 100, 88 | 0.366 |
 
 1. **`clampedToExtent()` before the Gaussian.** Without it Core Image samples transparent black past the image bounds, so the blurred result's alpha falls off towards every edge — measured ~52% in the outer 10px against ~99% in the middle. On screen the widget's whole rim went semi-transparent and leaked the sharp, unblurred desktop through exactly where the frosted edge belongs.
 2. **Capture at `screen.backingScaleFactor`, not in points.** A point-sized request hands back a half-resolution backdrop that gets upscaled 2x into the widget, and that upscale smooths away more detail than the Gaussian does — which is why shrinking the blur radius appeared to do nothing until this was fixed. The radius is in pixels, so it scales with the image.
-3. **A translucent scrim over the blur** (`WidgetGlassBackground.scrim`). Blurred wallpaper on its own reads as dark smoked glass; macOS's widgets lay a scrim over theirs, which is what produces the milky lift and keeps content legible over a dark wallpaper. A flat white/black pair rather than a SwiftUI `Material` — see the anti-patterns below for why.
+3. **Saturation above 1** (`WidgetGlassBackground.vibrancy`). The one that matters most and is least obvious: `NSVisualEffectView` materials don't just blur, they run the backdrop hotter than the desktop behind it (0.42 against the wallpaper's 0.37 here). Passing it through at saturation 1 is what left this looking like a flat grey-brown panel — a blurry screenshot of the wallpaper rather than vibrant glass.
+4. **A slight dark scrim** (`WidgetGlassBackground.scrim`). Counter-intuitively *dark*, not white: measured against the wallpaper beside it, native widget glass comes out level with or slightly below the desktop, never lifted. A white scrim — the obvious choice for "frosted" — pushed the panel to luminance 142 against native's 110.
+
+Don't over-blur chasing "frostiness". The wallpaper's large-scale structure is supposed to stay readable through the glass; native widgets only drop diffusion from ~5.0 to ~1.1, not to zero. Blurring until the backdrop is a uniform wash is what makes a panel read as opaque plastic instead of glass.
 
 **Corner radius formula:** `(34 * scale).clamped(to: 14...40)`, `0` in full-screen mode. Tracks `overlaySize` per Apple's Widget HIG guidance that a widget's corner radius should scale with its container rather than stay a flat constant.
 
