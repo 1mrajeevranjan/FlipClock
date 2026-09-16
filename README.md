@@ -2,44 +2,59 @@
 
 [![Platform](https://img.shields.io/badge/platform-macOS%2014%2B-blue)](https://www.apple.com/macos/)
 [![Swift](https://img.shields.io/badge/swift-5.0-orange)](https://swift.org)
+[![Tests](https://img.shields.io/badge/tests-61%20passing-brightgreen)](#running-tests)
 [![License](https://img.shields.io/badge/license-unspecified-lightgrey)](#license)
 
-A native macOS split-flap clock: menu bar clock, popover view with calendar, a floating desktop overlay styled like a native widget, and a configurable settings window.
+A native macOS split-flap clock. Lives in the menu bar, expands into a popover with a calendar, timer and stopwatch, and puts a floating desktop widget on your wallpaper that is built to be visually indistinguishable from Apple's own.
+
+Every character on every surface — digits, weekday, date, AM/PM — is a real rasterized flip card with a two-housing flip animation, not styled text.
 
 ## Table of Contents
 
 - [Features](#features)
 - [Requirements](#requirements)
 - [Getting Started](#getting-started)
+- [Permissions](#permissions)
 - [Usage](#usage)
 - [Project Structure](#project-structure)
 - [Architecture](#architecture)
-- [Development Notes](#development-notes)
+- [Testing](#testing)
+- [Documentation](#documentation)
 - [Contributing](#contributing)
 - [License](#license)
 
 ## Features
 
+**Clock surfaces**
+
 - Menu bar clock with live split-flap animation
-- Full popover clock with calendar, date header, and reminders
-- Desktop overlay clock styled like a native macOS widget — real captured-and-blurred desktop glass (not just system vibrancy), positionable anywhere on screen or set to drift/bounce across it, with an optional full-screen "liquid glass" mode
-- Full Color / Monochrome widget style, matching macOS's own desktop-widget color option
-- 37 bundled decorative digit fonts, plus a real image-based sun/moon AM/PM icon
-- **Reminders:** double-click any calendar date to add one (with a precise "@ time"); a pulsing badge marks the day and the widget; a "Due Today" banner appears in the popover; the menu bar clock pulses light/dark every 5s until you acknowledge it
-- Optional second menu bar clock in a different time zone
-- Configurable appearance, time format, overlay size, and AM/PM style
-- Launch-at-login support
-- Settings window that resizes per tab instead of leaving blank space, with a sliding tab-selection pill
+- Popover with three tabs — Calendar, Timer, Stopwatch
+- Desktop widget styled to match native macOS widgets, positionable anywhere, with optional drift-across-screen and a full-screen mode
+- Optional second clock in another time zone, as a menu bar item, a second desktop widget, or both
+
+**Desktop widget glass**
+
+The widget doesn't rely on `NSVisualEffectView` alone — its blur radius is fixed by the system material and can't reach what Apple's widgets show. Instead it captures the desktop behind the window via ScreenCaptureKit and applies its own tunable Gaussian blur, then matches native widget glass on three measured axes: diffusion, tone, and a saturation boost. It also follows macOS's own **Dim widgets on desktop** setting, so it flattens and brightens in step with the widgets beside it.
+
+Falls back gracefully: live vibrancy before the first capture lands or if Screen Recording is denied, and an opaque fill when Reduce Transparency is on.
+
+**Reminders**
+
+Double-click any calendar date to add a reminder with a precise time. The day gets a pulsing badge (orange = within 24h, red = due today), the popover shows a "Due Today" banner, and the menu bar clock pulses light/dark every 5 seconds until acknowledged.
+
+**Customisation**
+
+37 bundled decorative digit fonts, light/dark/system theme, 12/24-hour time, four widget sizes, AM/PM as text or a sun/moon icon, Full Color / Monochrome widget style, and launch-at-login.
 
 ## Requirements
 
-- macOS 14.0 (Sonoma) or later
-- Xcode 16 or later
-- [XcodeGen](https://github.com/yonaskolb/XcodeGen) (only needed if regenerating the `.xcodeproj` from `project.yml`)
+| | |
+|---|---|
+| macOS | 14.0 (Sonoma) or later |
+| Xcode | 16 or later |
+| [XcodeGen](https://github.com/yonaskolb/XcodeGen) | Only to regenerate `.xcodeproj` from `project.yml` |
 
 ## Getting Started
-
-Clone the repo and open the project in Xcode:
 
 ```bash
 git clone https://github.com/1mrajeevranjan/FlipClock.git
@@ -49,86 +64,124 @@ open FlipClock.xcodeproj
 
 Build and run the `FlipClock` scheme (⌘R).
 
+### Code signing
+
+`project.yml` pins a specific `DEVELOPMENT_TEAM`. Change it to your own before building:
+
+```yaml
+CODE_SIGN_STYLE: Manual
+CODE_SIGN_IDENTITY: "Apple Development"
+DEVELOPMENT_TEAM: YOUR_TEAM_ID   # `security find-identity -v -p codesigning`
+```
+
+Then `xcodegen generate`.
+
+Use a real signing identity rather than ad-hoc signing. Ad-hoc (`--sign -`) puts the binary's own hash into the app's designated requirement, so **every rebuild looks like a new app to macOS and the Screen Recording grant is discarded** — meaning a permission prompt on every single build. The test bundle needs matching signing too; it's loaded into the host app, and macOS refuses to map a bundle whose Team ID differs from the loading process.
+
 ### Command-line build
 
 ```bash
-xcodebuild -project FlipClock.xcodeproj \
-  -scheme FlipClock \
-  -configuration Debug \
-  build
+xcodebuild -project FlipClock.xcodeproj -scheme FlipClock -configuration Debug build
 ```
-
-### Running tests
-
-```bash
-xcodebuild test -project FlipClock.xcodeproj \
-  -scheme FlipClock \
-  -destination 'platform=macOS'
-```
-
-`FlipClockTests` covers the app's logic and persistence layers (time/digit math, settings, reminders, the countdown timer and stopwatch), including stress tests for rapid start/stop/reset cycling and bulk reminder operations, plus a performance suite (`PerformanceTests.swift`) covering per-tick time math, the desktop widget's capture-gating logic, and persistence throughput under load. It never touches your real preferences — `AppSettings` and `ReminderStore` are tested against isolated `UserDefaults(suiteName:)` instances, not `.standard`.
 
 ### Regenerating the Xcode project
 
-The project is defined in `project.yml` and the generated `FlipClock.xcodeproj` is checked into the repo. After adding, removing, or renaming source files, regenerate the project rather than hand-editing `project.pbxproj`:
+Sources are defined in `project.yml`; the generated `FlipClock.xcodeproj` is committed. After adding, removing, or renaming files, regenerate rather than hand-editing `project.pbxproj`:
 
 ```bash
 xcodegen generate
 ```
 
+## Permissions
+
+**Screen Recording** — required only for the desktop widget's glass, which samples the wallpaper behind the window to blur it. macOS prompts on first capture. If you decline, everything still works; the widget just falls back to softer system vibrancy.
+
+No data leaves your machine. The captured frame is blurred in memory, drawn into the widget, and never written to disk or transmitted.
+
 ## Usage
 
-FlipClock is a menu bar app (`LSUIElement`) — it has no Dock icon. Click the menu bar clock to open the popover, or open Settings from there to configure:
+FlipClock is an `LSUIElement` agent — no Dock icon, no app window.
+
+| Action | Result |
+|---|---|
+| Left-click menu bar clock | Opens the popover (Calendar / Timer / Stopwatch) |
+| Right-click menu bar clock | Settings, More (About, Support, Tips, FAQ, Website, Rate, Share), Quit |
+| Double-click a calendar date | Add a reminder |
+| Drag the desktop widget | Reposition it |
+
+### Settings
 
 | Tab | Controls |
 |---|---|
-| General | Launch at login, second clock |
-| Appearance | Theme, popover glassiness, AM/PM style, digit font |
-| Desktop Clock | Show/hide overlay, size, date row, color style (Full Color/Monochrome), float-across-screen |
-| Second Clock | Time zone for the secondary menu bar clock |
-
-**Reminders:** double-click any date in the popover calendar to add a reminder with a title and precise time. Days with a reminder show a pulsing dot (orange = upcoming within 24h, red = due today). Hovering a marked day shows what's scheduled. On the due day, the desktop widget and calendar both flash, and the menu bar clock pulses light/dark every 5 seconds until you check it off in the popover's "Due Today" banner.
+| General | Show desktop clock, launch at login |
+| Appearance | Theme, AM/PM style, digit font |
+| Desktop Clock | Size, time format, colour style, date row, float across screen, fill screen |
+| Second Clock | Display (off / menu bar / widget / both), time zone |
 
 ## Project Structure
 
 ```text
 FlipClock/
-  App/                  App entry point and AppKit bridge (AppDelegate, FlipClockApp)
-  DesktopOverlay/       Desktop overlay window, glass background, backdrop capture, content view
-  FlipClock/            Split-flap rendering components (clock face, digits, flap layer, fonts)
-  MenuBar/              Menu bar clock views and status item controllers
-  Popover/               Popover clock, calendar, vibrant hosting controller
-  Reminders/             Reminder model, store, add form, badge, due-today banner
-  Settings/             Settings model (AppSettings), window, and SwiftUI view
-  TimeEngine/           Tick generation and time/digit calculations
+  App/              Entry point and AppKit bridge (AppDelegate, FlipClockApp)
+  CountdownTimer/   Timer, stopwatch, wheel picker, flip time display
+  DesktopOverlay/   Overlay window, glass background, ScreenCaptureKit backdrop capture
+  FlipClock/        Split-flap rendering (clock face, digits, flap layer, fonts)
+  MenuBar/          Menu bar clock views and status item controllers
+  Popover/          Popover, calendar, vibrant hosting controller
+  Reminders/        Model, store, add form, badge, due-today banner
+  Settings/         AppSettings, settings window and SwiftUI view
+  TimeEngine/       Tick generation and time/digit maths
+FlipClockTests/     Unit, stress, and performance tests
 ```
-
-See `architecture.md` for the full file-by-file map.
 
 ## Architecture
 
-- `TimeProvider` publishes clock ticks consumed across the app.
-- `SplitFlapClockFace` renders the animated split-flap clock face; menu bar, popover, and desktop overlay all share this one implementation at different scales.
-- `OverlayWindowController` owns the desktop overlay `NSPanel`, including size/position management and the float-across-screen drift animation.
-- `WidgetGlassBackground` + `DesktopBackdropCapture` provide the widget's glass: a captured-and-blurred still of the actual desktop behind the window (real, tunable blur), falling back to live `NSVisualEffectView` vibrancy or an opaque fill (Reduce Transparency) when needed.
-- `StatusItemController` owns the menu bar clock, its popover, and the reminder pulse timer.
-- `AppSettings` is an `ObservableObject` that persists user preferences to `UserDefaults` and publishes changes via Combine.
-- `ReminderStore` is an `ObservableObject` that persists reminders (JSON in `UserDefaults`) and is shared by reference across the popover, widget, and menu bar.
+- **`TimeProvider`** publishes clock ticks consumed across every surface.
+- **`SplitFlapClockFace`** renders the animated face; menu bar, popover, and widget all share this one implementation at different scales.
+- **`DigitFaceRenderer`** rasterizes each glyph to a bitmap card — this is what makes the physical flip animation possible, and it's the app's core identity rather than an implementation detail to simplify away.
+- **`OverlayWindowController`** owns the widget `NSPanel`: window level, size, position, and drift animation.
+- **`WidgetGlassBackground` + `DesktopBackdropCapture`** produce the widget's glass.
+- **`StatusItemController`** owns the menu bar clock, popover, context menu, and reminder pulse.
+- **`AppSettings`** persists preferences to `UserDefaults` and publishes via Combine. **`ReminderStore`** does the same for reminders (JSON), shared by reference across surfaces.
 
-More detail — including design rationale, hard-won gotchas, and development history — lives in `architecture.md`, `design.md`, `memory.md`, and `phases.md`.
+Both stores take an injectable `UserDefaults` so tests never touch real preferences.
 
-## Development Notes
+## Testing
 
-- AppKit is used where SwiftUI can't reach (menu bar, window level/collection behavior, login-item registration); SwiftUI drives the settings UI and content views.
-- Date and time rendering share the same split-flap face renderer for visual consistency.
-- The desktop overlay window sits just above the desktop-icon layer and below normal app windows, so it's covered by any foreground app window — this is intentional, matching how system widgets behave.
-- `NSWindow.frame` reports/stores whole-point origins. Any animation that accumulates a sub-pixel-per-tick offset (like the float-across-screen drift) must track its own precise position rather than reading it back from `window.frame` each tick, or the fractional progress gets silently truncated away every frame.
-- Settings window's tab-selection pill is driven by an explicit `@State` offset animated via `withAnimation`, not `.animation(_:value:)` or `matchedGeometryEffect` — both of those animate the pill's *entire* layout-derived position, so a transient re-layout during a large tab-to-tab content-height change got eased into a visible diagonal arc on some tab pairs but not others. Animating a single scalar keeps every pair identical. The settings window's resize is also unanimated for the same reason (an animated `NSWindow` frame around a hosted SwiftUI view transiently misplaces top-aligned content while it grows).
+```bash
+xcodebuild test -project FlipClock.xcodeproj -scheme FlipClock -destination 'platform=macOS'
+```
+
+61 tests covering time and digit maths, settings persistence and fallbacks, reminders, timer and stopwatch — including stress tests (rapid start/stop/reset cycling, hundreds of reminders) and a performance suite over per-tick maths, capture gating, and persistence throughput.
+
+There is no UI test coverage: the menu bar, popover, and desktop overlay aren't practical to drive headlessly, so SwiftUI view code is verified manually.
+
+## Documentation
+
+| File | Contents |
+|---|---|
+| [`architecture.md`](architecture.md) | Full module-by-module map |
+| [`design.md`](design.md) | Visual design system, glass tuning, measurement method |
+| [`memory.md`](memory.md) | Non-obvious lessons and platform gotchas |
+| [`phases.md`](phases.md) | Development milestones |
+| [`rules.md`](rules.md) | Enforceable project rules |
+| [`CLAUDE.md`](CLAUDE.md) | Context for AI coding assistants |
+
+`design.md` and `memory.md` are worth reading before touching anything glass- or animation-related — several behaviours that look like stylistic choices are actually workarounds for specific AppKit and Core Image quirks, each documented with the symptom that motivated it.
 
 ## Contributing
 
-Issues and pull requests are welcome. Please keep changes scoped and run a build (`xcodebuild ... build`) before submitting.
+Issues and pull requests welcome.
+
+Before submitting:
+
+1. `xcodebuild ... build` passes.
+2. `xcodebuild test ...` passes.
+3. New files added via `project.yml` + `xcodegen generate`, not by hand-editing `project.pbxproj`.
+4. Comments explain *why*, not *what* — match the density of the existing doc comments in `DesktopOverlay/`.
 
 ## License
 
-No license has been specified for this repository. All rights reserved by the author unless stated otherwise.
+No license has been specified. All rights reserved by the author unless stated otherwise.
+
+If you intend this to be open source, add a `LICENSE` file — without one, others have no legal right to use, modify, or distribute the code, regardless of it being publicly visible.
