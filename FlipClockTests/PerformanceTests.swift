@@ -65,6 +65,60 @@ final class PerformanceTests: XCTestCase {
         )
     }
 
+    // MARK: - Backdrop crop geometry
+    //
+    // The widget's glass is a crop out of a full-display capture, recomputed
+    // on every drag event. Cocoa screen coordinates are bottom-left origin
+    // and the captured image is top-left origin, so this flips the Y axis —
+    // the one bit of arithmetic here that silently produces a plausible but
+    // wrong-looking backdrop if it's off.
+
+    func testCropRectFlipsYAndScalesToImagePixels() {
+        // 1000x800pt screen at 2x, window 100pt from the left and with its
+        // top edge 100pt below the top of the screen.
+        let crop = DesktopBackdropCapture.cropRect(
+            windowFrame: CGRect(x: 100, y: 500, width: 200, height: 200),
+            screenFrame: CGRect(x: 0, y: 0, width: 1000, height: 800),
+            pixelScale: 2,
+            imageSize: CGSize(width: 2000, height: 1600)
+        )
+        XCTAssertEqual(crop, CGRect(x: 200, y: 200, width: 400, height: 400))
+    }
+
+    func testCropRectOffsetsByScreenOriginForASecondaryDisplay() {
+        // A display whose origin isn't (0,0): the crop must be relative to
+        // that display's own frame, not the global coordinate space.
+        let crop = DesktopBackdropCapture.cropRect(
+            windowFrame: CGRect(x: 1100, y: 500, width: 200, height: 200),
+            screenFrame: CGRect(x: 1000, y: 0, width: 1000, height: 800),
+            pixelScale: 2,
+            imageSize: CGSize(width: 2000, height: 1600)
+        )
+        XCTAssertEqual(crop, CGRect(x: 200, y: 200, width: 400, height: 400))
+    }
+
+    func testCropRectClampsAWidgetDraggedPastTheScreenEdge() {
+        // Half off the left edge. `CGImage.cropping(to:)` returns nil for a
+        // rect that isn't fully inside the image, which would drop the glass
+        // entirely mid-drag — so this has to come back clamped, not whole.
+        let crop = DesktopBackdropCapture.cropRect(
+            windowFrame: CGRect(x: -100, y: 500, width: 200, height: 200),
+            screenFrame: CGRect(x: 0, y: 0, width: 1000, height: 800),
+            pixelScale: 2,
+            imageSize: CGSize(width: 2000, height: 1600)
+        )
+        XCTAssertEqual(crop, CGRect(x: 0, y: 200, width: 200, height: 400))
+    }
+
+    func testCropRectIsNilWhenTheWidgetIsEntirelyOffTheDisplay() {
+        XCTAssertNil(DesktopBackdropCapture.cropRect(
+            windowFrame: CGRect(x: -500, y: 500, width: 200, height: 200),
+            screenFrame: CGRect(x: 0, y: 0, width: 1000, height: 800),
+            pixelScale: 2,
+            imageSize: CGSize(width: 2000, height: 1600)
+        ))
+    }
+
     // MARK: - Reminder persistence under load (JSON encode/decode is the
     // ReminderStore's per-mutation cost — see ReminderStoreTests for
     // correctness; this covers throughput on a large reminder set)

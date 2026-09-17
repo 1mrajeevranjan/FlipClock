@@ -6,10 +6,21 @@ import ScreenCaptureKit
 /// with a real, tunable Gaussian blur radius — `NSVisualEffectView`'s own
 /// blur radius is fixed by the system material and isn't a public API, so
 /// no amount of `.opacity()` on it can push the diffusion past what that
-/// fixed radius produces. This captures a still image of whatever sits
-/// behind the overlay window, blurs it heavily with Core Image, and
-/// republishes it on a timer — strong enough to match Notification
-/// Center's own widget diffusion.
+/// fixed radius produces.
+///
+/// Captures the **whole display** rather than just the window's own rect,
+/// blurs it once, and hands each widget the sub-rect sitting behind it.
+/// Capturing only the window's rect meant the glass was a snapshot of
+/// wherever the widget used to be: drag it and the old location's wallpaper
+/// came along for the ride until the next 5s refresh caught up, then popped
+/// to the new one. Cropping a `CGImage` is effectively free (it references
+/// the same pixels), so the crop can instead be redone on every window move
+/// and the glass tracks the desktop exactly while dragging, with no capture
+/// work per frame.
+///
+/// The expensive part — capture plus `CIGaussianBlur` over a full screen —
+/// is shared across every widget on that display via `SharedBackdrop`, so
+/// adding the second clock widget doesn't double it.
 ///
 /// Requires Screen Recording permission (macOS prompts on first capture
 /// attempt). If the user denies it, `image` just stays `nil` forever and
@@ -26,9 +37,15 @@ import ScreenCaptureKit
 final class DesktopBackdropCapture: ObservableObject {
     @Published private(set) var image: CGImage?
 
-    private let ciContext = CIContext()
+    /// Last full-display blurred backdrop this widget received. Held here so
+    /// `publishCrop` can crop synchronously on the main thread while dragging
+    /// — going back to the shared store for it would make every drag event an
+    /// `await`, and the glass would lag the window by a frame or more.
+    private var fullBackdrop: CGImage?
+
     private var timer: Timer?
     private var occlusionObserver: NSObjectProtocol?
+    private var moveObserver: NSObjectProtocol?
     private var captureTask: Task<Void, Never>?
 
     /// Whether a capture is worth doing right now — pulled out as a pure
@@ -56,6 +73,32 @@ final class DesktopBackdropCapture: ObservableObject {
         isLowPowerModeEnabled ? 15.0 : 5.0
     }
 
+    /// Where `window` sits inside a full-display backdrop image, in that
+    /// image's pixel space (top-left origin, Y down) — Cocoa screen
+    /// coordinates are bottom-left origin, so the Y axis flips here.
+    ///
+    /// Pure, and separated out, because this is the part with the axis flip
+    /// and the multi-display offset in it: the arithmetic worth testing
+    /// without needing a real window or a real screen capture.
+    static func cropRect(
+        windowFrame: CGRect,
+        screenFrame: CGRect,
+        pixelScale: CGFloat,
+        imageSize: CGSize
+    ) -> CGRect? {
+        let rect = CGRect(
+            x: (windowFrame.minX - screenFrame.minX) * pixelScale,
+            y: (screenFrame.maxY - windowFrame.maxY) * pixelScale,
+            width: windowFrame.width * pixelScale,
+            height: windowFrame.height * pixelScale
+        )
+        // A widget dragged past the edge of the display would otherwise ask
+        // for pixels the capture doesn't contain, which `cropping(to:)`
+        // answers with nil — dropping the glass entirely mid-drag.
+        let clamped = rect.intersection(CGRect(origin: .zero, size: imageSize))
+        return clamped.isNull || clamped.isEmpty ? nil : clamped
+    }
+
     func start(window: NSWindow, blurRadius: CGFloat) {
         stop()
         refresh(window: window, blurRadius: blurRadius)
@@ -72,6 +115,18 @@ final class DesktopBackdropCapture: ObservableObject {
             guard let self, let window, Self.shouldCapture(occlusionState: window.occlusionState) else { return }
             self.refresh(window: window, blurRadius: blurRadius)
         }
+        // Fires continuously while the user drags. Deliberately only re-crops
+        // the backdrop already in hand — no capture, no blur — which is what
+        // makes the glass track the desktop underneath in real time instead
+        // of dragging a stale snapshot around behind it.
+        moveObserver = NotificationCenter.default.addObserver(
+            forName: NSWindow.didMoveNotification,
+            object: window,
+            queue: .main
+        ) { [weak self, weak window] _ in
+            guard let self, let window else { return }
+            self.publishCrop(for: window)
+        }
     }
 
     func stop() {
@@ -79,10 +134,11 @@ final class DesktopBackdropCapture: ObservableObject {
         timer = nil
         captureTask?.cancel()
         captureTask = nil
-        if let occlusionObserver {
-            NotificationCenter.default.removeObserver(occlusionObserver)
+        for observer in [occlusionObserver, moveObserver].compactMap({ $0 }) {
+            NotificationCenter.default.removeObserver(observer)
         }
         occlusionObserver = nil
+        moveObserver = nil
     }
 
     private func scheduleTimer(window: NSWindow, blurRadius: CGFloat) {
@@ -108,67 +164,114 @@ final class DesktopBackdropCapture: ObservableObject {
         self.timer = timer
     }
 
+    /// Re-crops from whatever full-screen backdrop is already cached. Cheap
+    /// enough to call on every drag event.
+    @MainActor
+    private func publishCrop(for window: NSWindow) {
+        guard let screen = window.screen ?? NSScreen.main, let backdrop = fullBackdrop else { return }
+        guard let crop = Self.cropRect(
+            windowFrame: window.frame,
+            screenFrame: screen.frame,
+            pixelScale: screen.backingScaleFactor,
+            imageSize: CGSize(width: backdrop.width, height: backdrop.height)
+        ), let cropped = backdrop.cropping(to: crop) else { return }
+        image = cropped
+    }
+
     private func refresh(window: NSWindow, blurRadius: CGFloat) {
         guard Self.shouldCapture(occlusionState: window.occlusionState) else { return }
-        let windowID = CGWindowID(window.windowNumber)
-        let frame = window.frame
         guard let screen = window.screen ?? NSScreen.main,
-              let displayID = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber else { return }
-        // ScreenCaptureKit's `sourceRect` is in the display's own top-left,
-        // Y-down pixel space; `NSWindow.frame` is Cocoa screen space
-        // (origin bottom-left, Y up) — flip against the screen's own frame,
-        // not the primary screen's, so this is correct on secondary displays.
-        let captureRect = CGRect(
-            x: frame.minX - screen.frame.minX,
-            y: screen.frame.height - (frame.maxY - screen.frame.minY),
-            width: frame.width,
-            height: frame.height
-        )
-        // Capture at the display's real pixel density. Requesting a
-        // point-sized image on a Retina screen hands back a half-resolution
-        // backdrop that then gets upscaled 2x to fill the widget — and that
-        // upscale smooths away far more detail than the Gaussian does, which
-        // is why shrinking the blur radius barely changed how diffuse the
-        // panel looked. The radius is in pixels, so it scales with the image.
+              let displayID = Self.displayID(of: screen) else { return }
+
         let pixelScale = screen.backingScaleFactor
-
         captureTask?.cancel()
-        captureTask = Task { [weak self] in
-            guard let self else { return }
-            do {
-                let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
-                guard let display = content.displays.first(where: { $0.displayID == displayID.uint32Value }) else { return }
-                // Only our own window is excluded. Excluding every window (to
-                // capture strictly the desktop behind the overlay) reads better
-                // in principle but fails outright here — SCK returns -3811
-                // "Failed to start stream" for a filter that excludes
-                // everything. The occlusion gate in `shouldCapture` already
-                // skips the case this would have covered, since a widget that's
-                // fully behind another window isn't being composited anyway.
-                let ourWindow = content.windows.first { $0.windowID == windowID }
-                let filter = SCContentFilter(display: display, excludingWindows: ourWindow.map { [$0] } ?? [])
-                let config = SCStreamConfiguration()
-                config.sourceRect = captureRect
-                config.width = max(1, Int(captureRect.width * pixelScale))
-                config.height = max(1, Int(captureRect.height * pixelScale))
-                config.showsCursor = false
-                config.scalesToFit = false
-
-                let raw = try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: config)
-                try Task.checkCancellation()
-
-                let source = CIImage(cgImage: raw)
-                guard let blurred = self.blur(source, radius: blurRadius * pixelScale),
-                      let output = self.ciContext.createCGImage(blurred, from: source.extent) else { return }
-
-                await MainActor.run { [weak self] in
-                    self?.image = output
-                }
-            } catch {
-                // Denied Screen Recording permission or a transient capture
-                // failure — `image` just stays whatever it last was (or nil),
-                // and `WidgetGlassBackground` falls back gracefully.
+        captureTask = Task { [weak self, weak window] in
+            let backdrop = await SharedBackdrop.shared.backdrop(
+                displayID: displayID,
+                blurRadius: blurRadius,
+                pixelScale: pixelScale
+            )
+            guard !Task.isCancelled, let backdrop, let self, let window else { return }
+            await MainActor.run {
+                self.fullBackdrop = backdrop
+                self.publishCrop(for: window)
             }
+        }
+    }
+
+    private static func displayID(of screen: NSScreen) -> CGDirectDisplayID? {
+        (screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber)?.uint32Value
+    }
+}
+
+/// One blurred full-display backdrop per display, shared by every widget on
+/// it. Without this each widget would capture and blur the whole screen on
+/// its own timer — the same work twice for the clock and the second clock.
+/// An `actor`, deliberately not a `@MainActor` type: the capture and the
+/// full-screen `CIGaussianBlur` are the most expensive work in the app and
+/// must not run on the main thread, or every refresh would hitch the UI.
+private actor SharedBackdrop {
+    static let shared = SharedBackdrop()
+
+    private struct Entry {
+        let image: CGImage
+        let blurRadius: CGFloat
+        let captured: Date
+    }
+
+    private var entries: [CGDirectDisplayID: Entry] = [:]
+    private let ciContext = CIContext()
+
+    /// Returns the display's blurred backdrop, re-capturing only if what's
+    /// cached has aged past the refresh interval. Two widgets on one screen
+    /// therefore cost one capture between them rather than one each — and
+    /// because this is an actor, a second caller arriving mid-capture waits
+    /// for that result instead of kicking off its own.
+    func backdrop(displayID: CGDirectDisplayID, blurRadius: CGFloat, pixelScale: CGFloat) async -> CGImage? {
+        let interval = DesktopBackdropCapture.refreshInterval(
+            isLowPowerModeEnabled: ProcessInfo.processInfo.isLowPowerModeEnabled
+        )
+        if let entry = entries[displayID],
+           entry.blurRadius == blurRadius,
+           Date().timeIntervalSince(entry.captured) < interval {
+            return entry.image
+        }
+
+        do {
+            let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
+            guard let display = content.displays.first(where: { $0.displayID == displayID }) else {
+                return entries[displayID]?.image
+            }
+            // Every window this app owns is excluded, not just the one being
+            // drawn: capturing the whole display means a widget would
+            // otherwise blur *itself* and its sibling into its own backdrop.
+            let ownPID = ProcessInfo.processInfo.processIdentifier
+            let ourWindows = content.windows.filter { $0.owningApplication?.processID == ownPID }
+            let filter = SCContentFilter(display: display, excludingWindows: ourWindows)
+
+            let config = SCStreamConfiguration()
+            // Native pixel density: a point-sized request hands back a
+            // half-resolution backdrop that then gets upscaled into the
+            // widget, and that upscale smooths away more detail than the
+            // Gaussian does.
+            config.width = Int(CGFloat(display.width) * pixelScale)
+            config.height = Int(CGFloat(display.height) * pixelScale)
+            config.showsCursor = false
+            config.scalesToFit = false
+
+            let raw = try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: config)
+            let source = CIImage(cgImage: raw)
+            guard let blurred = blur(source, radius: blurRadius * pixelScale),
+                  let output = ciContext.createCGImage(blurred, from: source.extent) else {
+                return entries[displayID]?.image
+            }
+            entries[displayID] = Entry(image: output, blurRadius: blurRadius, captured: Date())
+            return output
+        } catch {
+            // Denied Screen Recording permission or a transient capture
+            // failure — the last good backdrop (or none) stays in place and
+            // `WidgetGlassBackground` falls back gracefully.
+            return entries[displayID]?.image
         }
     }
 
@@ -179,13 +282,12 @@ final class DesktopBackdropCapture: ObservableObject {
         // result's alpha falls off towards every edge (measured at ~52% in the
         // outer 10px vs ~99% in the middle). On screen that turned the widget's
         // whole rim semi-transparent, letting the sharp unblurred desktop leak
-        // through exactly where the frosted edge should be — the single biggest
-        // reason this didn't read like a native widget's glass.
+        // through exactly where the frosted edge should be.
         filter.setValue(image.clampedToExtent(), forKey: kCIInputImageKey)
         filter.setValue(radius, forKey: kCIInputRadiusKey)
         guard let output = filter.outputImage else { return nil }
         // Clamping makes the blur output infinite in extent — crop back to the
-        // source rect so it lines up with the widget's bounds.
+        // source rect so it lines up with the display's bounds.
         return output.cropped(to: image.extent)
     }
 }
