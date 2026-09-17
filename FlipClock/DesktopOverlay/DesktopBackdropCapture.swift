@@ -44,6 +44,8 @@ final class DesktopBackdropCapture: ObservableObject {
     private var fullBackdrop: CGImage?
 
     private var timer: Timer?
+    private var activeWindow: NSWindow?
+    private var activeBlurRadius: CGFloat = 0
     private var occlusionObserver: NSObjectProtocol?
     private var moveObserver: NSObjectProtocol?
     private var captureTask: Task<Void, Never>?
@@ -101,6 +103,8 @@ final class DesktopBackdropCapture: ObservableObject {
 
     func start(window: NSWindow, blurRadius: CGFloat) {
         stop()
+        activeWindow = window
+        activeBlurRadius = blurRadius
         refresh(window: window, blurRadius: blurRadius)
         scheduleTimer(window: window, blurRadius: blurRadius)
         // If the window goes from covered to visible again between ticks
@@ -139,6 +143,18 @@ final class DesktopBackdropCapture: ObservableObject {
         }
         occlusionObserver = nil
         moveObserver = nil
+        activeWindow = nil
+    }
+
+    /// Forces a capture outside the normal cadence. Used when a drag ends:
+    /// the crop keeps the *position* honest during the gesture, but the pixels
+    /// themselves are still up to one refresh interval old, so anything that
+    /// has changed on screen at the new location would otherwise take until
+    /// the next tick to show up.
+    @MainActor
+    func refreshNow() {
+        guard let activeWindow else { return }
+        refresh(window: activeWindow, blurRadius: activeBlurRadius, force: true)
     }
 
     private func scheduleTimer(window: NSWindow, blurRadius: CGFloat) {
@@ -166,8 +182,13 @@ final class DesktopBackdropCapture: ObservableObject {
 
     /// Re-crops from whatever full-screen backdrop is already cached. Cheap
     /// enough to call on every drag event.
+    /// Re-crops the cached full-display backdrop for the window's current
+    /// position. Called on every frame of a drag (see
+    /// `OverlayWindow.onDragStep`) as well as on `didMoveNotification`, so it
+    /// has to stay cheap: one `CGImage.cropping`, which references the
+    /// existing pixels rather than copying them.
     @MainActor
-    private func publishCrop(for window: NSWindow) {
+    func publishCrop(for window: NSWindow) {
         guard let screen = window.screen ?? NSScreen.main, let backdrop = fullBackdrop else { return }
         guard let crop = Self.cropRect(
             windowFrame: window.frame,
@@ -178,7 +199,7 @@ final class DesktopBackdropCapture: ObservableObject {
         image = cropped
     }
 
-    private func refresh(window: NSWindow, blurRadius: CGFloat) {
+    private func refresh(window: NSWindow, blurRadius: CGFloat, force: Bool = false) {
         guard Self.shouldCapture(occlusionState: window.occlusionState) else { return }
         guard let screen = window.screen ?? NSScreen.main,
               let displayID = Self.displayID(of: screen) else { return }
@@ -189,7 +210,8 @@ final class DesktopBackdropCapture: ObservableObject {
             let backdrop = await SharedBackdrop.shared.backdrop(
                 displayID: displayID,
                 blurRadius: blurRadius,
-                pixelScale: pixelScale
+                pixelScale: pixelScale,
+                force: force
             )
             guard !Task.isCancelled, let backdrop, let self, let window else { return }
             await MainActor.run {
@@ -227,11 +249,12 @@ private actor SharedBackdrop {
     /// therefore cost one capture between them rather than one each — and
     /// because this is an actor, a second caller arriving mid-capture waits
     /// for that result instead of kicking off its own.
-    func backdrop(displayID: CGDirectDisplayID, blurRadius: CGFloat, pixelScale: CGFloat) async -> CGImage? {
+    func backdrop(displayID: CGDirectDisplayID, blurRadius: CGFloat, pixelScale: CGFloat, force: Bool = false) async -> CGImage? {
         let interval = DesktopBackdropCapture.refreshInterval(
             isLowPowerModeEnabled: ProcessInfo.processInfo.isLowPowerModeEnabled
         )
-        if let entry = entries[displayID],
+        if !force,
+           let entry = entries[displayID],
            entry.blurRadius == blurRadius,
            Date().timeIntervalSince(entry.captured) < interval {
             return entry.image

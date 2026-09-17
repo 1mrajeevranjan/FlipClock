@@ -234,6 +234,22 @@ final class OverlayWindowController {
         // structure through the frost. ~16pt lands in that range.
         let blurRadius = (4 * settings.overlaySize.scale).clamped(to: 2.5...8)
         backdropCapture.start(window: window, blurRadius: blurRadius)
+        // Re-crop the backdrop on every frame of a user drag. Without this the
+        // glass only catches up when the gesture's coalesced move
+        // notifications happen to land, so it visibly drags the old location's
+        // wallpaper along with it.
+        window.onDragStep = { [weak self, weak window] in
+            guard let self, let window else { return }
+            // Event tracking is main-thread by definition, so this is a
+            // statement of fact rather than a hop — and a hop is exactly what
+            // must not happen here: bouncing to the next run-loop turn would
+            // put the backdrop a frame behind the window it belongs to.
+            MainActor.assumeIsolated { self.backdropCapture.publishCrop(for: window) }
+        }
+        window.onDragEnd = { [weak self] in
+            guard let self else { return }
+            MainActor.assumeIsolated { self.backdropCapture.refreshNow() }
+        }
     }
 
     private func setFloating(_ floating: Bool) {
