@@ -38,22 +38,32 @@ final class SettingsWindowController {
             window.titlebarAppearsTransparent = true
             window.isMovableByWindowBackground = true
             window.isReleasedWhenClosed = false
-            window.contentViewController = NSHostingController(
+            let hosting = NSHostingController(
                 rootView: SettingsView(onChangeWindow: { [weak window] title, size in
                     guard let window else { return }
                     window.title = title
-                    Self.position(window: window, contentSize: size)
+                    Self.resize(window: window, contentSize: size)
                 })
                 .environmentObject(settings)
             )
+            window.contentViewController = hosting
             self.window = window
-            Self.position(window: window, contentSize: .init(width: 470, height: 184))
+            Self.resize(window: window, contentSize: .init(width: 470, height: 184))
+            window.center()
         }
         NSApp.activate(ignoringOtherApps: true)
         window?.makeKeyAndOrderFront(nil)
     }
 
-    /// Resizes the window to fit `contentSize`, top-right anchored.
+    /// Resizes the window to fit `contentSize`, keeping its **top-left corner
+    /// where it already is** so switching tabs grows and shrinks the window
+    /// downward in place.
+    ///
+    /// This used to re-derive the origin from the screen on every call and
+    /// pin the window to the top-right corner, which meant a tab switch
+    /// yanked the window back to the corner from wherever the user had
+    /// dragged it — and left it jammed against the screen edge the rest of
+    /// the time. Placement now happens exactly once, in `show()`.
     ///
     /// The resize is deliberately **not** animated. An animated window
     /// frame was the root cause of the tab pill appearing to "bounce" on
@@ -93,21 +103,33 @@ final class SettingsWindowController {
     /// horizontal arithmetic — see `SettingsView.pillOffset`) is the only
     /// motion left. Every tab pair now animates identically, which is the
     /// requirement.
-    private static func position(window: NSWindow, contentSize: CGSize) {
-        let frame = window.frameRect(forContentRect: CGRect(origin: .zero, size: contentSize))
-        let screenFrame = window.screen?.visibleFrame ?? NSScreen.main?.visibleFrame ?? NSScreen.screens.first?.visibleFrame
-        guard let screenFrame else {
-            window.setFrame(frame, display: true, animate: false)
-            return
+    private static func resize(window: NSWindow, contentSize: CGSize) {
+        // `contentSize` is used as the *frame* size, not run through
+        // `frameRect(forContentRect:)`. This window is `.fullSizeContentView`,
+        // so its content view already spans the whole frame including the
+        // titlebar band — and `SettingsView` lays its own title out inside
+        // that band. Converting would have added another titlebar's height on
+        // top, which is the ~28pt of dead space that sat under the last
+        // control on every tab.
+        let sized = CGRect(origin: .zero, size: contentSize)
+        // Cocoa origins are bottom-left, so holding the *top* edge still means
+        // moving the origin down by however much the height grew.
+        let topLeft = NSPoint(x: window.frame.minX, y: window.frame.maxY)
+        var frame = NSRect(
+            x: topLeft.x,
+            y: topLeft.y - sized.height,
+            width: sized.width,
+            height: sized.height
+        )
+
+        // Only nudge back on-screen if growing pushed it off — never recentre,
+        // or the window would creep away from where the user put it.
+        if let visible = window.screen?.visibleFrame ?? NSScreen.main?.visibleFrame {
+            frame.origin.y = max(frame.origin.y, visible.minY)
+            frame.origin.x = min(max(frame.origin.x, visible.minX), visible.maxX - frame.width)
+            if frame.maxY > visible.maxY { frame.origin.y = visible.maxY - frame.height }
         }
 
-        var origin = NSPoint(
-            x: screenFrame.maxX - frame.width - 12,
-            y: screenFrame.maxY - frame.height - 12
-        )
-        origin.x = max(origin.x, screenFrame.minX + 12)
-        origin.y = max(origin.y, screenFrame.minY + 12)
-
-        window.setFrame(frame.offsetBy(dx: origin.x, dy: origin.y), display: true, animate: false)
+        window.setFrame(frame, display: true, animate: false)
     }
 }

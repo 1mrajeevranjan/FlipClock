@@ -113,11 +113,16 @@ enum SecondClockDisplay: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
+    /// Kept short on purpose. A SwiftUI segmented `Picker` sizes itself to its
+    /// labels and will not compress them, so "Desktop Widget" pushed the whole
+    /// control wider than the settings window and clipped "Both" off the right
+    /// edge. "Widget" is unambiguous next to "Menu Bar" under a
+    /// "Show second clock" heading.
     var label: String {
         switch self {
         case .off: return "Off"
         case .menuBar: return "Menu Bar"
-        case .widget: return "Desktop Widget"
+        case .widget: return "Widget"
         case .both: return "Both"
         }
     }

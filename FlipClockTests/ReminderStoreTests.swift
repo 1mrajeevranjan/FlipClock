@@ -94,9 +94,13 @@ final class ReminderStoreTests: XCTestCase {
         let calendar = Calendar.current
         let now = Date()
 
-        // 12 hours out: should count as "upcoming".
-        let in12h = calendar.date(byAdding: .hour, value: 12, to: now)!
-        store.add(title: "in 12h", date: in12h)
+        // Tomorrow, and by definition at most 24h out: should count as
+        // "upcoming". Deliberately start-of-tomorrow rather than "now + 12h",
+        // which only lands on tomorrow when the test runs after midday — it
+        // failed every morning otherwise, since `upcomingWithin24Hours`
+        // excludes today and "now + 12h" is still today before noon.
+        let startOfTomorrow = calendar.startOfDay(for: calendar.date(byAdding: .day, value: 1, to: now)!)
+        store.add(title: "in 12h", date: startOfTomorrow)
 
         // 48 hours out: too far, should NOT count as "upcoming".
         let in48h = calendar.date(byAdding: .hour, value: 48, to: now)!

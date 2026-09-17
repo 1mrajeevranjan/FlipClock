@@ -57,10 +57,19 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
 /// Reports the settings content's real, natural height up to `SettingsView`
 /// so the window can be sized to fit it exactly — no scrollbar, no guessed
 /// magic numbers per tab that drift out of sync with the actual content.
+///
+/// `reduce` takes the max rather than the usual `value = nextValue()`.
+/// Last-writer-wins is wrong for a key read from a `ZStack`: only one child
+/// (the card) ever sets this, while the header sibling silently contributes
+/// `defaultValue`. Whichever is reduced last wins, and that was the header —
+/// so this reported `0` forever, the `cardHeight > 0` guard threw every real
+/// measurement away, and all four tabs fell back to the hand-written estimate
+/// table. That's where the leftover blank space at the bottom of every tab
+/// came from: the estimates were simply larger than the real content.
 private struct ContentHeightPreferenceKey: PreferenceKey {
     static var defaultValue: CGFloat = 0
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = nextValue()
+        value = max(value, nextValue())
     }
 }
 
@@ -72,10 +81,25 @@ private struct ContentHeightPreferenceKey: PreferenceKey {
 /// card's top padding no longer matched the header's real height. Measuring
 /// it instead of guessing means it can never drift out of sync again,
 /// regardless of what's added to the header block later.
+///
+/// Takes the max for the same reason as `ContentHeightPreferenceKey` — the
+/// card sibling contributes `defaultValue` here, and last-writer-wins would
+/// let whichever child happens to reduce last decide the answer.
 private struct HeaderHeightPreferenceKey: PreferenceKey {
     static var defaultValue: CGFloat = 78
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = nextValue()
+        value = max(value, nextValue())
+    }
+}
+
+/// The titlebar-height safe-area inset `.fullSizeContentView` hands the
+/// hosted SwiftUI view. Needed as a real number because the card has to be
+/// laid out *inside* the safe area while still appearing to start at the
+/// header's bottom edge — see the card's `.padding(.top)`.
+private struct TopInsetPreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = max(value, nextValue())
     }
 }
 
@@ -85,8 +109,15 @@ struct SettingsView: View {
     @State private var selectedTab: SettingsTab = .general
     @State private var showingTimezonePicker = false
     @State private var measuredHeight: CGFloat = 0
+    /// Real measured height per tab, so returning to a tab jumps straight to
+    /// its true size instead of bouncing off the rough estimate first. The
+    /// estimate table is only ever consulted for a tab's first visit.
+    @State private var knownHeights: [SettingsTab: CGFloat] = [:]
     @State private var pendingResize: DispatchWorkItem?
     @State private var headerHeight: CGFloat = 78
+    /// Titlebar safe-area inset, measured rather than hardcoded — it differs
+    /// between macOS versions and window configurations.
+    @State private var topInset: CGFloat = 0
     /// Selection pill's x-offset within the tab row. Animated explicitly via
     /// `withAnimation` (see `headerBar`) rather than through an
     /// `.animation(_:value:)` modifier, so that it — and nothing else — eases.
@@ -156,13 +187,22 @@ struct SettingsView: View {
                 // animating bounds are keeps content and window in lockstep —
                 // window size is driven entirely by the measured height below,
                 // not by this frame.
-                .padding(.top, headerHeight)
-                // Without this, the card body was *also* respecting the
-                // system's implicit top safe-area inset reserved for the
-                // (visually hidden, but still logically present) title bar —
-                // stacking on top of the manual `headerHeight` padding above,
-                // which is already accounting for that exact space.
-                .ignoresSafeArea(edges: .top)
+                // Padded by the header's height *minus* the safe-area inset,
+                // and deliberately NOT `.ignoresSafeArea` — the card is laid
+                // out inside the safe area, so the inset supplies the first
+                // `topInset` points and this supplies the rest. Visually the
+                // card still starts exactly at the header's bottom edge.
+                //
+                // Ignoring the safe area here instead (and padding by the full
+                // header height) drew in the right place but made the hosted
+                // view's *ideal* height `topInset + header + card`, since
+                // SwiftUI still reserves an inset the content has opted out of
+                // drawing in. Auto Layout then grew the window back to that
+                // ideal a moment after every `setFrame`, leaving exactly
+                // `topInset` (~32pt) of dead space below the last control on
+                // every tab. Staying inside the safe area makes the ideal
+                // height equal what's actually drawn.
+                .padding(.top, max(0, headerHeight - topInset))
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
 
             // The window's native title is hidden (see
@@ -219,7 +259,13 @@ struct SettingsView: View {
                 }
             )
         }
+        .background(
+            GeometryReader { proxy in
+                Color.clear.preference(key: TopInsetPreferenceKey.self, value: proxy.safeAreaInsets.top)
+            }
+        )
         .preferredColorScheme(settings.theme.colorScheme)
+        .onPreferenceChange(TopInsetPreferenceKey.self) { topInset = $0 }
         .onAppear { onChangeWindow(selectedTab.label, selectedTab.windowSize) }
         // Updates the window title immediately (it shouldn't lag
         // behind the click) using `tab.windowSize` — the per-tab
@@ -236,8 +282,9 @@ struct SettingsView: View {
         // content — the 0.5pt-delta guard suppresses a redundant
         // second resize entirely.
         .onChange(of: selectedTab) { _, tab in
-            measuredHeight = tab.windowSize.height
-            onChangeWindow(tab.label, tab.windowSize)
+            let guess = knownHeights[tab] ?? tab.windowSize.height
+            measuredHeight = guess
+            onChangeWindow(tab.label, CGSize(width: SettingsTab.width, height: guess))
         }
         .onPreferenceChange(ContentHeightPreferenceKey.self) { cardHeight in
             let totalHeight = cardHeight + headerHeight
@@ -255,8 +302,10 @@ struct SettingsView: View {
             // applied, so exactly one clean resize happens per switch.
             pendingResize?.cancel()
             let label = selectedTab.label
+            let tab = selectedTab
             let work = DispatchWorkItem {
                 measuredHeight = totalHeight
+                knownHeights[tab] = totalHeight
                 onChangeWindow(label, CGSize(width: SettingsTab.width, height: totalHeight))
             }
             pendingResize = work
