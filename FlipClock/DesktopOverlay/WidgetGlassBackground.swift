@@ -91,6 +91,18 @@ struct WidgetGlassBackground: View {
     }
 
     var body: some View {
+        // Every path gets the drag handle behind it, not just the
+        // `VisualEffectBlur` fallback. That view's `mouseDownCanMoveWindow`
+        // override used to be the only thing making the widget draggable, so
+        // dragging silently stopped working the moment the ScreenCaptureKit
+        // capture started succeeding reliably and the `Image` path took over —
+        // a plain SwiftUI `Image` puts no AppKit view under the cursor, and
+        // `isMovableByWindowBackground` has nothing to ask.
+        glass.background(WindowDragHandle())
+    }
+
+    @ViewBuilder
+    private var glass: some View {
         if fullyClear {
             Color.clear
         } else if reduceTransparency {
@@ -239,6 +251,21 @@ private struct VisualEffectBlur: NSViewRepresentable {
         nsView.layer?.cornerRadius = cornerRadius
     }
 }
+
+/// A plain AppKit view whose only job is to answer `true` to
+/// `mouseDownCanMoveWindow`, so `OverlayWindow.isMovableByWindowBackground`
+/// has something to act on wherever the widget's SwiftUI content doesn't
+/// claim the click itself. Sits behind the glass, so anything interactive
+/// added to the widget later still hit-tests first and wins.
+private struct WindowDragHandle: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSView { DragHandleView() }
+    func updateNSView(_ nsView: NSView, context: Context) {}
+}
+
+private final class DragHandleView: NSView {
+    override var mouseDownCanMoveWindow: Bool { true }
+}
+
 
 /// `NSVisualEffectView` returns `false` from `mouseDownCanMoveWindow` by
 /// default, which silently defeats the overlay window's
