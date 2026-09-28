@@ -25,20 +25,30 @@ struct WidgetGlassBackground: View {
     /// (or forever, if Screen Recording access was denied), in which case
     /// this falls back to the live `NSVisualEffectView` blur below.
     var backdropImage: CGImage? = nil
-    /// The app's own "Monochrome" pick — drains the glass to true greyscale.
-    /// A deliberate user choice, so it goes all the way, unlike `dimmed`.
-    var monochrome: Bool = false
-
-    /// Mirrors macOS dimming its desktop widgets (see `SystemWidgetDimming`).
+    /// The same backdrop pre-blurred for the dimmed look (see
+    /// `DesktopBackdropCapture.dimmedImage`).
+    var dimmedBackdropImage: CGImage? = nil
+    /// Which of macOS's three widget looks to render (see `GlassTone`).
+    /// Monochrome is a deliberate user choice and drains the glass all the
+    /// way to greyscale.
     ///
-    /// Deliberately *not* full greyscale. Measuring a real widget while the
-    /// system had it dimmed showed its glass still carrying the vibrancy
-    /// boost — saturation 0.34 against the wallpaper's 0.09. What macOS dims
-    /// is the widget's *content*, not the backdrop behind it. Draining the
-    /// glass to grey here overshot badly and read as a different material
-    /// entirely, so this just pulls the vibrancy back toward the raw wallpaper
-    /// and deepens the scrim a little: flatter, still glass.
-    var dimmed: Bool = false
+    /// Dimmed is deliberately *not* full greyscale. Measuring a real widget
+    /// while the system had it dimmed showed its glass still carrying some
+    /// colour (saturation ~0.13-0.25 over a ~0.3 wallpaper) but far more
+    /// diffused than the vivid state — nearly a flat average of what's behind
+    /// it. So dimming pulls the vibrancy back, deepens the scrim a little, and
+    /// adds a second blur on top of the captured one.
+    var tone: GlassTone = .vivid
+
+    private var monochrome: Bool { tone == .monochrome }
+    private var dimmed: Bool { tone == .dimmed }
+
+    /// Extra diffusion the dimmed backdrop gets on top of the vivid one's
+    /// blur. Baked into a second capture image (not a live SwiftUI `.blur`,
+    /// which was too heavy to animate smoothly across the panel).
+    static func dimmedBlur(scale: CGFloat) -> CGFloat {
+        (18 * scale).clamped(to: 8...28)
+    }
 
     /// `34 * scale`, clamped to `14...40`. The default `.full` size
     /// (`scale = 0.65`) now renders at `22pt` — smaller than the old flat
@@ -62,7 +72,38 @@ struct WidgetGlassBackground: View {
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.colorScheme) private var colorScheme
 
+    @Environment(\.colorSchemeContrast) private var contrast
+
     private var isDark: Bool { colorScheme == .dark }
+
+    /// HIG: with Increase Contrast on, native widgets trade their soft glass
+    /// edge for a solid outline so the panel separates from any wallpaper.
+    private var increasedContrastEdge: Color? {
+        contrast == .increased ? Color(nsColor: .separatorColor) : nil
+    }
+
+    @ViewBuilder
+    private func rim(_ shape: RoundedRectangle) -> some View {
+        if let edge = increasedContrastEdge {
+            shape.strokeBorder(edge, lineWidth: 1)
+        } else {
+            // The glossy rim macOS's own widgets have: a bright specular arc
+            // along the top edge fading to almost nothing by the sides/bottom
+            // — light catching curved glass from above, not a stroke drawn
+            // all the way around (which is what previously read as an
+            // artificial "ring").
+            shape.strokeBorder(
+                AngularGradient(
+                    colors: [.white.opacity(0.05), .white.opacity(0.55), .white.opacity(0.05)],
+                    center: .center,
+                    startAngle: .degrees(200),
+                    endAngle: .degrees(340)
+                ),
+                lineWidth: 1
+            )
+            .blendMode(.plusLighter)
+        }
+    }
 
     /// Measured off real widget glass rather than guessed: sampling a
     /// Notification Center widget against the wallpaper band running right
@@ -85,9 +126,26 @@ struct WidgetGlassBackground: View {
     /// boosting it, landing near the wallpaper's own saturation.
     static let dimmedVibrancy: Double = 0.75
 
+    /// Passing the backdrop through at saturation 1 is what kept this reading
+    /// as a flat grey-brown panel next to the real thing.
+    /// `NSVisualEffectView`'s materials don't just blur, they push saturation
+    /// up — measured against the wallpaper band beside a Notification Center
+    /// widget, the wallpaper sits at ~0.31 saturation and the widget's glass at
+    /// ~0.42, a ~1.35x boost. That colour lift is most of what reads as
+    /// "vibrancy" rather than "a blurry screenshot".
     static func saturation(monochrome: Bool, dimmed: Bool) -> Double {
         if monochrome { return 0 }
         return dimmed ? dimmedVibrancy : vibrancy
+    }
+
+    /// `.frame` from the measured size, not the proposal — see the
+    /// `GeometryReader` note in `glass`.
+    private func backdropLayer(_ image: CGImage, size: CGSize) -> some View {
+        Image(decorative: image, scale: 1)
+            .resizable()
+            .aspectRatio(contentMode: .fill)
+            .frame(width: size.width, height: size.height)
+            .clipped()
     }
 
     var body: some View {
@@ -108,6 +166,7 @@ struct WidgetGlassBackground: View {
         } else if reduceTransparency {
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                 .fill(Color(nsColor: .windowBackgroundColor))
+                .overlay(increasedContrastEdge.map { RoundedRectangle(cornerRadius: cornerRadius, style: .continuous).strokeBorder($0, lineWidth: 1) })
                 .shadow(
                     color: .black.opacity(0.28),
                     radius: (16 * scale).clamped(to: 8...26),
@@ -143,22 +202,31 @@ struct WidgetGlassBackground: View {
                                 // widget levels of diffusion, since
                                 // `NSVisualEffectView`'s own blur radius is
                                 // fixed and isn't a public API.
-                                Image(decorative: backdropImage, scale: 1)
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
-                                    .frame(width: proxy.size.width, height: proxy.size.height)
-                                    .clipped()
-                                    // The blurred wallpaper alone reads as dark
-                                    // smoked glass, not frosted glass. macOS's
-                                    // own widgets lay a translucent scrim over
-                                    // the blur — that's what gives them their
-                                    // milky lift and keeps content legible over
-                                    // a dark wallpaper. A flat white/black pair
-                                    // (rather than a SwiftUI `Material`, which
-                                    // does its own sampling and washed the panel
-                                    // out entirely when tried before) keeps the
-                                    // strength tunable and predictable.
-                                    .overlay(Self.scrim(isDark: isDark, dimmed: dimmed))
+                                ZStack {
+                                    backdropLayer(backdropImage, size: proxy.size)
+                                        .saturation(Self.saturation(monochrome: monochrome, dimmed: false))
+                                    // The dimmed look is its own pre-blurred
+                                    // image faded in on top, so switching
+                                    // looks animates nothing but opacity and a
+                                    // colour matrix — cheap enough to run at
+                                    // full frame rate from the first frame.
+                                    if let dimmedBackdropImage {
+                                        backdropLayer(dimmedBackdropImage, size: proxy.size)
+                                            .saturation(Self.saturation(monochrome: false, dimmed: true))
+                                            .opacity(dimmed ? 1 : 0)
+                                    }
+                                }
+                                // The blurred wallpaper alone reads as dark
+                                // smoked glass, not frosted glass. macOS's
+                                // own widgets lay a translucent scrim over
+                                // the blur — that's what gives them their
+                                // milky lift and keeps content legible over
+                                // a dark wallpaper. A flat white/black pair
+                                // (rather than a SwiftUI `Material`, which
+                                // does its own sampling and washed the panel
+                                // out entirely when tried before) keeps the
+                                // strength tunable and predictable.
+                                .overlay(Self.scrim(isDark: isDark, dimmed: dimmed))
                             } else {
                                 // The corner rounding lives on the
                                 // NSVisualEffectView's own CALayer (see
@@ -173,39 +241,13 @@ struct WidgetGlassBackground: View {
                                 // or permanently if Screen Recording
                                 // access was denied.
                                 VisualEffectBlur(cornerRadius: cornerRadius)
+                                    .saturation(Self.saturation(monochrome: monochrome, dimmed: dimmed))
                             }
                         }
                     }
                     .clipShape(shape)
-                    // Passing the backdrop through at saturation 1 is what kept
-                    // this reading as a flat grey-brown panel next to the real
-                    // thing. `NSVisualEffectView`'s materials don't just blur,
-                    // they push saturation up — measured against the wallpaper
-                    // band beside a Notification Center widget, the wallpaper
-                    // sits at ~0.31 saturation and the widget's glass at ~0.42,
-                    // a ~1.35x boost. That colour lift is most of what reads as
-                    // "vibrancy" rather than "a blurry screenshot".
-                    .saturation(Self.saturation(monochrome: monochrome, dimmed: dimmed))
                 )
-                .overlay(
-                    // The glossy rim macOS's own widgets have: a bright
-                    // specular arc along the top edge fading to almost
-                    // nothing by the sides/bottom — light catching curved
-                    // glass from above, not a stroke drawn all the way
-                    // around (which is what previously read as an
-                    // artificial "ring").
-                    shape.strokeBorder(
-                        AngularGradient(
-                            colors: [.white.opacity(0.05), .white.opacity(0.55), .white.opacity(0.05)],
-                            center: .center,
-                            startAngle: .degrees(200),
-                            endAngle: .degrees(340)
-                        ),
-                        lineWidth: 1
-                    )
-                    .blendMode(.plusLighter)
-                    .allowsHitTesting(false)
-                )
+                .overlay(rim(shape).allowsHitTesting(false))
                 .shadow(
                     color: .black.opacity(0.28),
                     radius: (16 * scale).clamped(to: 8...26),

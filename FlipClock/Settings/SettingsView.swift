@@ -1,7 +1,7 @@
 import SwiftUI
 
 private enum SettingsTab: String, CaseIterable, Identifiable {
-    case general, appearance, desktopClock, secondClock
+    case general, appearance, desktopClock, worldClocks
 
     var id: String { rawValue }
 
@@ -10,7 +10,7 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
         case .general: return "General"
         case .appearance: return "Appearance"
         case .desktopClock: return "Desktop Clock"
-        case .secondClock: return "Second Clock"
+        case .worldClocks: return "World Clocks"
         }
     }
 
@@ -19,7 +19,7 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
         case .general: return "Launch, visibility"
         case .appearance: return "Theme and glass"
         case .desktopClock: return "Overlay layout"
-        case .secondClock: return "Extra clock"
+        case .worldClocks: return "Other time zones"
         }
     }
 
@@ -28,7 +28,7 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
         case .general: return "gearshape"
         case .appearance: return "paintbrush"
         case .desktopClock: return "rectangle.on.rectangle"
-        case .secondClock: return "globe"
+        case .worldClocks: return "globe"
         }
     }
 
@@ -49,7 +49,7 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
         case .general: return CGSize(width: Self.width, height: 184)
         case .appearance: return CGSize(width: Self.width, height: 304)
         case .desktopClock: return CGSize(width: Self.width, height: 336)
-        case .secondClock: return CGSize(width: Self.width, height: 260)
+        case .worldClocks: return CGSize(width: Self.width, height: 300)
         }
     }
 }
@@ -107,7 +107,8 @@ struct SettingsView: View {
     @EnvironmentObject var settings: AppSettings
     private let onChangeWindow: (String, CGSize) -> Void
     @State private var selectedTab: SettingsTab = .general
-    @State private var showingTimezonePicker = false
+    /// The world clock whose time zone is being picked, if any.
+    @State private var pickingTimezoneFor: WorldClock.ID?
     @State private var measuredHeight: CGFloat = 0
     /// Real measured height per tab, so returning to a tab jumps straight to
     /// its true size instead of bouncing off the rough estimate first. The
@@ -312,9 +313,14 @@ struct SettingsView: View {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.03, execute: work)
         }
         .onPreferenceChange(HeaderHeightPreferenceKey.self) { headerHeight = $0 }
-        .sheet(isPresented: $showingTimezonePicker) {
-            TimezonePickerView(selection: $settings.secondTimezoneID)
-                .frame(width: 460, height: 520)
+        .sheet(isPresented: Binding(
+            get: { pickingTimezoneFor != nil },
+            set: { if !$0 { pickingTimezoneFor = nil } }
+        )) {
+            if let id = pickingTimezoneFor, let binding = worldClockBinding(id) {
+                TimezonePickerView(selection: binding.timezoneID)
+                    .frame(width: 460, height: 520)
+            }
         }
     }
 
@@ -486,8 +492,10 @@ struct SettingsView: View {
                 // Monochrome: "Full Color" is selected and nothing happens,
                 // because the system style is deliberately allowed to win so
                 // the widget tracks the native ones beside it.
-                if settings.systemWidgetDimming.drainsColor, settings.widgetColorStyle == .full {
-                    Text("macOS is dimming desktop widgets, so this widget follows it. Change it in System Settings › Desktop & Dock › “Dim widgets on desktop”.")
+                if settings.systemWidgetDimming != .never {
+                    Text(settings.systemWidgetDimming == .always
+                         ? "macOS is set to always dim desktop widgets, so this widget stays dimmed too. Change it in System Settings › Desktop & Dock › “Dim widgets on desktop”."
+                         : "Like macOS’s own widgets, this one dims while an app is in front and turns vivid when you click the wallpaper.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -498,36 +506,45 @@ struct SettingsView: View {
                     .disabled(settings.fillScreen)
                 Toggle("Fill screen", isOn: $settings.fillScreen)
             }
-        case .secondClock:
-            settingsCard("Show second clock") {
-                Picker("Display", selection: secondClockDisplayBinding) {
-                    ForEach(SecondClockDisplay.allCases) { option in
-                        Text(option.label).tag(option)
+        case .worldClocks:
+            ForEach(settings.worldClocks) { clock in
+                if let binding = worldClockBinding(clock.id) {
+                    WorldClockCard(clock: binding) {
+                        pickingTimezoneFor = clock.id
+                    } onRemove: {
+                        settings.removeWorldClock(id: clock.id)
                     }
                 }
-                .pickerStyle(.segmented)
             }
 
-            settingsCard("Timezone") {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(settings.secondTimezoneID)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                        .truncationMode(.middle)
-
-                    Button("Choose Timezone") {
-                        showingTimezonePicker = true
-                    }
-                    .disabled(settings.secondClockDisplay == .off)
+            HStack(spacing: 8) {
+                Button {
+                    settings.addWorldClock()
+                    // Straight into choosing where the new clock is.
+                    pickingTimezoneFor = settings.worldClocks.last?.id
+                } label: {
+                    Label("Add Clock", systemImage: "plus")
                 }
+                .disabled(!settings.canAddWorldClock)
+                Text(settings.canAddWorldClock
+                     ? "\(settings.worldClocks.count) of \(WorldClock.maxCount) — each shows its name in the menu bar"
+                     : "Up to \(WorldClock.maxCount) world clocks")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
         }
     }
 
-    private var secondClockDisplayBinding: Binding<SecondClockDisplay> {
-        Binding(
-            get: { settings.secondClockDisplay },
-            set: { settings.secondClockDisplay = $0 }
+    /// Bound by ID, not index, so removing one clock can't leave a card
+    /// editing its neighbour.
+    private func worldClockBinding(_ id: WorldClock.ID) -> Binding<WorldClock>? {
+        guard settings.worldClocks.contains(where: { $0.id == id }) else { return nil }
+        return Binding(
+            get: { settings.worldClocks.first { $0.id == id } ?? WorldClock(timezoneID: "UTC") },
+            set: { newValue in
+                guard let index = settings.worldClocks.firstIndex(where: { $0.id == id }) else { return }
+                settings.worldClocks[index] = newValue
+            }
         )
     }
 

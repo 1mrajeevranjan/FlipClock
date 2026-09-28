@@ -1,4 +1,37 @@
 import SwiftUI
+import AppKit
+
+/// The three looks macOS gives a desktop widget: full colour, the user's
+/// Monochrome pick, and the system's dimmed state while an app is in front.
+enum GlassTone: Equatable {
+    case vivid, monochrome, dimmed
+
+    /// Vivid <-> dimmed completes within 5-10ms — one frame at 120Hz — as
+    /// explicitly specified, so it reads as an immediate switch. That only
+    /// works because nothing is rendered at switch time: the dimmed backdrop
+    /// is pre-blurred (`DesktopBackdropCapture.dimmedImage`) and every card's
+    /// faces for the other look are pre-rasterised (`FlipCardLayer`'s
+    /// `upcomingStyles`). One shared timing keeps every layer in step.
+    static let transitionDuration: Double = 0.008
+    static let transitionCurve = (c0x: 0.25, c0y: 0.1, c1x: 0.25, c1y: 1.0)
+    static let transition = Animation.timingCurve(
+        transitionCurve.c0x, transitionCurve.c0y, transitionCurve.c1x, transitionCurve.c1y,
+        duration: transitionDuration
+    )
+}
+
+private struct GlassToneKey: EnvironmentKey {
+    static let defaultValue: GlassTone = .vivid
+}
+
+extension EnvironmentValues {
+    /// Set once at a widget's root; every glass card below reads it, so the
+    /// tone doesn't have to be threaded through each flap view's initializer.
+    var glassTone: GlassTone {
+        get { self[GlassToneKey.self] }
+        set { self[GlassToneKey.self] = newValue }
+    }
+}
 
 enum FlapColors {
     static func leaf(isDark: Bool) -> Color {
@@ -15,24 +48,39 @@ enum FlapColors {
         isDark ? Color.black : Color.white
     }
 
-    /// Opaque "frosted glass" fill for glass-style cards. Both the resting
-    /// card face and the animating flap use this same tone, so a flip never
-    /// changes the card's appearance — the flap is opaque (required, or the
-    /// old digit ghosts through mid-rotation), and because the resting card
-    /// is the identical opaque tone there is no transparent/live-blur state
-    /// for it to flash away from.
-    ///
-    /// This is deliberately opaque, not a live blur: a static rasterized
-    /// flap face can never sample a live `NSVisualEffectView` blur, so any
-    /// see-through/live-blur resting card is fundamentally impossible for
-    /// the flap to match, and the flip flashes. A fixed frosted tone that
-    /// reads as glass sidesteps that entirely. The floating widget panel
-    /// behind the cards (`WidgetGlassBackground`) stays real live glass.
-    static func frostedCard(isDark: Bool) -> Color {
-        isDark
-            ? Color(red: 0.22, green: 0.25, blue: 0.30)
-            : Color(red: 0.86, green: 0.89, blue: 0.93)
+    /// Card face on glass cards. Full colour matches the Calendar widget's
+    /// near-solid white (dark grey in Dark mode) face; Monochrome and dimmed
+    /// fall back to a faint translucent platter so the whole widget recedes,
+    /// like the system's own.
+    static func glassCardFill(isDark: Bool, tone: GlassTone) -> Color {
+        switch tone {
+        case .vivid: return isDark ? Color(white: 0.17).opacity(0.94) : Color.white.opacity(0.94)
+        case .monochrome, .dimmed: return Color.white.opacity(0.14)
+        }
     }
+
+    /// Glyph colour on glass cards: theme-coloured on the solid full-colour
+    /// cards, soft white on the translucent Monochrome/dimmed ones.
+    static func glassGlyph(isDark: Bool, tone: GlassTone) -> NSColor {
+        switch tone {
+        case .vivid: return isDark ? .white : NSColor.black.withAlphaComponent(0.85)
+        case .monochrome, .dimmed: return NSColor.white.withAlphaComponent(0.82)
+        }
+    }
+
+    static func glassSeparator(isDark: Bool, tone: GlassTone) -> Color {
+        Color(nsColor: glassGlyph(isDark: isDark, tone: tone)).opacity(0.7)
+    }
+
+    /// The split between a glass card's two leaves — a dark gap, like the
+    /// real mechanism, strong enough to read on both the solid white
+    /// full-colour cards and the translucent dimmed ones.
+    static let glassHinge = NSColor.black.withAlphaComponent(0.62)
+
+    /// Shade on the moving leaf of a glass card, so the flap reads as a
+    /// surface catching less light while it turns rather than a glyph
+    /// floating on its own.
+    static let glassFlapShade = NSColor.black.withAlphaComponent(0.06)
 
     static func digit(isDark: Bool) -> Color {
         isDark ? Color.white : Color.black

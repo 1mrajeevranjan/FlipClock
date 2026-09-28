@@ -28,6 +28,9 @@ final class TimeProvider {
         }
         // .common run loop mode: a default-mode timer stalls while a status
         // bar menu/popover is tracking, which would visibly freeze the clock.
+        // Lets macOS coalesce this wakeup with others; 50ms can't be seen on
+        // a seconds display.
+        t.tolerance = 0.05
         RunLoop.main.add(t, forMode: .common)
         timer = t
     }

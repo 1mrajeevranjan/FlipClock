@@ -29,6 +29,7 @@ enum DigitFaceRenderer {
         let fillColor: String
         let fontIdentifier: String
         let hingeThickness: Int
+        let tintsIcons: Bool
     }
 
     /// Cache-key component for the font — without this, switching fonts
@@ -80,7 +81,7 @@ enum DigitFaceRenderer {
     /// independent rectangle whose apparent overlap with the rotating
     /// layer's edge changed every frame and read as the line's thickness
     /// visibly pulsing mid-flip.
-    static func halfFace(for value: String, cardSize: CGSize, top: Bool, isDark: Bool, textColor: NSColor?, transparentBackground: Bool = false, fillColor: NSColor? = nil, fontName: String? = nil, isMonospacedSystemFont: Bool = false, hingeThickness: CGFloat = 0) -> CGImage {
+    static func halfFace(for value: String, cardSize: CGSize, top: Bool, isDark: Bool, textColor: NSColor?, transparentBackground: Bool = false, fillColor: NSColor? = nil, fontName: String? = nil, isMonospacedSystemFont: Bool = false, hingeThickness: CGFloat = 0, tintsIcons: Bool = false) -> CGImage {
         let key = HalfKey(
             value: cacheKey(for: value, textColor: textColor),
             width: Int(cardSize.width.rounded()),
@@ -90,12 +91,13 @@ enum DigitFaceRenderer {
             transparentBackground: transparentBackground,
             fillColor: fillColor?.description ?? "leaf",
             fontIdentifier: fontIdentifier(fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont),
-            hingeThickness: Int((hingeThickness * 10).rounded())
+            hingeThickness: Int((hingeThickness * 10).rounded()),
+            tintsIcons: tintsIcons
         )
         if let image = halfCache[key] {
             return image
         }
-        let image = render(value: value, fullSize: cardSize, half: top ? .top : .bottom, isDark: isDark, textColor: textColor, transparentBackground: transparentBackground, fillColor: fillColor, fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont, hingeThickness: hingeThickness)
+        let image = render(value: value, fullSize: cardSize, half: top ? .top : .bottom, isDark: isDark, textColor: textColor, transparentBackground: transparentBackground, fillColor: fillColor, fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont, hingeThickness: hingeThickness, tintsIcons: tintsIcons)
         halfCache[key] = image
         return image
     }
@@ -106,7 +108,7 @@ enum DigitFaceRenderer {
     /// card, but into a bitmap that may only be the top or bottom half of
     /// that card — the glyph lands cut exactly at the hinge line, matching
     /// the physical two-housing split-flap card.
-    private static func render(value: String, fullSize: CGSize, half: Half?, isDark: Bool, textColor: NSColor?, transparentBackground: Bool = false, fillColor: NSColor? = nil, fontName: String? = nil, isMonospacedSystemFont: Bool = false, hingeThickness: CGFloat = 0) -> CGImage {
+    private static func render(value: String, fullSize: CGSize, half: Half?, isDark: Bool, textColor: NSColor?, transparentBackground: Bool = false, fillColor: NSColor? = nil, fontName: String? = nil, isMonospacedSystemFont: Bool = false, hingeThickness: CGFloat = 0, tintsIcons: Bool = false) -> CGImage {
         let outputSize = half == nil ? fullSize : CGSize(width: fullSize.width, height: fullSize.height / 2)
         let nsImage = NSImage(size: outputSize)
         nsImage.lockFocus()
@@ -117,7 +119,7 @@ enum DigitFaceRenderer {
         }
 
         if let icon = iconImage(for: value) {
-            drawIcon(icon, fullSize: fullSize, half: half)
+            drawIcon(icon, fullSize: fullSize, half: half, tint: tintsIcons ? (textColor ?? NSColor(FlapColors.digit(isDark: isDark))) : nil)
         } else {
             guard let context = NSGraphicsContext.current?.cgContext else {
                 nsImage.unlockFocus()
@@ -161,7 +163,8 @@ enum DigitFaceRenderer {
         // that actually rotates during the flip, it foreshortens in lockstep
         // with everything else instead of independently.
         if let half, hingeThickness > 0 {
-            NSColor(FlapColors.leafHinge(isDark: isDark)).setFill()
+            let isGlass = transparentBackground || fillColor != nil
+            (isGlass ? FlapColors.glassHinge : NSColor(FlapColors.leafHinge(isDark: isDark))).setFill()
             let sliver = hingeThickness / 2
             let hingeRect: CGRect
             switch half {
@@ -213,7 +216,9 @@ enum DigitFaceRenderer {
     /// Draws an icon centered in the full card, cropped to `half` using the
     /// same origin-shift trick as the text path so the flip animation's
     /// top/bottom halves line up at the hinge.
-    private static func drawIcon(_ icon: NSImage, fullSize: CGSize, half: Half?) {
+    /// `tint` flattens the icon to one colour — the sun/moon PNGs are full
+    /// colour, which reads wrong on a Monochrome or dimmed widget.
+    private static func drawIcon(_ icon: NSImage, fullSize: CGSize, half: Half?, tint: NSColor? = nil) {
         let maxDimension = min(fullSize.width, fullSize.height) * 0.82
         let iconSize = CGSize(width: maxDimension, height: maxDimension)
         let originX = (fullSize.width - iconSize.width) / 2
@@ -227,8 +232,18 @@ enum DigitFaceRenderer {
             originY = fullCardOriginY - fullSize.height / 2
         }
 
-        icon.draw(in: CGRect(origin: CGPoint(x: originX, y: originY), size: iconSize),
-                   from: .zero, operation: .sourceOver, fraction: 1.0)
+        let rect = CGRect(origin: CGPoint(x: originX, y: originY), size: iconSize)
+        guard let tint else {
+            icon.draw(in: rect, from: .zero, operation: .sourceOver, fraction: 1.0)
+            return
+        }
+        let tinted = NSImage(size: icon.size, flipped: false) { bounds in
+            icon.draw(in: bounds)
+            tint.set()
+            bounds.fill(using: .sourceAtop)
+            return true
+        }
+        tinted.draw(in: rect, from: .zero, operation: .sourceOver, fraction: 1.0)
     }
 
     private static func line(for value: String, fullSize: CGSize, isDark: Bool, textColor: NSColor?, fontName: String? = nil, isMonospacedSystemFont: Bool = false) -> CTLine {

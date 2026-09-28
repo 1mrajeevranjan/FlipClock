@@ -57,8 +57,8 @@ final class PerformanceTests: XCTestCase {
     }
 
     func testRefreshIntervalStretchesOutUnderLowPowerMode() {
-        XCTAssertEqual(DesktopBackdropCapture.refreshInterval(isLowPowerModeEnabled: false), 5.0)
-        XCTAssertEqual(DesktopBackdropCapture.refreshInterval(isLowPowerModeEnabled: true), 15.0)
+        XCTAssertEqual(DesktopBackdropCapture.refreshInterval(isLowPowerModeEnabled: false), 60.0)
+        XCTAssertEqual(DesktopBackdropCapture.refreshInterval(isLowPowerModeEnabled: true), 180.0)
         XCTAssertGreaterThan(
             DesktopBackdropCapture.refreshInterval(isLowPowerModeEnabled: true),
             DesktopBackdropCapture.refreshInterval(isLowPowerModeEnabled: false)

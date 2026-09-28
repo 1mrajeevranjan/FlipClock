@@ -30,11 +30,11 @@ Every character on every surface — digits, weekday, date, AM/PM — is a real 
 - Menu bar clock with live split-flap animation
 - Popover with three tabs — Calendar, Timer, Stopwatch
 - Desktop widget styled to match native macOS widgets, positionable anywhere, with optional drift-across-screen and a full-screen mode
-- Optional second clock in another time zone, as a menu bar item, a second desktop widget, or both
+- Up to 5 world clocks in other time zones, each as a named menu bar item ("TOKYO 07:22 PM"), its own desktop widget, or both — with its own widget size and 12/24-hour format
 
 **Desktop widget glass**
 
-The widget doesn't rely on `NSVisualEffectView` alone — its blur radius is fixed by the system material and can't reach what Apple's widgets show. Instead it captures the desktop behind the window via ScreenCaptureKit and applies its own tunable Gaussian blur, then matches native widget glass on three measured axes: diffusion, tone, and a saturation boost. It also follows macOS's own **Dim widgets on desktop** setting, so it flattens and brightens in step with the widgets beside it.
+The widget doesn't rely on `NSVisualEffectView` alone — its blur radius is fixed by the system material and can't reach what Apple's widgets show. Instead it captures the wallpaper (only the wallpaper — never app windows in front of it) via ScreenCaptureKit and applies its own tunable Gaussian blur, then matches native widget glass on three measured axes: diffusion, tone, and a saturation boost. It also follows macOS's own **Dim widgets on desktop** setting: under Automatic it fades to its dimmed look while an app is in front and back to full colour when you click the wallpaper, in step with the widgets beside it.
 
 Falls back gracefully: live vibrancy before the first capture lands or if Screen Recording is denied, and an opaque fill when Reduce Transparency is on.
 
@@ -116,7 +116,7 @@ FlipClock is an `LSUIElement` agent — no Dock icon, no app window.
 | General | Show desktop clock, launch at login |
 | Appearance | Theme, AM/PM style, digit font |
 | Desktop Clock | Size, time format, colour style, date row, float across screen, fill screen |
-| Second Clock | Display (off / menu bar / widget / both), time zone |
+| World Clocks | Up to 5 clocks: time zone, optional name, show in (off / menu bar / widget / both), widget size, 12/24-hour |
 
 ## Project Structure
 

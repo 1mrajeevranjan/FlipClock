@@ -22,8 +22,8 @@ private enum PopoverTab: String, CaseIterable, Identifiable {
     }
 }
 
-/// Full popover content, now split into three tabs (Calendar / Timer /
-/// Stopwatch) via a top icon+label tab row — a Mac-idiomatic stand-in for
+/// Full popover content, split into three tabs (Calendar / Timer /
+/// Stopwatch, ⌘1-⌘3) via a top icon+label tab row — a Mac-idiomatic stand-in for
 /// the "separate tab per tool" structure of iOS's Clock app (World Clock/
 /// Alarms/Stopwatch/Timers). A literal bottom iOS tab bar is a documented
 /// Mac anti-pattern (Mac apps use toolbars/segmented controls, not bottom
@@ -56,7 +56,8 @@ struct PopoverClockView: View {
     @State private var selectedTab: PopoverTab = .calendar
 
     var body: some View {
-        VStack(spacing: 16) {
+        // HIG 9.6: 20pt between groups (tab bar / content), 20pt margins.
+        VStack(spacing: 20) {
             tabRow
 
             switch selectedTab {
@@ -82,33 +83,22 @@ struct PopoverClockView: View {
     }
 
     private var tabRow: some View {
-        HStack(spacing: 2) {
-            ForEach(PopoverTab.allCases) { tab in
-                Button {
+        HStack(spacing: 4) {
+            ForEach(Array(PopoverTab.allCases.enumerated()), id: \.element) { index, tab in
+                PopoverTabButton(tab: tab, isSelected: selectedTab == tab) {
                     selectedTab = tab
-                } label: {
-                    VStack(spacing: 3) {
-                        Image(systemName: tab.icon)
-                            .font(.system(size: 15))
-                        Text(tab.label)
-                            .font(.caption2)
-                            .lineLimit(1)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 6)
                 }
-                .buttonStyle(.borderless)
-                .foregroundStyle(selectedTab == tab ? .white : .primary)
-                .background(
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(selectedTab == tab ? Color.accentColor : Color.clear)
-                )
+                // HIG 5.1: every mouse action has a keyboard equivalent.
+                .keyboardShortcut(KeyEquivalent(Character("\(index + 1)")), modifiers: .command)
             }
         }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Popover sections")
     }
 
     private var calendarContent: some View {
-        VStack(spacing: 16) {
+        // Related pieces 8-12pt apart, the calendar as its own group 20pt below.
+        VStack(spacing: 12) {
             DateHeaderView(date: timeProvider.tick.date)
 
             if !reminderStore.dueTodayUnacknowledged.isEmpty {
@@ -136,6 +126,48 @@ struct PopoverClockView: View {
                 fontName: settings.widgetFont.postscriptName
             )
             CalendarMonthView(reminderStore: reminderStore)
+                .padding(.top, 8)
         }
+    }
+}
+
+/// One section button in the popover's top row. Styled like macOS's own
+/// icon-over-label tab rows (System Settings, Xcode inspectors) rather than
+/// the old solid-accent slab with white text, which read as an iOS control:
+/// the selected tab gets a quiet fill with its icon and label in the accent
+/// colour; the others get a hover highlight (HIG 6.1). The icon sits in a
+/// fixed-height frame so every label lands on the same baseline — the
+/// symbols differ in height, which is what pushed "Calendar" out of line.
+private struct PopoverTabButton: View {
+    let tab: PopoverTab
+    let isSelected: Bool
+    let action: () -> Void
+
+    @State private var isHovered = false
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 4) {
+                Image(systemName: tab.icon)
+                    .font(.system(size: 15, weight: .medium))
+                    .frame(height: 18)
+                Text(tab.label)
+                    .font(.caption)
+                    .fontWeight(isSelected ? .semibold : .regular)
+                    .lineLimit(1)
+            }
+            .foregroundStyle(isSelected ? Color.accentColor : Color.primary)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 6)
+            .background(
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .fill(Color.primary.opacity(isSelected ? 0.1 : (isHovered ? 0.05 : 0)))
+            )
+            .contentShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .onHover { isHovered = $0 }
+        .accessibilityLabel(tab.label)
+        .accessibilityAddTraits(isSelected ? [.isSelected] : [])
     }
 }

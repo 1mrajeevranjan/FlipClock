@@ -18,40 +18,71 @@ struct AddReminderView: View {
         return f
     }()
 
+    /// Both buttons share one width, as in a standard macOS dialog.
+    private static let buttonWidth: CGFloat = 72
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("New Reminder")
-                .font(.system(size: 13, weight: .semibold))
-            Text(Self.dateFormatter.string(from: date))
-                .font(.system(size: 11))
-                .foregroundStyle(.secondary)
-            TextField("What's this reminder for?", text: $title)
-                .textFieldStyle(.roundedBorder)
-                .focused($isFocused)
-                .onSubmit(save)
-            // "@ <time>" — the precise moment the reminder is due, separate
-            // from the day it's filed under, so "due today" pulses/flashes
-            // land at an actual meaningful time instead of whenever the
-            // user happened to double-click the day cell.
-            HStack(spacing: 6) {
-                Text("@")
-                    .font(.system(size: 12, weight: .semibold))
+        // One leading edge and one trailing edge for every row, a 16pt inset,
+        // 12pt between groups and 2pt inside the title block (HIG 9.6). The
+        // form rows sit in a two-column `Grid` so the labels share a column
+        // and every control ends on the same trailing edge.
+        VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("New Reminder")
+                    .font(.headline)
+                Text(Self.dateFormatter.string(from: date))
+                    .font(.caption)
                     .foregroundStyle(.secondary)
-                DatePicker("", selection: $time, displayedComponents: .hourAndMinute)
-                    .labelsHidden()
-                    .datePickerStyle(.field)
             }
-            HStack {
+
+            Grid(alignment: .leadingFirstTextBaseline, horizontalSpacing: 8, verticalSpacing: 10) {
+                GridRow {
+                    Text("Title")
+                        .foregroundStyle(.secondary)
+                        // Leading, so the labels start on the same edge as
+                        // the "New Reminder" heading above them.
+                        .gridColumnAlignment(.leading)
+                    TextField("Title", text: $title, prompt: Text("What's this for?"))
+                        .textFieldStyle(.roundedBorder)
+                        .labelsHidden()
+                        .focused($isFocused)
+                        .onSubmit(save)
+                }
+                // The precise moment the reminder is due, separate from the
+                // day it's filed under, so "due today" pulses land at a
+                // meaningful time instead of whenever the day was
+                // double-clicked. The stepper field is macOS's standard time
+                // control: a bare `.field` picker left its digits floating
+                // off-centre in an over-wide bezel.
+                GridRow {
+                    Text("Time")
+                        .foregroundStyle(.secondary)
+                    DatePicker("Time", selection: $time, displayedComponents: .hourAndMinute)
+                        .labelsHidden()
+                        .datePickerStyle(.stepperField)
+                        .fixedSize()
+                }
+            }
+            .font(.callout)
+
+            HStack(spacing: 8) {
                 Spacer()
-                Button("Cancel", action: onCancel)
-                    .buttonStyle(.plain)
-                Button("Add", action: save)
-                    .buttonStyle(.borderedProminent)
-                    .disabled(title.trimmingCharacters(in: .whitespaces).isEmpty)
+                // HIG 5.3/5.4: Esc cancels, Return adds. Default push-button
+                // chrome, not `.bordered` — that drew a heavy filled slab on
+                // the popover's vibrancy.
+                Button(action: onCancel) {
+                    Text("Cancel").frame(width: Self.buttonWidth)
+                }
+                .keyboardShortcut(.cancelAction)
+                Button(action: save) {
+                    Text("Add").frame(width: Self.buttonWidth)
+                }
+                .keyboardShortcut(.defaultAction)
+                .disabled(title.trimmingCharacters(in: .whitespaces).isEmpty)
             }
         }
-        .padding(14)
-        .frame(width: 240)
+        .padding(16)
+        .frame(width: 280)
         .onAppear { isFocused = true }
     }
 

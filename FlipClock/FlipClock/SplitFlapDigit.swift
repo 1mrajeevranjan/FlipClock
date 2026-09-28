@@ -2,12 +2,9 @@ import SwiftUI
 import AppKit
 
 /// One flap position: a static top half, a static bottom half, and the
-/// animating flap layered on top. Works for a single digit ("7") or a
-/// short label ("AM") — same card, same flip mechanism either way. Top
-/// half updates the instant the value changes (in the real mechanism the
-/// housing behind the flipping leaf already shows the upcoming value);
-/// bottom half only updates once the flap finishes landing, so the new
-/// value never "peeks" early.
+/// animating flap layered on top, all drawn by `FlipCardLayer`. Works for a
+/// single digit ("7") or a short label ("AM") — same card, same flip
+/// mechanism either way.
 struct SplitFlapDigit: View {
     let value: String
     let cardSize: CGSize
@@ -24,22 +21,16 @@ struct SplitFlapDigit: View {
     /// boundary).
     var fusedLeading: Bool = false
     var fusedTrailing: Bool = false
-    /// "Frosted glass" card style: the card face is a single opaque frosted
-    /// tone (`FlapColors.frostedCard`), used identically by the resting
-    /// halves and the animating flap. Because both share that exact opaque
-    /// tone, a flip never changes the card's look — the flap has to stay
-    /// opaque to mask the old digit mid-rotation, but there's no
-    /// transparent/live-blur resting state for it to visibly flash away
-    /// from. The floating widget panel behind the cards stays real glass.
+    /// Glass card style: a translucent platter (`FlapColors.glassCardFill`)
+    /// over whatever glass is behind the card, like the inner platters of
+    /// macOS's own widgets, with its look following `\.glassTone`.
     var glassCard: Bool = false
     /// Retained for source compatibility with existing call sites; no
-    /// longer affects rendering. Frosted cards are opaque, so there's no
-    /// per-card behind-window blur to draw (and thus none of the freeze/
-    /// flicker behavior an `NSVisualEffectView` per card used to cause).
+    /// longer affects rendering.
     var showOwnGlassPanel: Bool = true
 
-    @State private var topValue: String
-    @State private var bottomValue: String
+    @Environment(\.glassTone) private var tone
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     init(value: String, cardSize: CGSize, isDark: Bool = true, compact: Bool = false, textColor: NSColor? = nil, fusedLeading: Bool = false, fusedTrailing: Bool = false, glassCard: Bool = false, showOwnGlassPanel: Bool = true, fontName: String? = nil, isMonospacedSystemFont: Bool = false) {
         self.value = value
@@ -53,112 +44,72 @@ struct SplitFlapDigit: View {
         self.showOwnGlassPanel = showOwnGlassPanel
         self.fontName = fontName
         self.isMonospacedSystemFont = isMonospacedSystemFont
-        _topValue = State(initialValue: value)
-        _bottomValue = State(initialValue: value)
     }
 
-    private var cornerRadius: CGFloat { compact ? 2 : 6 }
+    static let cardCornerRadius: CGFloat = 6
+    private var cornerRadius: CGFloat { compact ? 2 : Self.cardCornerRadius }
     /// Total seam-line thickness at rest — split between the top and
     /// bottom halves' baked-in slivers (see `DigitFaceRenderer.render`).
-    /// 20% thinner than the original 1.5/3.5.
-    private var hingeThickness: CGFloat { compact ? 1.2 : 2.8 }
+    /// Proportional to the card so the split between the two leaves stays a
+    /// thin but clearly visible line at 2×/3× sizes, where a fixed 2.8pt all
+    /// but vanished; floored so the smallest cards keep a readable seam.
+    private var hingeThickness: CGFloat { compact ? 1.2 : max(2.4, cardSize.height * 0.024) }
 
     private var cardShape: UnevenRoundedRectangle {
         UnevenRoundedRectangle(
             topLeadingRadius: fusedLeading ? 0 : cornerRadius,
             bottomLeadingRadius: fusedLeading ? 0 : cornerRadius,
             bottomTrailingRadius: fusedTrailing ? 0 : cornerRadius,
-            topTrailingRadius: fusedTrailing ? 0 : cornerRadius
+            topTrailingRadius: fusedTrailing ? 0 : cornerRadius,
+            style: .continuous
         )
+    }
+
+    /// Glass cards always get an explicit colour so the glyph follows the
+    /// tone; a caller's accent (Sunday's red) only survives in full colour.
+    private func glyphColor(for tone: GlassTone) -> NSColor? {
+        guard glassCard else { return textColor }
+        if let textColor, tone == .vivid { return textColor }
+        return FlapColors.glassGlyph(isDark: isDark, tone: tone)
+    }
+
+    private func layerStyle(for tone: GlassTone) -> FlipCardLayer.Style {
+        FlipCardLayer.Style(
+            isDark: isDark,
+            glassCard: glassCard,
+            textColor: glyphColor(for: tone),
+            tintsIcons: glassCard && tone != .vivid,
+            fontName: fontName,
+            isMonospacedSystemFont: isMonospacedSystemFont,
+            hingeThickness: hingeThickness
+        )
+    }
+
+    /// The looks this card can switch to from the current one — only glass
+    /// cards change look at all.
+    private var upcomingStyles: [FlipCardLayer.Style] {
+        guard glassCard else { return [] }
+        let current = layerStyle(for: tone)
+        return [GlassTone.vivid, .dimmed].map(layerStyle(for:)).filter { $0 != current }
     }
 
     var body: some View {
         ZStack {
             if glassCard {
-                // Opaque frosted base, drawn by a real drag-enabled NSView
-                // (see `DraggableColorView`) so the desktop overlay stays
-                // draggable by its background over the cards. The static
-                // halves render their digit on a transparent background and
-                // composite on top of this, so the resting card is exactly
-                // "frosted tone + digit" — identical to what the flap draws.
-                DraggableColorView(color: FlapColors.frostedCard(isDark: isDark)).clipShape(cardShape)
+                cardShape
+                    .fill(FlapColors.glassCardFill(isDark: isDark, tone: tone))
+                    .animation(reduceMotion ? nil : GlassTone.transition, value: tone)
             }
 
-            VStack(spacing: 0) {
-                HalfCard(image: DigitFaceRenderer.halfFace(for: topValue, cardSize: cardSize, top: true, isDark: isDark, textColor: textColor, transparentBackground: glassCard, fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont, hingeThickness: hingeThickness))
-                    .frame(width: cardSize.width, height: cardSize.height / 2)
-                HalfCard(image: DigitFaceRenderer.halfFace(for: bottomValue, cardSize: cardSize, top: false, isDark: isDark, textColor: textColor, transparentBackground: glassCard, fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont, hingeThickness: hingeThickness))
-                    .frame(width: cardSize.width, height: cardSize.height / 2)
-            }
-            .clipShape(cardShape)
-
-            // The animating leaf always renders opaque — it needs to fully
-            // mask the static half underneath while it's mid-rotation, or
-            // the old digit bleeds through the new one and reads as a
-            // double-exposed "ghost" during the flip. In glass mode it
-            // fills with the same `FlapColors.frostedCard` tone as the
-            // resting halves, so the opaque flap is visually indistinct
-            // from the resting card and the flip doesn't change the card's
-            // appearance at all.
-            FlipCardLayer(value: value, cardSize: cardSize, isDark: isDark, glassCard: glassCard, fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont, hingeThickness: hingeThickness) {
-                bottomValue = value
-            }
+            FlipCardLayer(
+                value: value,
+                cardSize: cardSize,
+                style: layerStyle(for: tone),
+                upcomingStyles: upcomingStyles
+            )
             .frame(width: cardSize.width, height: cardSize.height)
             .clipShape(cardShape)
         }
         .frame(width: cardSize.width, height: cardSize.height)
-        .onChange(of: value) { _, newValue in
-            topValue = newValue
-        }
-    }
-}
-
-/// Opaque frosted-tone base for a glass-style card. This replaces the
-/// per-card behind-window `NSVisualEffectView` that glass cards used to
-/// draw: a live blur can't be matched by the static rasterized flap, so
-/// the flip flashed. A flat opaque frosted tone (shared with the flap) is
-/// what makes resting and mid-flip identical.
-///
-/// It's a real `NSView` rather than a SwiftUI `Color` specifically so it
-/// can override `mouseDownCanMoveWindow` — the desktop overlay window is
-/// `isMovableByWindowBackground`, and this base view tiles across nearly
-/// the whole widget, so it has to report itself draggable or the widget
-/// can't be moved by dragging over the digits. (This is the same reason
-/// the old per-card blur subclassed `NSVisualEffectView`; that blur is
-/// gone, but the drag requirement remains.)
-private struct DraggableColorView: NSViewRepresentable {
-    let color: Color
-
-    func makeNSView(context: Context) -> NSView {
-        let view = DraggableColorNSView()
-        view.wantsLayer = true
-        view.cardColor = NSColor(color)
-        return view
-    }
-
-    func updateNSView(_ nsView: NSView, context: Context) {
-        (nsView as? DraggableColorNSView)?.cardColor = NSColor(color)
-    }
-}
-
-private final class DraggableColorNSView: NSView {
-    var cardColor: NSColor = .clear {
-        didSet { needsDisplay = true }
-    }
-
-    override var mouseDownCanMoveWindow: Bool { true }
-    override var wantsUpdateLayer: Bool { true }
-
-    override func updateLayer() {
-        layer?.backgroundColor = cardColor.cgColor
-    }
-}
-
-private struct HalfCard: View {
-    let image: CGImage
-
-    var body: some View {
-        Image(decorative: image, scale: 1)
-            .resizable()
     }
 }

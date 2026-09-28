@@ -17,16 +17,17 @@ struct DueReminderBanner: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Label("Due Today", systemImage: "bell.fill")
-                .font(.system(size: 11, weight: .semibold))
+                .font(.caption.weight(.semibold))
                 .foregroundStyle(.red)
+                .accessibilityAddTraits(.isHeader)
 
             ForEach(reminders) { reminder in
                 HStack(spacing: 8) {
-                    VStack(alignment: .leading, spacing: 1) {
+                    VStack(alignment: .leading, spacing: 2) {
                         Text(reminder.title)
-                            .font(.system(size: 12, weight: .medium))
+                            .font(.callout.weight(.medium))
                         Text(Self.timeFormatter.string(from: reminder.date))
-                            .font(.system(size: 10))
+                            .font(.caption2)
                             .foregroundStyle(.secondary)
                     }
                     Spacer()
@@ -38,10 +39,12 @@ struct DueReminderBanner: View {
                     }
                     .buttonStyle(.plain)
                     .help("Acknowledge")
+                    // HIG 11.1: an icon-only button needs a spoken label.
+                    .accessibilityLabel("Acknowledge \(reminder.title)")
                 }
             }
         }
-        .padding(10)
+        .padding(12)
         .background(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
                 .fill(Color.red.opacity(0.12))

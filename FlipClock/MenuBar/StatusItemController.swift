@@ -110,6 +110,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
             guard let self else { return }
             self.pulseColorScheme = self.pulseColorScheme == .dark ? .light : .dark
         }
+        timer.tolerance = 0.5
         RunLoop.main.add(timer, forMode: .common)
         pulseTimer = timer
     }

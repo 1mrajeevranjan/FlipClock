@@ -8,9 +8,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let stopwatch = Stopwatch()
 
     private var statusItemController: StatusItemController?
-    private var secondClockStatusItemController: SecondClockStatusItemController?
     private var overlayWindowController: OverlayWindowController?
-    private var secondClockOverlayWindowController: SecondClockOverlayWindowController?
+    private var worldClocksCoordinator: WorldClocksCoordinator?
     private lazy var settingsWindowController = SettingsWindowController(settings: settings)
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -18,8 +17,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusItemController = StatusItemController(timeProvider: timeProvider, settings: settings, reminderStore: reminderStore, timerModel: timerModel, stopwatch: stopwatch) { [weak self] in
             self?.settingsWindowController.show()
         }
-        secondClockStatusItemController = SecondClockStatusItemController(timeProvider: timeProvider, settings: settings)
-        overlayWindowController = OverlayWindowController(timeProvider: timeProvider, settings: settings, reminderStore: reminderStore)
-        secondClockOverlayWindowController = SecondClockOverlayWindowController(timeProvider: timeProvider, settings: settings)
+        overlayWindowController = OverlayWindowController(timeProvider: timeProvider, settings: settings, reminderStore: reminderStore) { [weak self] in
+            self?.settingsWindowController.show()
+        }
+        worldClocksCoordinator = WorldClocksCoordinator(timeProvider: timeProvider, settings: settings) { [weak self] in
+            self?.settingsWindowController.show()
+        }
     }
 }

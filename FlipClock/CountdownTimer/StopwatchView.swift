@@ -17,12 +17,11 @@ struct StopwatchView: View {
         return [hours, minutes, seconds, stopwatch.centiseconds]
     }
 
-    var body: some View {
-        VStack(spacing: 10) {
-            Label("Stopwatch", systemImage: "stopwatch")
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(.secondary)
+    private var hasElapsed: Bool { stopwatch.elapsedSeconds > 0 || stopwatch.centiseconds > 0 }
 
+    var body: some View {
+        // No "Stopwatch" heading: the selected tab already says it.
+        VStack(spacing: 12) {
             FlipTimeDisplay(
                 components: components,
                 isDark: isDark,
@@ -30,7 +29,7 @@ struct StopwatchView: View {
                 unitLabels: ["hr", "min", "sec", "ms"]
             )
 
-            HStack(spacing: 10) {
+            HStack(spacing: 8) {
                 Button(stopwatch.isRunning ? "Stop" : "Start") {
                     if stopwatch.isRunning {
                         stopwatch.stop()
@@ -39,14 +38,22 @@ struct StopwatchView: View {
                     }
                 }
                 .buttonStyle(.borderedProminent)
+                // Space is the conventional start/stop key for a stopwatch.
+                .keyboardShortcut(.space, modifiers: [])
+                .help("Start or stop (Space)")
 
                 Button("Reset") { stopwatch.reset() }
-                    .buttonStyle(.borderless)
-                    .disabled(stopwatch.elapsedSeconds == 0 && !stopwatch.isRunning)
+                    .buttonStyle(.bordered)
+                    .keyboardShortcut("r", modifiers: .command)
+                    .help("Reset (⌘R)")
+                    // Stopped part-way through the first second still has
+                    // something to reset — the old check looked at whole
+                    // seconds only.
+                    .disabled(!hasElapsed && !stopwatch.isRunning)
             }
         }
         .frame(maxWidth: .infinity)
-        .padding(10)
+        .padding(12)
         .background(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
                 .fill(Color.primary.opacity(0.06))
