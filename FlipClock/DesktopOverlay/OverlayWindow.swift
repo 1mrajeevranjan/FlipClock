@@ -53,7 +53,27 @@ final class OverlayWindow: NSPanel {
     /// pixels are still as old as the last refresh.
     var onDragEnd: (() -> Void)?
 
+    /// HIG: every interactive surface answers right-click (and control-
+    /// click) with its most relevant commands. Handled here rather than via
+    /// `NSView.menu` because the hosting view's SwiftUI subviews sit under
+    /// the cursor and don't forward it.
+    func installContextMenu(openSettings: @escaping () -> Void, hide: @escaping () -> Void) {
+        let menu = NSMenu()
+        menu.addItem(ActionMenuItem("Settings…", handler: openSettings))
+        menu.addItem(.separator())
+        menu.addItem(ActionMenuItem("Hide Widget", handler: hide))
+        contextMenu = menu
+    }
+
+    private var contextMenu: NSMenu?
+
     override func sendEvent(_ event: NSEvent) {
+        let isContextClick = event.type == .rightMouseDown
+            || (event.type == .leftMouseDown && event.modifierFlags.contains(.control))
+        if isContextClick, let contextMenu, let contentView {
+            NSMenu.popUpContextMenu(contextMenu, with: event, for: contentView)
+            return
+        }
         if event.type == .leftMouseDown, isMovableByWindowBackground {
             trackDrag(from: event)
             return
@@ -81,4 +101,56 @@ final class OverlayWindow: NSPanel {
 
     override var canBecomeKey: Bool { false }
     override var canBecomeMain: Bool { false }
+}
+
+private final class ActionMenuItem: NSMenuItem {
+    private let handler: () -> Void
+
+    init(_ title: String, handler: @escaping () -> Void) {
+        self.handler = handler
+        super.init(title: title, action: #selector(fire), keyEquivalent: "")
+        target = self
+    }
+
+    required init(coder: NSCoder) { fatalError("init(coder:) is not supported") }
+
+    @objc private func fire() { handler() }
+}
+
+/// Whether a widget window has any pixel on screen, and the time it last
+/// showed before it stopped having one.
+///
+/// A widget sits below every app window, so it's fully covered most of the
+/// day — yet it was still re-laying-out and animating flips every second for
+/// nobody. Content views read the live time only while `isVisible`; SwiftUI's
+/// observation tracking then drops the per-second updates entirely while the
+/// window is covered, and the first frame after it's uncovered catches up.
+final class WindowVisibility: ObservableObject {
+    @Published private(set) var isVisible = true
+    private(set) var frozenTick: ClockTick?
+    private var observer: NSObjectProtocol?
+
+    init(window: NSWindow, timeProvider: TimeProvider) {
+        observer = NotificationCenter.default.addObserver(
+            forName: NSWindow.didChangeOcclusionStateNotification,
+            object: window,
+            queue: .main
+        ) { [weak self, weak window, weak timeProvider] _ in
+            guard let self, let window, let timeProvider else { return }
+            let visible = window.occlusionState.contains(.visible)
+            guard visible != self.isVisible else { return }
+            if !visible { self.frozenTick = timeProvider.tick }
+            self.isVisible = visible
+        }
+    }
+
+    /// The time a content view should render: live while visible, frozen
+    /// (and therefore not observed) while covered.
+    func tick(from timeProvider: TimeProvider) -> ClockTick {
+        isVisible ? timeProvider.tick : (frozenTick ?? timeProvider.tick)
+    }
+
+    deinit {
+        if let observer { NotificationCenter.default.removeObserver(observer) }
+    }
 }

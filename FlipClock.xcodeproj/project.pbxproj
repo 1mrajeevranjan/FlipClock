@@ -19,10 +19,10 @@
 		19A441A793D1B4A1194D4918 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02DDB38188F3CABDE8AF990C /* AppDelegate.swift */; };
 		1ABB169CB78335BA956DE48B /* Game Of Squids.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 84EEFA884CE122921803C149 /* Game Of Squids.ttf */; };
 		1DDF18C7AC5EA749D6EC8F6B /* WidgetGlassBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7433122D748E80051A23B7BD /* WidgetGlassBackground.swift */; };
+		21EC63A2D527DFC31C79A103 /* WorldClock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C90E746B854DBB9B2334C23 /* WorldClock.swift */; };
 		220F76AD0CE46D72FEDEE229 /* Sportfield Varsity.otf in Resources */ = {isa = PBXBuildFile; fileRef = 76AE834CBCB2C51C0DE02C22 /* Sportfield Varsity.otf */; };
 		2582E8755006A0B3FA2F3063 /* Sportfield Varsity-Outline2.otf in Resources */ = {isa = PBXBuildFile; fileRef = 001227C8E08C263951B67D42 /* Sportfield Varsity-Outline2.otf */; };
 		28051F2EAB481FB6EF3EAF22 /* Tennessee College.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 95C32DF3B238972ABB75917B /* Tennessee College.ttf */; };
-		2811B527FE03B0BFAB73B046 /* SecondClockStatusItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22AAEA71929350340A866A7B /* SecondClockStatusItemController.swift */; };
 		2C4B847BAD58325CD4FAA389 /* ClockTickTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2525509177AFA99671D1CF5B /* ClockTickTests.swift */; };
 		2F4B686AABC817A2C396EF25 /* ReminderStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21DD6E720292DB4703BB04D5 /* ReminderStoreTests.swift */; };
 		301E780BFE282310BCE1E919 /* Vlump Black.ttf in Resources */ = {isa = PBXBuildFile; fileRef = AB31DEDDADF92FBAAA7BF088 /* Vlump Black.ttf */; };
@@ -34,8 +34,10 @@
 		3F10BB5B3BBB26EC9CD50632 /* ClockTick.swift in Sources */ = {isa = PBXBuildFile; fileRef = 915EEE7160E430CB387D242E /* ClockTick.swift */; };
 		4511816071E0C80C3F673194 /* SplitFlapPairView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD2A120ACB0F42A007264D1C /* SplitFlapPairView.swift */; };
 		4B9E8E45D3828A20209486B4 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E79414097EB0F91E58961D38 /* SettingsView.swift */; };
+		4DE2EAE270F47D589544EAB7 /* WorldClockCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = C11AF6B6BCFC09C9232CA914 /* WorldClockCard.swift */; };
 		4F83211EE8E7E1D2AB1DC4E8 /* Sportfield Varsity-Italic.otf in Resources */ = {isa = PBXBuildFile; fileRef = CB3B3C2DD6832C4407F90348 /* Sportfield Varsity-Italic.otf */; };
 		5A8891A7D93D1E1D1BD8B3FB /* KGPrimaryItalics.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 268CF845110A5784202E0DD8 /* KGPrimaryItalics.ttf */; };
+		5BFC597D9769409F0917A304 /* WorldClockMenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D097F64253C4E8B4F41152C /* WorldClockMenuBarView.swift */; };
 		5C1B69D5930DE43E3BCBFD50 /* Bring Me A Helicopter!.otf in Resources */ = {isa = PBXBuildFile; fileRef = C34727CD47DA893CF590CD5E /* Bring Me A Helicopter!.otf */; };
 		5EACEC3FC36487CFA104204E /* PopoverClockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 569EF2149D9DD94C311A6F46 /* PopoverClockView.swift */; };
 		5EB9FB47C5C4FFC780D6F0CE /* GFSCUS1D.ttf in Resources */ = {isa = PBXBuildFile; fileRef = BC155D6D5B8537159E016AEC /* GFSCUS1D.ttf */; };
@@ -45,7 +47,6 @@
 		6FB425BA9B762D2080B7B0D4 /* Pullstar-Holinight.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 26294A48122D93211F28E15D /* Pullstar-Holinight.ttf */; };
 		74E262E105D3B7DC5352EEDA /* PerformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8123CC7E46595793EA80EF29 /* PerformanceTests.swift */; };
 		75FC8E691208165530B02821 /* WhiteSquareRedYesBlackEightZero-Zero.ttf in Resources */ = {isa = PBXBuildFile; fileRef = AF79222F73CC682D76B2C6E9 /* WhiteSquareRedYesBlackEightZero-Zero.ttf */; };
-		767AC13761BF3B9411377F1E /* SecondClockOverlayContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91C2E7F077573AE79F1C7530 /* SecondClockOverlayContentView.swift */; };
 		76B3109C1ABCE3C4998125FD /* WhiteSquareRedYesBlackEightWarsaw-Warsaw.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 3BECC1B4E84BEC1609AAA67B /* WhiteSquareRedYesBlackEightWarsaw-Warsaw.ttf */; };
 		779F863191CEC50106530C3A /* WhiteSquareRedYesBlackEightPingpong-Pingpong.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 36289D6564B3309ABB60855F /* WhiteSquareRedYesBlackEightPingpong-Pingpong.ttf */; };
 		7A1F48DB77650A681CCDE78A /* Dynamix.ttf in Resources */ = {isa = PBXBuildFile; fileRef = EFF07A7015305AA9257A835A /* Dynamix.ttf */; };
@@ -67,19 +68,23 @@
 		AADCD9DA62CCC375945AD004 /* sun.png in Resources */ = {isa = PBXBuildFile; fileRef = 7E04EE7FD9784E7541D7296F /* sun.png */; };
 		ABAFF924E0D4AA14F4E3003A /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8800DAAFAC2F27DC741FF29C /* SettingsWindowController.swift */; };
 		AC742C4A93D9C9D45A481588 /* OverlayWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CD4601C3340A6C28FDF8C3A /* OverlayWindowController.swift */; };
-		AE2A8EB82443B5249DF45E74 /* SecondClockOverlayWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72D54E078479B26DA8FDFF17 /* SecondClockOverlayWindowController.swift */; };
-		B170E1361D84026C0EE80D8A /* SecondClockMenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96A869DA91B1A0C42E527852 /* SecondClockMenuBarView.swift */; };
+		ACA2C5CD8993BAA88029F981 /* DesktopFocus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893CCCCA1BE21D9E0E72048F /* DesktopFocus.swift */; };
 		B5B2142D78AB041CCBB45B5B /* TimeProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = CED75368A307036F58F0332F /* TimeProvider.swift */; };
 		B7296591D2A8AA2A29EBEE6A /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C82BBCF4822EE69EB39A8D8C /* AppSettings.swift */; };
 		B9D618297F7CD605E224A50D /* space age.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A91D51A54F868D836DF9EEE5 /* space age.ttf */; };
 		BEE4478FD4D402324CFDBE0B /* WhiteSquareRedYesBlackEight-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = FFD7E50CEB556B656FB461A7 /* WhiteSquareRedYesBlackEight-Regular.ttf */; };
 		C2E6D90C324F39DB722972EB /* CountdownTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2284429193024632E90DAB5 /* CountdownTimer.swift */; };
 		C9754D0A7822746BE4F0F162 /* FlipClockApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9382537EFD4FE15801C53C0E /* FlipClockApp.swift */; };
+		CAF59530DE90125A7F7CA6C9 /* WorldClockStatusItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56490F0614A5B13F6D33C545 /* WorldClockStatusItemController.swift */; };
+		CB2204F0C7AF436C0D3F0660 /* WorldClockOverlayContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EACBAFC5D1A8B1EE0605DB20 /* WorldClockOverlayContentView.swift */; };
 		CB610DD5CD71165948A6FC47 /* Stopwatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91E5E1421B48CA58FC8F8606 /* Stopwatch.swift */; };
+		CC9C748A97817DEDB579188B /* WorldClocksCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3331AC70F89805DEA520E93 /* WorldClocksCoordinator.swift */; };
 		CD4212EE01B9C3D2FC4D595E /* OverlayWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EA3DA66A1F9A49A759B1825 /* OverlayWindow.swift */; };
+		CD727E7689849EA775F891F4 /* WidgetLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EC93791618CC9C6D0654B62 /* WidgetLayoutTests.swift */; };
 		CE5D57ABFCD944F78182C8D0 /* AppSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA976B0F756D51EC33095C39 /* AppSettingsTests.swift */; };
 		D0448B25E61FFCC1FD18E9B7 /* StatusItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FEC2FADD24FCE8918E65F47 /* StatusItemController.swift */; };
 		D0F8A5633C87FBE5502EB6D7 /* ReminderBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5896ECD25212EC9A5CB044A /* ReminderBadge.swift */; };
+		D5092B9F3154B9F9032CC0C6 /* WorldClockOverlayWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1841B6F898DD7267C9A4BEA /* WorldClockOverlayWindowController.swift */; };
 		D7C8F4FC0959420C060B315B /* TimeWheelPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EB9AA3719A25F93A36D7124 /* TimeWheelPicker.swift */; };
 		DAB960062120E9ED90E69164 /* DateHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B45723FCF839EE6FCDF79CAA /* DateHeaderView.swift */; };
 		DB13156575EEFA035F2AB15B /* ReminderStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99B38BBE6721287DFCDD38D1 /* ReminderStore.swift */; };
@@ -121,18 +126,20 @@
 		135E56F9C9038BA61C90310C /* Reminder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reminder.swift; sourceTree = "<group>"; };
 		16AC161B34E3FF7009C8F9FD /* MenuBarClockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarClockView.swift; sourceTree = "<group>"; };
 		1CD4601C3340A6C28FDF8C3A /* OverlayWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayWindowController.swift; sourceTree = "<group>"; };
+		1EC93791618CC9C6D0654B62 /* WidgetLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetLayoutTests.swift; sourceTree = "<group>"; };
 		21DD6E720292DB4703BB04D5 /* ReminderStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderStoreTests.swift; sourceTree = "<group>"; };
-		22AAEA71929350340A866A7B /* SecondClockStatusItemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecondClockStatusItemController.swift; sourceTree = "<group>"; };
 		2525509177AFA99671D1CF5B /* ClockTickTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClockTickTests.swift; sourceTree = "<group>"; };
 		26294A48122D93211F28E15D /* Pullstar-Holinight.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Pullstar-Holinight.ttf"; sourceTree = "<group>"; };
 		268CF845110A5784202E0DD8 /* KGPrimaryItalics.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = KGPrimaryItalics.ttf; sourceTree = "<group>"; };
 		36289D6564B3309ABB60855F /* WhiteSquareRedYesBlackEightPingpong-Pingpong.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "WhiteSquareRedYesBlackEightPingpong-Pingpong.ttf"; sourceTree = "<group>"; };
 		3A0DD5C3784D6C80A8C35D4B /* DigitDeltaTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigitDeltaTests.swift; sourceTree = "<group>"; };
 		3BECC1B4E84BEC1609AAA67B /* WhiteSquareRedYesBlackEightWarsaw-Warsaw.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "WhiteSquareRedYesBlackEightWarsaw-Warsaw.ttf"; sourceTree = "<group>"; };
+		3C90E746B854DBB9B2334C23 /* WorldClock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClock.swift; sourceTree = "<group>"; };
 		3EA3DA66A1F9A49A759B1825 /* OverlayWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayWindow.swift; sourceTree = "<group>"; };
 		3FE91CB5C9D39516AFE000B6 /* Vlump.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Vlump.ttf; sourceTree = "<group>"; };
 		441CD5D08FC3CF244C84C5EB /* StopwatchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StopwatchTests.swift; sourceTree = "<group>"; };
 		494FF96E602C234D3D76D3CF /* Sportfield Varsity-Shadow.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Sportfield Varsity-Shadow.otf"; sourceTree = "<group>"; };
+		56490F0614A5B13F6D33C545 /* WorldClockStatusItemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockStatusItemController.swift; sourceTree = "<group>"; };
 		569EF2149D9DD94C311A6F46 /* PopoverClockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverClockView.swift; sourceTree = "<group>"; };
 		5EB9AA3719A25F93A36D7124 /* TimeWheelPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeWheelPicker.swift; sourceTree = "<group>"; };
 		5FB871E136E63543744A1304 /* DesktopBackdropCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopBackdropCapture.swift; sourceTree = "<group>"; };
@@ -142,9 +149,9 @@
 		65C518BF9B070A2A98DE8BB6 /* ARCADE_N.TTF */ = {isa = PBXFileReference; path = ARCADE_N.TTF; sourceTree = "<group>"; };
 		662CD1BF127064A4EF3EC6EC /* moon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = moon.png; sourceTree = "<group>"; };
 		6AC7885A916410F16341805C /* CountdownTimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownTimerView.swift; sourceTree = "<group>"; };
+		6D097F64253C4E8B4F41152C /* WorldClockMenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockMenuBarView.swift; sourceTree = "<group>"; };
 		6E8F0A2C9AEE1DA153F24C00 /* CountdownTimerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownTimerTests.swift; sourceTree = "<group>"; };
 		700B2677EE2AAF09F5FD974F /* Sportfield Varsity-Scrible.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Sportfield Varsity-Scrible.otf"; sourceTree = "<group>"; };
-		72D54E078479B26DA8FDFF17 /* SecondClockOverlayWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecondClockOverlayWindowController.swift; sourceTree = "<group>"; };
 		7433122D748E80051A23B7BD /* WidgetGlassBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetGlassBackground.swift; sourceTree = "<group>"; };
 		75F26A8260DC39BEC3E247F3 /* AddReminderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddReminderView.swift; sourceTree = "<group>"; };
 		76AE834CBCB2C51C0DE02C22 /* Sportfield Varsity.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Sportfield Varsity.otf"; sourceTree = "<group>"; };
@@ -153,9 +160,9 @@
 		8123CC7E46595793EA80EF29 /* PerformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformanceTests.swift; sourceTree = "<group>"; };
 		84EEFA884CE122921803C149 /* Game Of Squids.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Game Of Squids.ttf"; sourceTree = "<group>"; };
 		8800DAAFAC2F27DC741FF29C /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
+		893CCCCA1BE21D9E0E72048F /* DesktopFocus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopFocus.swift; sourceTree = "<group>"; };
 		8F25BC2B615F37FE8B111CBF /* angrybirds-regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "angrybirds-regular.ttf"; sourceTree = "<group>"; };
 		915EEE7160E430CB387D242E /* ClockTick.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClockTick.swift; sourceTree = "<group>"; };
-		91C2E7F077573AE79F1C7530 /* SecondClockOverlayContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecondClockOverlayContentView.swift; sourceTree = "<group>"; };
 		91E5E1421B48CA58FC8F8606 /* Stopwatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stopwatch.swift; sourceTree = "<group>"; };
 		91EE622C614D16D2F0D9CB00 /* DigitDelta.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigitDelta.swift; sourceTree = "<group>"; };
 		9382537EFD4FE15801C53C0E /* FlipClockApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlipClockApp.swift; sourceTree = "<group>"; };
@@ -163,8 +170,8 @@
 		950E63F93638F86B32529136 /* chintzys.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = chintzys.ttf; sourceTree = "<group>"; };
 		95820B6E1DB27B499C2DAA5F /* BLADRMF_.TTF */ = {isa = PBXFileReference; path = BLADRMF_.TTF; sourceTree = "<group>"; };
 		95C32DF3B238972ABB75917B /* Tennessee College.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Tennessee College.ttf"; sourceTree = "<group>"; };
-		96A869DA91B1A0C42E527852 /* SecondClockMenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecondClockMenuBarView.swift; sourceTree = "<group>"; };
 		99B38BBE6721287DFCDD38D1 /* ReminderStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderStore.swift; sourceTree = "<group>"; };
+		A1841B6F898DD7267C9A4BEA /* WorldClockOverlayWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockOverlayWindowController.swift; sourceTree = "<group>"; };
 		A91D51A54F868D836DF9EEE5 /* space age.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "space age.ttf"; sourceTree = "<group>"; };
 		AB31DEDDADF92FBAAA7BF088 /* Vlump Black.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Vlump Black.ttf"; sourceTree = "<group>"; };
 		ABC77DD942B206F433DB7BBB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -176,6 +183,7 @@
 		BA976B0F756D51EC33095C39 /* AppSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettingsTests.swift; sourceTree = "<group>"; };
 		BC155D6D5B8537159E016AEC /* GFSCUS1D.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = GFSCUS1D.ttf; sourceTree = "<group>"; };
 		BD8DAB5C74DA5D3A473DA9DC /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		C11AF6B6BCFC09C9232CA914 /* WorldClockCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockCard.swift; sourceTree = "<group>"; };
 		C1404A3D2475EEDC6D174181 /* DueReminderBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DueReminderBanner.swift; sourceTree = "<group>"; };
 		C34727CD47DA893CF590CD5E /* Bring Me A Helicopter!.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Bring Me A Helicopter!.otf"; sourceTree = "<group>"; };
 		C3EAB38CFE04422718C3047D /* Destroy All Humans!.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Destroy All Humans!.otf"; sourceTree = "<group>"; };
@@ -190,8 +198,10 @@
 		DD2A120ACB0F42A007264D1C /* SplitFlapPairView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitFlapPairView.swift; sourceTree = "<group>"; };
 		E1B048EDDC054D8647424B07 /* FlipCardLayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlipCardLayer.swift; sourceTree = "<group>"; };
 		E2284429193024632E90DAB5 /* CountdownTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownTimer.swift; sourceTree = "<group>"; };
+		E3331AC70F89805DEA520E93 /* WorldClocksCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClocksCoordinator.swift; sourceTree = "<group>"; };
 		E79414097EB0F91E58961D38 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		E7E3F10687F2F80B1FA8F91E /* WidgetFont.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetFont.swift; sourceTree = "<group>"; };
+		EACBAFC5D1A8B1EE0605DB20 /* WorldClockOverlayContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockOverlayContentView.swift; sourceTree = "<group>"; };
 		ED3D59C1D26F59C0741E18C3 /* CalendarMonthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarMonthView.swift; sourceTree = "<group>"; };
 		EE1FDD56434FA08A26814B3D /* TRON.TTF */ = {isa = PBXFileReference; path = TRON.TTF; sourceTree = "<group>"; };
 		EFF07A7015305AA9257A835A /* Dynamix.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Dynamix.ttf; sourceTree = "<group>"; };
@@ -325,12 +335,13 @@
 			isa = PBXGroup;
 			children = (
 				5FB871E136E63543744A1304 /* DesktopBackdropCapture.swift */,
+				893CCCCA1BE21D9E0E72048F /* DesktopFocus.swift */,
 				12A448C0C9D97B8982A4777C /* OverlayContentView.swift */,
 				3EA3DA66A1F9A49A759B1825 /* OverlayWindow.swift */,
 				1CD4601C3340A6C28FDF8C3A /* OverlayWindowController.swift */,
-				91C2E7F077573AE79F1C7530 /* SecondClockOverlayContentView.swift */,
-				72D54E078479B26DA8FDFF17 /* SecondClockOverlayWindowController.swift */,
 				7433122D748E80051A23B7BD /* WidgetGlassBackground.swift */,
+				EACBAFC5D1A8B1EE0605DB20 /* WorldClockOverlayContentView.swift */,
+				A1841B6F898DD7267C9A4BEA /* WorldClockOverlayWindowController.swift */,
 			);
 			path = DesktopOverlay;
 			sourceTree = "<group>";
@@ -359,6 +370,7 @@
 			children = (
 				02DDB38188F3CABDE8AF990C /* AppDelegate.swift */,
 				9382537EFD4FE15801C53C0E /* FlipClockApp.swift */,
+				E3331AC70F89805DEA520E93 /* WorldClocksCoordinator.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -379,9 +391,9 @@
 			isa = PBXGroup;
 			children = (
 				16AC161B34E3FF7009C8F9FD /* MenuBarClockView.swift */,
-				96A869DA91B1A0C42E527852 /* SecondClockMenuBarView.swift */,
-				22AAEA71929350340A866A7B /* SecondClockStatusItemController.swift */,
 				5FEC2FADD24FCE8918E65F47 /* StatusItemController.swift */,
+				6D097F64253C4E8B4F41152C /* WorldClockMenuBarView.swift */,
+				56490F0614A5B13F6D33C545 /* WorldClockStatusItemController.swift */,
 			);
 			path = MenuBar;
 			sourceTree = "<group>";
@@ -396,6 +408,7 @@
 				8123CC7E46595793EA80EF29 /* PerformanceTests.swift */,
 				21DD6E720292DB4703BB04D5 /* ReminderStoreTests.swift */,
 				441CD5D08FC3CF244C84C5EB /* StopwatchTests.swift */,
+				1EC93791618CC9C6D0654B62 /* WidgetLayoutTests.swift */,
 			);
 			path = FlipClockTests;
 			sourceTree = "<group>";
@@ -406,6 +419,8 @@
 				C82BBCF4822EE69EB39A8D8C /* AppSettings.swift */,
 				E79414097EB0F91E58961D38 /* SettingsView.swift */,
 				8800DAAFAC2F27DC741FF29C /* SettingsWindowController.swift */,
+				3C90E746B854DBB9B2334C23 /* WorldClock.swift */,
+				C11AF6B6BCFC09C9232CA914 /* WorldClockCard.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -661,6 +676,7 @@
 				A7795FDB787B0D0D52B44FAC /* CountdownTimerView.swift in Sources */,
 				DAB960062120E9ED90E69164 /* DateHeaderView.swift in Sources */,
 				0A59D6179E919B1B5C9BEC5C /* DesktopBackdropCapture.swift in Sources */,
+				ACA2C5CD8993BAA88029F981 /* DesktopFocus.swift in Sources */,
 				E6960F41E21880F41D3C0C78 /* DigitDelta.swift in Sources */,
 				E98342BF539CAE355C1D0DEE /* DigitFaceRenderer.swift in Sources */,
 				3AB38857C79E08B3BF2ADBC6 /* DueReminderBanner.swift in Sources */,
@@ -676,10 +692,6 @@
 				8B2973DC33ED8E39177D0930 /* Reminder.swift in Sources */,
 				D0F8A5633C87FBE5502EB6D7 /* ReminderBadge.swift in Sources */,
 				DB13156575EEFA035F2AB15B /* ReminderStore.swift in Sources */,
-				B170E1361D84026C0EE80D8A /* SecondClockMenuBarView.swift in Sources */,
-				767AC13761BF3B9411377F1E /* SecondClockOverlayContentView.swift in Sources */,
-				AE2A8EB82443B5249DF45E74 /* SecondClockOverlayWindowController.swift in Sources */,
-				2811B527FE03B0BFAB73B046 /* SecondClockStatusItemController.swift in Sources */,
 				4B9E8E45D3828A20209486B4 /* SettingsView.swift in Sources */,
 				ABAFF924E0D4AA14F4E3003A /* SettingsWindowController.swift in Sources */,
 				9F29001BC6E87DC8BF62BF78 /* SplitFlapClockFace.swift in Sources */,
@@ -693,6 +705,13 @@
 				E84902489E6F8CCF4F6B778C /* VibrantHostingController.swift in Sources */,
 				DC9C7F4FB4955BC7BA2B07E7 /* WidgetFont.swift in Sources */,
 				1DDF18C7AC5EA749D6EC8F6B /* WidgetGlassBackground.swift in Sources */,
+				21EC63A2D527DFC31C79A103 /* WorldClock.swift in Sources */,
+				4DE2EAE270F47D589544EAB7 /* WorldClockCard.swift in Sources */,
+				5BFC597D9769409F0917A304 /* WorldClockMenuBarView.swift in Sources */,
+				CB2204F0C7AF436C0D3F0660 /* WorldClockOverlayContentView.swift in Sources */,
+				D5092B9F3154B9F9032CC0C6 /* WorldClockOverlayWindowController.swift in Sources */,
+				CAF59530DE90125A7F7CA6C9 /* WorldClockStatusItemController.swift in Sources */,
+				CC9C748A97817DEDB579188B /* WorldClocksCoordinator.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -707,6 +726,7 @@
 				74E262E105D3B7DC5352EEDA /* PerformanceTests.swift in Sources */,
 				2F4B686AABC817A2C396EF25 /* ReminderStoreTests.swift in Sources */,
 				A8332CB0B3EB8B753189388D /* StopwatchTests.swift in Sources */,
+				CD727E7689849EA775F891F4 /* WidgetLayoutTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

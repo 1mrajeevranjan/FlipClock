@@ -10,6 +10,7 @@ final class OverlayWindowController {
     private let settings: AppSettings
     private let reminderStore: ReminderStore
     private let backdropCapture = DesktopBackdropCapture()
+    private let visibility: WindowVisibility
     private var cancellables = Set<AnyCancellable>()
 
     private var floatTimer: Timer?
@@ -31,13 +32,15 @@ final class OverlayWindowController {
     /// its box.
     private var preFillScreenTopLeft: NSPoint?
 
-    init(timeProvider: TimeProvider, settings: AppSettings, reminderStore: ReminderStore) {
+    init(timeProvider: TimeProvider, settings: AppSettings, reminderStore: ReminderStore, openSettings: @escaping () -> Void) {
         self.settings = settings
         self.reminderStore = reminderStore
         window = OverlayWindow()
 
-        let hostingController = NSHostingController(rootView: OverlayContentView(timeProvider: timeProvider, settings: settings, backdropCapture: backdropCapture, reminderStore: reminderStore))
+        visibility = WindowVisibility(window: window, timeProvider: timeProvider)
+        let hostingController = NSHostingController(rootView: OverlayContentView(timeProvider: timeProvider, settings: settings, backdropCapture: backdropCapture, reminderStore: reminderStore, visibility: visibility))
         window.contentViewController = hostingController
+        window.installContextMenu(openSettings: openSettings) { [weak settings] in settings?.showDesktopOverlay = false }
 
         applySize(anchorTopRight: true)
         window.setFrameAutosaveName("DesktopOverlayFrame")
@@ -211,10 +214,9 @@ final class OverlayWindowController {
             // window nobody can see, the same wasted-CPU/battery pattern
             // already fixed once in `DesktopBackdropCapture`.
             setFloating(false)
-            // Only this window's own visibility is known here, so the second
-            // clock's overlay may still need the watcher — it re-starts it in
-            // its own `setVisible`, and starting twice is a no-op.
-            if !settings.showSecondClockOverlay { settings.stopWatchingSystemWidgetAppearance() }
+            // World clock widgets may still need the watcher; each starts it
+            // when it opens, and starting twice is a no-op.
+            if !settings.worldClocks.contains(where: { $0.showsAsWidget }) { settings.stopWatchingSystemWidgetAppearance() }
         }
     }
 
@@ -233,7 +235,7 @@ final class OverlayWindowController {
         // widgets sit around 1.0-1.7, still showing the wallpaper's large-scale
         // structure through the frost. ~16pt lands in that range.
         let blurRadius = (4 * settings.overlaySize.scale).clamped(to: 2.5...8)
-        backdropCapture.start(window: window, blurRadius: blurRadius)
+        backdropCapture.start(window: window, blurRadius: blurRadius, dimmedBlurRadius: WidgetGlassBackground.dimmedBlur(scale: settings.overlaySize.scale))
         // Re-crop the backdrop on every frame of a user drag. Without this the
         // glass only catches up when the gesture's coalesced move
         // notifications happen to land, so it visibly drags the old location's

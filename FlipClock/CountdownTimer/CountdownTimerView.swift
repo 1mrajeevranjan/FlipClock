@@ -14,21 +14,19 @@ struct CountdownTimerView: View {
     private var isDark: Bool { colorScheme == .dark }
 
     var body: some View {
-        VStack(spacing: 10) {
-            Label("Timer", systemImage: "timer")
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(.secondary)
-
+        // No "Timer" heading: the selected tab already says it.
+        VStack(spacing: 12) {
             if timerModel.isFinished {
                 VStack(spacing: 8) {
                     Text("Time's up!")
-                        .font(.system(size: 15, weight: .semibold))
+                        .font(.title3.weight(.semibold))
                         .foregroundStyle(.red)
                     Button("Dismiss") { timerModel.reset() }
-                        .buttonStyle(.borderless)
+                        .buttonStyle(.bordered)
+                        .keyboardShortcut(.defaultAction)
                 }
             } else if timerModel.isRunning || timerModel.remainingSeconds > 0 {
-                VStack(spacing: 10) {
+                VStack(spacing: 12) {
                     FlipTimeDisplay(
                         components: [
                             timerModel.remainingSeconds / 3600,
@@ -38,7 +36,7 @@ struct CountdownTimerView: View {
                         isDark: isDark,
                         fontName: settings.widgetFont.postscriptName
                     )
-                    HStack(spacing: 10) {
+                    HStack(spacing: 8) {
                         Button(timerModel.isRunning ? "Pause" : "Resume") {
                             if timerModel.isRunning {
                                 timerModel.pause()
@@ -46,22 +44,28 @@ struct CountdownTimerView: View {
                                 timerModel.resume()
                             }
                         }
-                        .buttonStyle(.bordered)
+                        .buttonStyle(.borderedProminent)
+                        .keyboardShortcut(.space, modifiers: [])
+                        .help("Pause or resume (Space)")
                         Button("Reset") { timerModel.reset() }
-                            .buttonStyle(.borderless)
+                            .buttonStyle(.bordered)
+                            .keyboardShortcut("r", modifiers: .command)
+                            .help("Reset (⌘R)")
                     }
                 }
             } else {
-                VStack(spacing: 10) {
+                VStack(spacing: 12) {
                     TimeWheelPicker(hours: $timerModel.inputHours, minutes: $timerModel.inputMinutes, seconds: $timerModel.inputSeconds)
                     Button("Start") { timerModel.start() }
                         .buttonStyle(.borderedProminent)
+                        // HIG 5.4: Return triggers the default action.
+                        .keyboardShortcut(.defaultAction)
                         .disabled(timerModel.inputHours == 0 && timerModel.inputMinutes == 0 && timerModel.inputSeconds == 0)
                 }
             }
         }
         .frame(maxWidth: .infinity)
-        .padding(10)
+        .padding(12)
         .background(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
                 .fill(Color.primary.opacity(0.06))

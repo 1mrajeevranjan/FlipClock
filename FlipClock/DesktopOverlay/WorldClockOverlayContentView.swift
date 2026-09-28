@@ -1,37 +1,40 @@
 import SwiftUI
 
-/// Root content of the second desktop clock widget — mirrors
-/// `OverlayContentView`'s glass-widget look but renders
-/// `settings.secondTimezoneID` instead of the system timezone, with a
-/// small timezone label above the clock face so it reads as distinct from
-/// the primary widget at a glance. Day/date/year row and general styling
-/// (size, font, color style, theme) all follow the same settings as the
-/// default clock, per product intent — this isn't a separately configured
-/// widget, just the same one pointed at another timezone.
-struct SecondClockOverlayContentView: View {
+/// Root content of a world clock's desktop widget — the main widget's glass
+/// look, pointed at another time zone, with the clock's name as a small row
+/// of flip cards above the digits so it reads as distinct from the main
+/// widget at a glance. Size and 12/24-hour format are the clock's own;
+/// font, theme, colour style and the date row follow the main clock.
+struct WorldClockOverlayContentView: View {
+    let clockID: WorldClock.ID
     let timeProvider: TimeProvider
     @ObservedObject var settings: AppSettings
     @ObservedObject var backdropCapture: DesktopBackdropCapture
+    @ObservedObject var visibility: WindowVisibility
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    private var timeZone: TimeZone { TimeZone(identifier: settings.secondTimezoneID) ?? .current }
+    /// Falls back to a placeholder for the single frame between the clock
+    /// being removed and its window being torn down.
+    private var clock: WorldClock {
+        settings.worldClocks.first { $0.id == clockID } ?? WorldClock(timezoneID: TimeZone.current.identifier)
+    }
+
+    private var timeZone: TimeZone { clock.timeZone }
 
     private var tick: ClockTick {
-        ClockTick.at(date: timeProvider.tick.date, calendar: ClockTick.calendar(for: timeZone))
+        ClockTick.at(date: visibility.tick(from: timeProvider).date, calendar: ClockTick.calendar(for: timeZone))
     }
 
-    private var timezoneLabel: String { Self.timezoneLabel(for: settings.secondTimezoneID) }
+    private var timezoneLabel: String { Self.flapLabel(for: clock) }
 
-    /// City/region name portion of a timezone identifier, formatted the
-    /// same way for the view and for `windowSize` (which needs it to size
-    /// the window without constructing a whole view).
-    static func timezoneLabel(for identifier: String) -> String {
-        let timeZone = TimeZone(identifier: identifier) ?? .current
-        let name = timeZone.identifier.components(separatedBy: "/").last ?? timeZone.identifier
-        return name.replacingOccurrences(of: "_", with: " ").uppercased()
+    /// The name as the flip-card row renders it — shared with `windowSize`,
+    /// which has to size the window without building a view.
+    static func flapLabel(for clock: WorldClock) -> String {
+        clock.displayName.uppercased()
     }
 
-    private var effectiveScale: CGFloat { settings.overlaySize.scale }
+    private var effectiveScale: CGFloat { clock.widgetSize.scale }
 
     /// Strictly follows the app's theme setting, same as every other
     /// surface — see `OverlayContentView.effectiveIsDark`.
@@ -69,7 +72,7 @@ struct SecondClockOverlayContentView: View {
                     compact: false,
                     showPedestal: false,
                     meridiemStyle: settings.meridiemStyle,
-                    timeFormat: settings.timeFormat,
+                    timeFormat: clock.timeFormat,
                     glassCard: true,
                     fontName: settings.widgetFont.postscriptName,
                     isDarkOverride: effectiveIsDark
@@ -89,8 +92,17 @@ struct SecondClockOverlayContentView: View {
         }
         .padding(OverlayContentView.padding(scale: effectiveScale))
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(WidgetGlassBackground(scale: effectiveScale, backdropImage: backdropCapture.image, monochrome: settings.widgetColorStyle == .monochrome, dimmed: settings.systemWidgetDimming.drainsColor))
+        .background(
+            WidgetGlassBackground(scale: effectiveScale, backdropImage: backdropCapture.image, dimmedBackdropImage: backdropCapture.dimmedImage, tone: settings.widgetGlassTone)
+                // The fade between vivid and dimmed the system's own widgets do
+                // when an app comes to the front or the wallpaper is clicked.
+                .animation(reduceMotion ? nil : GlassTone.transition, value: settings.widgetGlassTone)
+        )
+        .environment(\.glassTone, settings.widgetGlassTone)
         .preferredColorScheme(settings.theme.colorScheme)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(clock.displayName): \(OverlayContentView.spokenTime(tick.date, showDate: settings.showDateOnOverlay, timeZone: timeZone))")
+        .accessibilityAddTraits(.updatesFrequently)
     }
 }
 

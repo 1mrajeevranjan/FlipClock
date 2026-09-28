@@ -6,14 +6,13 @@ import SwiftUI
 /// oversized and out of place next to Calendar/Weather-style widgets.
 /// Optionally shows the day/date/month/year above the clock.
 struct OverlayContentView: View {
-    /// HIG's standard widget margin is 16pt; scaling it by `overlaySize`
-    /// and clamping to `11...22` keeps the smallest widget from crowding
-    /// its edges. At the default `.full` size (`scale = 0.65`) this floors
-    /// at `11pt` — noticeably tighter than the old flat `22pt` constant, a
-    /// deliberate move toward HIG's standard margin rather than an
-    /// unchanged default.
+    /// Concentric with the panel: outer radius = margin + card radius, so
+    /// the cards' corners follow the widget's own curve instead of crowding
+    /// it. At the default `.full` size (`scale = 0.65`, 22pt panel radius)
+    /// this lands exactly on HIG's standard 16pt widget margin; the clamp
+    /// only kicks in at the smallest/largest sizes.
     static func padding(scale: CGFloat) -> CGFloat {
-        (16 * scale).clamped(to: 11...22)
+        (WidgetGlassBackground.cornerRadius(scale: scale) - SplitFlapDigit.cardCornerRadius).clamped(to: 11...22)
     }
 
     static func dateSpacing(scale: CGFloat) -> CGFloat {
@@ -28,7 +27,11 @@ struct OverlayContentView: View {
     @ObservedObject var settings: AppSettings
     @ObservedObject var backdropCapture: DesktopBackdropCapture
     @ObservedObject var reminderStore: ReminderStore
+    @ObservedObject var visibility: WindowVisibility
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private var tick: ClockTick { visibility.tick(from: timeProvider) }
 
     private var hasDueReminder: Bool { !reminderStore.dueTodayUnacknowledged.isEmpty }
     private var hasUpcomingReminder: Bool { !reminderStore.upcomingWithin24Hours.isEmpty }
@@ -70,6 +73,21 @@ struct OverlayContentView: View {
         DateFlapRow.idealSize(scale: scale)
     }
 
+    private static let spokenFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.timeStyle = .medium
+        return f
+    }()
+
+    /// What VoiceOver reads for the whole widget — otherwise it walks ~30
+    /// unlabeled flap-card images one by one. Cached formatter because this
+    /// is re-evaluated on every one-second tick.
+    static func spokenTime(_ date: Date, showDate: Bool, timeZone: TimeZone = .current) -> String {
+        spokenFormatter.timeZone = timeZone
+        spokenFormatter.dateStyle = showDate ? .full : .none
+        return spokenFormatter.string(from: date)
+    }
+
     /// Full-screen mode gets a noticeably larger clock to better fill the
     /// extra space a whole-screen layout affords.
     private var effectiveScale: CGFloat {
@@ -83,7 +101,7 @@ struct OverlayContentView: View {
             }
 
             SplitFlapClockFace(
-                tick: timeProvider.tick,
+                tick: tick,
                 scale: effectiveScale,
                 compact: false,
                 showPedestal: false,
@@ -95,7 +113,7 @@ struct OverlayContentView: View {
             )
 
             if settings.showDateOnOverlay {
-                DateFlapRow(date: timeProvider.tick.date, scale: effectiveScale, isDark: effectiveIsDark, glassCard: true, fontName: settings.widgetFont.postscriptName)
+                DateFlapRow(date: tick.date, scale: effectiveScale, isDark: effectiveIsDark, glassCard: true, fontName: settings.widgetFont.postscriptName)
             }
         }
         .padding(Self.padding(scale: settings.overlaySize.scale))
@@ -106,8 +124,23 @@ struct OverlayContentView: View {
         // weekday) otherwise pins content to the window's top-left corner
         // instead of centering it, producing lopsided margins.
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(WidgetGlassBackground(scale: settings.overlaySize.scale, fullyClear: settings.fillScreen, backdropImage: backdropCapture.image, monochrome: settings.widgetColorStyle == .monochrome, dimmed: settings.systemWidgetDimming.drainsColor))
+        .background(
+            WidgetGlassBackground(scale: settings.overlaySize.scale, fullyClear: settings.fillScreen, backdropImage: backdropCapture.image, dimmedBackdropImage: backdropCapture.dimmedImage, tone: settings.widgetGlassTone)
+                // The fade between vivid and dimmed the system's own widgets do
+                // when an app comes to the front or the wallpaper is clicked.
+                .animation(reduceMotion ? nil : GlassTone.transition, value: settings.widgetGlassTone)
+        )
+        .environment(\.glassTone, settings.widgetGlassTone)
         .preferredColorScheme(settings.theme.colorScheme)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibilityText)
+        .accessibilityAddTraits(.updatesFrequently)
+    }
+
+    private var accessibilityText: String {
+        let time = Self.spokenTime(tick.date, showDate: settings.showDateOnOverlay)
+        guard let bannerGroup, let first = bannerGroup.reminders.first else { return time }
+        return "\(time). Reminder \(bannerGroup.isDue ? "due today" : "coming up"): \(first.title)"
     }
 }
 
@@ -119,6 +152,15 @@ private struct ReminderTopBanner: View {
     let reminders: [Reminder]
     let isDue: Bool
     let scale: CGFloat
+    @Environment(\.glassTone) private var tone
+    @Environment(\.colorScheme) private var colorScheme
+
+    /// Status colour only in full colour; Monochrome and dimmed widgets are
+    /// single-colour throughout, like the system's.
+    private var color: Color {
+        guard tone == .vivid else { return Color(nsColor: FlapColors.glassGlyph(isDark: colorScheme == .dark, tone: tone)) }
+        return isDue ? .red : .orange
+    }
 
     private var displayText: String {
         guard let first = reminders.first else { return "" }
@@ -135,7 +177,8 @@ private struct ReminderTopBanner: View {
                 .lineLimit(1)
                 .truncationMode(.tail)
         }
-        .foregroundStyle(isDue ? Color.red : Color.orange)
+        .foregroundStyle(color)
+        .animation(GlassTone.transition, value: tone)
     }
 }
 

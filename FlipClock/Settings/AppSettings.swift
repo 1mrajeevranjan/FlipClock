@@ -2,6 +2,7 @@ import Foundation
 import Combine
 import ServiceManagement
 import SwiftUI
+import AppKit
 
 enum AppTheme: String, CaseIterable, Identifiable {
     case light, dark, system
@@ -28,7 +29,7 @@ enum AppTheme: String, CaseIterable, Identifiable {
     }
 }
 
-enum OverlaySize: String, CaseIterable, Identifiable {
+enum OverlaySize: String, CaseIterable, Identifiable, Codable {
     case half, full, double, triple
 
     var id: String { rawValue }
@@ -56,7 +57,7 @@ enum OverlaySize: String, CaseIterable, Identifiable {
     }
 }
 
-enum TimeFormat: String, CaseIterable, Identifiable {
+enum TimeFormat: String, CaseIterable, Identifiable, Codable {
     case twelveHour, twentyFourHour
 
     var id: String { rawValue }
@@ -104,11 +105,11 @@ enum MeridiemStyle: String, CaseIterable, Identifiable {
     }
 }
 
-/// Where the second (extra-timezone) clock appears — UI-only grouping over
-/// `AppSettings.showSecondClock`/`showSecondClockOverlay` so the settings
-/// screen offers one choice instead of two toggles whose four combinations
-/// (both off, only one on, both on) weren't obviously distinct controls.
-enum SecondClockDisplay: String, CaseIterable, Identifiable {
+/// Where a world clock appears — UI-only grouping over
+/// `WorldClock.showsInMenuBar`/`showsAsWidget` so the settings screen offers
+/// one choice instead of two toggles whose four combinations (both off, only
+/// one on, both on) weren't obviously distinct controls.
+enum WorldClockDisplay: String, CaseIterable, Identifiable {
     case off, menuBar, widget, both
 
     var id: String { rawValue }
@@ -117,7 +118,7 @@ enum SecondClockDisplay: String, CaseIterable, Identifiable {
     /// labels and will not compress them, so "Desktop Widget" pushed the whole
     /// control wider than the settings window and clipped "Both" off the right
     /// edge. "Widget" is unambiguous next to "Menu Bar" under a
-    /// "Show second clock" heading.
+    /// "Show in" label.
     var label: String {
         switch self {
         case .off: return "Off"
@@ -171,14 +172,16 @@ enum SystemWidgetDimming: Int {
     static let domain = "com.apple.widgets"
     static let key = "widgetAppearance"
 
-    /// `automatic` is grouped with `always` rather than with `never`: it means
-    /// "dim while an app is in front", and for a desktop widget that's nearly
-    /// all the time — in testing the system's own widgets rendered dimmed
-    /// under `automatic` in every state that could be captured, including with
-    /// the Finder frontmost. There's no public API for the live dim state, so
-    /// matching the common case beats leaving the widget vivid and obviously
-    /// out of place.
-    var drainsColor: Bool { self != .never }
+    /// `automatic` means "dim while an app is in front": vivid only while the
+    /// user is on the desktop itself (see `DesktopFocus`), exactly when the
+    /// system's own widgets light up.
+    func dims(desktopFocused: Bool) -> Bool {
+        switch self {
+        case .always: return true
+        case .never: return false
+        case .automatic: return !desktopFocused
+        }
+    }
 
     /// Reads the live system value. `CFPreferencesAppSynchronize` first
     /// because this is another process's domain — without it the value is
@@ -226,32 +229,51 @@ final class AppSettings: ObservableObject {
         didSet { defaults.set(meridiemStyle.rawValue, forKey: Keys.meridiemStyle) }
     }
 
-    @Published var showSecondClock: Bool {
-        didSet { defaults.set(showSecondClock, forKey: Keys.showSecondClock) }
-    }
-
-    /// `TimeZone` identifier (e.g. "America/New_York") for the second
-    /// menu-bar clock.
-    @Published var secondTimezoneID: String {
-        didSet { defaults.set(secondTimezoneID, forKey: Keys.secondTimezoneID) }
-    }
-
-    /// When true, a second desktop widget shows `secondTimezoneID`'s time —
-    /// same glass-widget treatment as the primary desktop clock, labeled
-    /// with the timezone name.
-    @Published var showSecondClockOverlay: Bool {
-        didSet { defaults.set(showSecondClockOverlay, forKey: Keys.showSecondClockOverlay) }
-    }
-
-    /// Single settings-UI-facing view over `showSecondClock` +
-    /// `showSecondClockOverlay` — not itself persisted, just a convenience
-    /// for presenting "Off/Menu Bar/Desktop Widget/Both" as one control.
-    var secondClockDisplay: SecondClockDisplay {
-        get { SecondClockDisplay(showsInMenuBar: showSecondClock, showsAsWidget: showSecondClockOverlay) }
-        set {
-            showSecondClock = newValue.showsInMenuBar
-            showSecondClockOverlay = newValue.showsAsWidget
+    /// Extra time-zone clocks beside the main one, in the order the user
+    /// added them — at most `WorldClock.maxCount`. Persisted as JSON.
+    @Published var worldClocks: [WorldClock] {
+        didSet {
+            if let data = try? JSONEncoder().encode(worldClocks) {
+                defaults.set(data, forKey: Keys.worldClocks)
+            }
         }
+    }
+
+    var canAddWorldClock: Bool { worldClocks.count < WorldClock.maxCount }
+
+    /// Adds a clock for `timezoneID`, shown in the menu bar by default so it's
+    /// immediately visible; no-op at the limit.
+    func addWorldClock(timezoneID: String = "UTC") {
+        guard canAddWorldClock else { return }
+        worldClocks.append(WorldClock(timezoneID: timezoneID, timeFormat: timeFormat))
+    }
+
+    func removeWorldClock(id: WorldClock.ID) {
+        worldClocks.removeAll { $0.id == id }
+    }
+
+    /// Whether any desktop widget — main or world clock — is showing. The
+    /// system-appearance watcher runs only while this is true.
+    var anyWidgetVisible: Bool {
+        showDesktopOverlay || worldClocks.contains { $0.showsAsWidget }
+    }
+
+    /// The pre-world-clocks app had exactly one extra clock stored as three
+    /// separate keys. Carried over as the first world clock the first time the
+    /// new list is read, but only if it was actually switched on.
+    private static func migratedWorldClocks(from defaults: UserDefaults) -> [WorldClock] {
+        let inMenuBar = defaults.object(forKey: Keys.legacyShowSecondClock) as? Bool ?? false
+        let asWidget = defaults.object(forKey: Keys.legacyShowSecondClockOverlay) as? Bool ?? false
+        guard inMenuBar || asWidget else { return [] }
+        let zone = defaults.string(forKey: Keys.legacySecondTimezoneID) ?? "UTC"
+        let format = (defaults.string(forKey: Keys.timeFormat)).flatMap(TimeFormat.init(rawValue:)) ?? .twelveHour
+        let size = (defaults.string(forKey: Keys.overlaySize)).flatMap(OverlaySize.init(rawValue:)) ?? .full
+        let clock = WorldClock(timezoneID: zone, showsInMenuBar: inMenuBar, showsAsWidget: asWidget, widgetSize: size, timeFormat: format)
+        // Keep the widget where the user had put it.
+        if let frame = defaults.string(forKey: "NSWindow Frame SecondClockOverlayFrame") {
+            defaults.set(frame, forKey: "NSWindow Frame \(WorldClockOverlayWindowController.frameAutosaveName(for: clock.id))")
+        }
+        return [clock]
     }
 
     @Published var timeFormat: TimeFormat {
@@ -303,12 +325,16 @@ final class AppSettings: ObservableObject {
     /// macOS, not to this app.
     @Published private(set) var systemWidgetDimming: SystemWidgetDimming = .automatic
 
-    /// What the widget glass should actually do, combining the app's own
-    /// picker with the system one. The app's Monochrome setting forces
-    /// grayscale; otherwise the system's choice wins, so the widget tracks
-    /// the native ones sitting next to it on the desktop.
-    var widgetDrainsColor: Bool {
-        widgetColorStyle == .monochrome || systemWidgetDimming.drainsColor
+    /// Live "is the user on the desktop" state — see `DesktopFocus`. Only
+    /// tracked while a widget is visible.
+    @Published private(set) var isDesktopFocused = false
+
+    /// What the widget should look like right now, combining the app's own
+    /// Full Color / Monochrome pick with the system's live dimming — the same
+    /// two inputs the native widgets beside it follow.
+    var widgetGlassTone: GlassTone {
+        if systemWidgetDimming.dims(desktopFocused: isDesktopFocused) { return .dimmed }
+        return widgetColorStyle == .monochrome ? .monochrome : .vivid
     }
 
     /// There's no public notification for the widget-style picker changing,
@@ -318,15 +344,46 @@ final class AppSettings: ObservableObject {
     /// `OverlayWindowController`'s float timer): a timer tied to a setting but
     /// not to whether anything can be seen just burns battery forever.
     private var systemAppearanceTimer: Timer?
+    private var activationObserver: NSObjectProtocol?
+    /// Runs only while Finder is frontmost — the one case where the desktop
+    /// can gain or lose focus without an app switch (clicking between a
+    /// Finder window and the wallpaper, windows sliding aside).
+    private var desktopFocusTimer: Timer?
+    private var clickMonitor: Any?
+    /// After a click on the wallpaper the windows take a moment to slide
+    /// aside; until then the window-position check still says "not on the
+    /// desktop". The click already told us the answer, so polls that
+    /// disagree are ignored for this long.
+    private static let wallpaperClickGrace: TimeInterval = 1.0
+    private var focusPredictedUntil: Date?
 
     func startWatchingSystemWidgetAppearance() {
         systemWidgetDimming = SystemWidgetDimming.current()
+        refreshDesktopFocus()
         guard systemAppearanceTimer == nil else { return }
+        activationObserver = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didActivateApplicationNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] note in
+            guard let self else { return }
+            let app = note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication
+            // Switching to any other app always ends desktop focus at once;
+            // Finder activating is usually the wallpaper click itself, which
+            // the click monitor has already handled.
+            if app?.bundleIdentifier != DesktopFocus.finderBundleID { self.focusPredictedUntil = nil }
+            self.refreshDesktopFocus()
+        }
+        // Mouse-down only, so no Accessibility permission is involved.
+        clickMonitor = NSEvent.addGlobalMonitorForEvents(matching: .leftMouseDown) { [weak self] _ in
+            self?.handleGlobalClick()
+        }
         let timer = Timer(timeInterval: 3, repeats: true) { [weak self] _ in
             guard let self else { return }
             let current = SystemWidgetDimming.current()
             if current != self.systemWidgetDimming { self.systemWidgetDimming = current }
         }
+        timer.tolerance = 1
         RunLoop.main.add(timer, forMode: .common)
         systemAppearanceTimer = timer
     }
@@ -334,6 +391,34 @@ final class AppSettings: ObservableObject {
     func stopWatchingSystemWidgetAppearance() {
         systemAppearanceTimer?.invalidate()
         systemAppearanceTimer = nil
+        desktopFocusTimer?.invalidate()
+        desktopFocusTimer = nil
+        if let activationObserver { NSWorkspace.shared.notificationCenter.removeObserver(activationObserver) }
+        activationObserver = nil
+        if let clickMonitor { NSEvent.removeMonitor(clickMonitor) }
+        clickMonitor = nil
+    }
+
+    private func handleGlobalClick() {
+        guard let onDesktop = DesktopFocus.clickTargetNow() else { return }
+        focusPredictedUntil = onDesktop ? Date().addingTimeInterval(Self.wallpaperClickGrace) : nil
+        if onDesktop != isDesktopFocused { isDesktopFocused = onDesktop }
+    }
+
+    private func refreshDesktopFocus() {
+        let focused = DesktopFocus.current()
+        let predicting = focusPredictedUntil.map { $0 > Date() } ?? false
+        if !predicting, focused != isDesktopFocused { isDesktopFocused = focused }
+        let finderFrontmost = NSWorkspace.shared.frontmostApplication?.bundleIdentifier == DesktopFocus.finderBundleID
+        if finderFrontmost, desktopFocusTimer == nil {
+            let timer = Timer(timeInterval: 0.4, repeats: true) { [weak self] _ in self?.refreshDesktopFocus() }
+            timer.tolerance = 0.1
+            RunLoop.main.add(timer, forMode: .common)
+            desktopFocusTimer = timer
+        } else if !finderFrontmost {
+            desktopFocusTimer?.invalidate()
+            desktopFocusTimer = nil
+        }
     }
 
     private enum Keys {
@@ -342,9 +427,10 @@ final class AppSettings: ObservableObject {
         static let theme = "theme"
         static let overlaySize = "overlaySize"
         static let meridiemStyle = "meridiemStyle"
-        static let showSecondClock = "showSecondClock"
-        static let secondTimezoneID = "secondTimezoneID"
-        static let showSecondClockOverlay = "showSecondClockOverlay"
+        static let worldClocks = "worldClocks"
+        static let legacyShowSecondClock = "showSecondClock"
+        static let legacySecondTimezoneID = "secondTimezoneID"
+        static let legacyShowSecondClockOverlay = "showSecondClockOverlay"
         static let timeFormat = "timeFormat"
         static let showDateOnOverlay = "showDateOnOverlay"
         static let floatAcrossScreen = "floatAcrossScreen"
@@ -360,9 +446,20 @@ final class AppSettings: ObservableObject {
         theme = (defaults.string(forKey: Keys.theme)).flatMap(AppTheme.init(rawValue:)) ?? .system
         overlaySize = (defaults.string(forKey: Keys.overlaySize)).flatMap(OverlaySize.init(rawValue:)) ?? .full
         meridiemStyle = (defaults.string(forKey: Keys.meridiemStyle)).flatMap(MeridiemStyle.init(rawValue:)) ?? .text
-        showSecondClock = defaults.object(forKey: Keys.showSecondClock) as? Bool ?? false
-        secondTimezoneID = defaults.string(forKey: Keys.secondTimezoneID) ?? "UTC"
-        showSecondClockOverlay = defaults.object(forKey: Keys.showSecondClockOverlay) as? Bool ?? false
+        if let data = defaults.data(forKey: Keys.worldClocks),
+           let stored = try? JSONDecoder().decode([WorldClock].self, from: data) {
+            worldClocks = Array(stored.prefix(WorldClock.maxCount))
+        } else {
+            let migrated = Self.migratedWorldClocks(from: defaults)
+            worldClocks = migrated
+            // Saved straight away (`didSet` doesn't run in `init`): otherwise
+            // the migrated clock got a fresh ID every launch, and with it a
+            // fresh widget-position and menu-bar-position key, so neither
+            // could ever stick.
+            if let data = try? JSONEncoder().encode(migrated) {
+                defaults.set(data, forKey: Keys.worldClocks)
+            }
+        }
         timeFormat = (defaults.string(forKey: Keys.timeFormat)).flatMap(TimeFormat.init(rawValue:)) ?? .twelveHour
         showDateOnOverlay = defaults.object(forKey: Keys.showDateOnOverlay) as? Bool ?? true
         floatAcrossScreen = defaults.object(forKey: Keys.floatAcrossScreen) as? Bool ?? false

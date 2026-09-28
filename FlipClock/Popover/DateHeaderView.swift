@@ -6,7 +6,6 @@ import SwiftUI
 struct DateHeaderView: View {
     let date: Date
     var showYear: Bool = false
-    var fontSize: CGFloat = 15
 
     private static let formatter: DateFormatter = {
         let f = DateFormatter()
@@ -22,7 +21,10 @@ struct DateHeaderView: View {
 
     var body: some View {
         Text((showYear ? Self.formatterWithYear : Self.formatter).string(from: date))
-            .font(.system(size: fontSize, weight: .semibold))
+            // HIG 9.1: a semantic style (15pt on macOS) rather than a fixed
+            // size, so it follows Bold Text and matches system headers.
+            .font(.title3.weight(.semibold))
             .foregroundStyle(.primary)
+            .accessibilityAddTraits(.isHeader)
     }
 }
