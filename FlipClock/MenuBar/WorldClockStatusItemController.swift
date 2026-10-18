@@ -30,6 +30,15 @@ final class WorldClockStatusItemController {
             .removeDuplicates()
             .sink { [weak self] clock in self?.render(clock) }
             .store(in: &cancellables)
+
+        settings.$theme
+            .dropFirst()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                guard let self, let clock = self.settings.worldClocks.first(where: { $0.id == self.clockID }) else { return }
+                self.render(clock)
+            }
+            .store(in: &cancellables)
     }
 
     private func render(_ clock: WorldClock) {
@@ -41,6 +50,7 @@ final class WorldClockStatusItemController {
         statusItem.button?.subviews.forEach { $0.removeFromSuperview() }
         statusItem.button?.addSubview(hosting)
         statusItem.button?.toolTip = "\(clock.displayName) — \(clock.timezoneID) (\(WorldClock.offsetLabel(for: clock.timeZone)))"
+        statusItem.button?.needsDisplay = true
     }
 
     func remove() {

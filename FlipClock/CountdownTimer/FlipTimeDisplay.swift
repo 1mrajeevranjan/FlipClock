@@ -15,6 +15,7 @@ struct FlipTimeDisplay: View {
     /// contexts where the grouping is already obvious (the countdown
     /// timer, which only ever shows a clock-style HH:MM:SS).
     var unitLabels: [String]? = nil
+    var lastComponentChangeIntervals: (tens: TimeInterval, ones: TimeInterval)? = nil
 
     private let digitGap: CGFloat = 3
     private let groupGap: CGFloat = 8
@@ -22,13 +23,14 @@ struct FlipTimeDisplay: View {
     var body: some View {
         HStack(alignment: .top, spacing: groupGap) {
             ForEach(Array(components.enumerated()), id: \.offset) { index, component in
+                let intervals = index == components.count - 1 ? lastComponentChangeIntervals : nil
                 if index > 0 {
                     separatorDots
                 }
                 VStack(spacing: 4) {
                     HStack(spacing: digitGap) {
-                        digit(component / 10)
-                        digit(component % 10)
+                        digit(component / 10, changeInterval: intervals?.tens)
+                        digit(component % 10, changeInterval: intervals?.ones)
                     }
                     if let label = unitLabels?[safe: index] {
                         Text(label)
@@ -40,7 +42,7 @@ struct FlipTimeDisplay: View {
         }
     }
 
-    private func digit(_ value: Int) -> some View {
+    private func digit(_ value: Int, changeInterval: TimeInterval?) -> some View {
         SplitFlapDigit(
             value: String(value),
             cardSize: cardSize,
@@ -48,7 +50,8 @@ struct FlipTimeDisplay: View {
             compact: false,
             glassCard: true,
             showOwnGlassPanel: false,
-            fontName: fontName
+            fontName: fontName,
+            expectedChangeInterval: changeInterval
         )
     }
 

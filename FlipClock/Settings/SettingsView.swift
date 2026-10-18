@@ -14,499 +14,237 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
         }
     }
 
-    var subtitle: String {
-        switch self {
-        case .general: return "Launch, visibility"
-        case .appearance: return "Theme and glass"
-        case .desktopClock: return "Overlay layout"
-        case .worldClocks: return "Other time zones"
-        }
-    }
-
     var icon: String {
         switch self {
         case .general: return "gearshape"
         case .appearance: return "paintbrush"
-        case .desktopClock: return "rectangle.on.rectangle"
+        case .desktopClock: return "macwindow"
         case .worldClocks: return "globe"
         }
-    }
-
-    /// Width is constant across every tab — only height varies with each
-    /// tab's content. Varying width too made the centered tab row visibly
-    /// slide sideways every time the window resized, which read as the
-    /// tabs "jumping" rather than a clean transition.
-    static let width: CGFloat = 470
-
-    /// Rough initial estimate used only for the very first layout, before
-    /// the real content height has been measured (see
-    /// `SettingsView.ContentHeightPreferenceKey`) — the authoritative size
-    /// now comes from measuring the actual rendered content, not this
-    /// table, so these numbers no longer need to track every content
-    /// change exactly.
-    var windowSize: CGSize {
-        switch self {
-        case .general: return CGSize(width: Self.width, height: 184)
-        case .appearance: return CGSize(width: Self.width, height: 304)
-        case .desktopClock: return CGSize(width: Self.width, height: 336)
-        case .worldClocks: return CGSize(width: Self.width, height: 300)
-        }
-    }
-}
-
-/// Reports the settings content's real, natural height up to `SettingsView`
-/// so the window can be sized to fit it exactly — no scrollbar, no guessed
-/// magic numbers per tab that drift out of sync with the actual content.
-///
-/// `reduce` takes the max rather than the usual `value = nextValue()`.
-/// Last-writer-wins is wrong for a key read from a `ZStack`: only one child
-/// (the card) ever sets this, while the header sibling silently contributes
-/// `defaultValue`. Whichever is reduced last wins, and that was the header —
-/// so this reported `0` forever, the `cardHeight > 0` guard threw every real
-/// measurement away, and all four tabs fell back to the hand-written estimate
-/// table. That's where the leftover blank space at the bottom of every tab
-/// came from: the estimates were simply larger than the real content.
-private struct ContentHeightPreferenceKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = max(value, nextValue())
-    }
-}
-
-/// Reports the title+tab-row+divider overlay's real, natural height —
-/// mirrors `ContentHeightPreferenceKey`'s approach for the card body, for
-/// the same reason: a hand-computed constant (title 28pt + tab row 50pt)
-/// silently went stale the moment a `Divider` was added to that overlay,
-/// leaving a visible gap between the divider and the card below since the
-/// card's top padding no longer matched the header's real height. Measuring
-/// it instead of guessing means it can never drift out of sync again,
-/// regardless of what's added to the header block later.
-///
-/// Takes the max for the same reason as `ContentHeightPreferenceKey` — the
-/// card sibling contributes `defaultValue` here, and last-writer-wins would
-/// let whichever child happens to reduce last decide the answer.
-private struct HeaderHeightPreferenceKey: PreferenceKey {
-    static var defaultValue: CGFloat = 78
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = max(value, nextValue())
-    }
-}
-
-/// The titlebar-height safe-area inset `.fullSizeContentView` hands the
-/// hosted SwiftUI view. Needed as a real number because the card has to be
-/// laid out *inside* the safe area while still appearing to start at the
-/// header's bottom edge — see the card's `.padding(.top)`.
-private struct TopInsetPreferenceKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = max(value, nextValue())
     }
 }
 
 struct SettingsView: View {
+    static let minimumWidth: CGFloat = 700
+    let onContentHeightChange: (CGFloat) -> Void
     @EnvironmentObject var settings: AppSettings
-    private let onChangeWindow: (String, CGSize) -> Void
+    @ObservedObject var reminderNotifications: ReminderNotifications
+    @Environment(\.colorScheme) private var colorScheme
     @State private var selectedTab: SettingsTab = .general
-    /// The world clock whose time zone is being picked, if any.
     @State private var pickingTimezoneFor: WorldClock.ID?
-    @State private var measuredHeight: CGFloat = 0
-    /// Real measured height per tab, so returning to a tab jumps straight to
-    /// its true size instead of bouncing off the rough estimate first. The
-    /// estimate table is only ever consulted for a tab's first visit.
-    @State private var knownHeights: [SettingsTab: CGFloat] = [:]
-    @State private var pendingResize: DispatchWorkItem?
-    @State private var headerHeight: CGFloat = 78
-    /// Titlebar safe-area inset, measured rather than hardcoded — it differs
-    /// between macOS versions and window configurations.
-    @State private var topInset: CGFloat = 0
-    /// Selection pill's x-offset within the tab row. Animated explicitly via
-    /// `withAnimation` (see `headerBar`) rather than through an
-    /// `.animation(_:value:)` modifier, so that it — and nothing else — eases.
-    @State private var pillX: CGFloat = 0
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var addingClock = false
 
-    init(onChangeWindow: @escaping (String, CGSize) -> Void = { _, _ in }) {
-        self.onChangeWindow = onChangeWindow
+    init(reminderNotifications: ReminderNotifications, onContentHeightChange: @escaping (CGFloat) -> Void = { _ in }) {
+        self.reminderNotifications = reminderNotifications
+        self.onContentHeightChange = onContentHeightChange
     }
 
-    /// Used only for the tab row's own selection highlight sliding between
-    /// buttons — `nil` (no animation) when Reduce Motion is on. Content no
-    /// longer crossfades (see `content` below), so this has nothing to do
-    /// with the window resize animation, which AppKit drives separately.
-    ///
-    /// Applied via `.animation(_:value:)` scoped to just the highlight fill
-    /// below — NOT via `withAnimation` around the `selectedTab` mutation
-    /// itself. `withAnimation` puts every view in the transaction into the
-    /// same ambient animation, including the title `Text(selectedTab.label)`
-    /// overlay: since that text is centered and its intrinsic width changes
-    /// with each tab's label length ("General" vs "Second Clock"), the
-    /// ambient animation visibly slid the title sideways for ~0.2s on every
-    /// switch — read as the tab name "not staying put." Scoping the
-    /// animation to only the highlight fill keeps the title an instant,
-    /// stable swap while still sliding the pill.
-    private var tabTransitionAnimation: Animation? {
-        reduceMotion ? nil : .easeInOut(duration: 0.2)
-    }
+    // ponytail: a still preview shares the clock renderer without another ticking timer.
+    private static let previewTick = ClockTick(
+        date: Date(), hour12: 10, hour24: 10, minute: 9, second: 30, isPM: false
+    )
 
     var body: some View {
-        // `header` and `content` are true `ZStack` siblings, NOT an
-        // `.overlay()` riding on `content`. That distinction is the actual
-        // fix for a real bug: with `.overlay()`, the header's placement is
-        // derived FROM content's resolved frame — an extra dependency hop
-        // (window → content → header) that only matters when content's
-        // frame is changing *fast and by a lot*, which is exactly what
-        // happens on General↔Appearance (the largest content-height delta
-        // of any tab pair, since General is by far the shortest tab).
-        // Frame-by-frame video analysis (30fps capture of a real switch)
-        // caught the smoking gun: on General→Appearance, the tab pill's
-        // `matchedGeometryEffect` completely vanished for 2 frames (~66ms)
-        // before reappearing mid-slide — a pop, not a slide, which is
-        // exactly what "bounces" instead of "slides." The same capture
-        // showed Appearance→Desktop Clock (a much smaller height delta)
-        // interpolating with zero dropped frames. `.overlay()`'s content-
-        // dependent placement recomputing every frame during a large,
-        // fast resize was destabilizing `matchedGeometryEffect`'s anchor
-        // resolution specifically when that recomputation was big/frequent
-        // enough. A `ZStack` positions both children directly off the
-        // window's own bounds, in parallel, with no intermediary — content
-        // resizing has nothing further to destabilize.
-        ZStack(alignment: .top) {
-            content
-                .background(
+        HStack(spacing: 0) {
+            VStack(spacing: 8) {
+                ForEach(Array(SettingsTab.allCases.enumerated()), id: \.element) { index, tab in
+                    SettingsNavigationCard(tab: tab, isSelected: selectedTab == tab) {
+                        selectedTab = tab
+                    }
+                    .keyboardShortcut(KeyEquivalent(Character("\(index + 1)")), modifiers: .command)
+                    .help("\(tab.label) (⌘\(index + 1))")
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(12)
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel("Settings sections")
+            .frame(width: 196)
+
+            Divider()
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: 12) {
+                    selectedTabContent
+                }
+                .padding(16)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background {
                     GeometryReader { proxy in
-                        Color.clear.preference(key: ContentHeightPreferenceKey.self, value: proxy.size.height)
+                        Color.clear.preference(key: SettingsContentHeightKey.self, value: proxy.size.height)
                     }
-                )
-                // Deliberately NOT pinned to `selectedTab.windowSize` here —
-                // that forced this content to the *target* size the instant
-                // `selectedTab` changed, while `SettingsWindowController`
-                // animates the actual NSWindow to that size over ~0.2s
-                // separately. The two disagreeing read as a glitch: content
-                // snapping to its final layout instantly, then getting
-                // clipped/letterboxed by a window that was still mid-resize.
-                // Filling whatever the hosting view's *real*, currently
-                // animating bounds are keeps content and window in lockstep —
-                // window size is driven entirely by the measured height below,
-                // not by this frame.
-                // Padded by the header's height *minus* the safe-area inset,
-                // and deliberately NOT `.ignoresSafeArea` — the card is laid
-                // out inside the safe area, so the inset supplies the first
-                // `topInset` points and this supplies the rest. Visually the
-                // card still starts exactly at the header's bottom edge.
-                //
-                // Ignoring the safe area here instead (and padding by the full
-                // header height) drew in the right place but made the hosted
-                // view's *ideal* height `topInset + header + card`, since
-                // SwiftUI still reserves an inset the content has opted out of
-                // drawing in. Auto Layout then grew the window back to that
-                // ideal a moment after every `setFrame`, leaving exactly
-                // `topInset` (~32pt) of dead space below the last control on
-                // every tab. Staying inside the safe area makes the ideal
-                // height equal what's actually drawn.
-                .padding(.top, max(0, headerHeight - topInset))
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-
-            // The window's native title is hidden (see
-            // `SettingsWindowController`) — AppKit only centers a titled
-            // window's title against a unified `NSToolbar`'s layout guide,
-            // and a plain `.fullSizeContentView` window with no toolbar
-            // left-aligns it right after the traffic lights instead.
-            // Drawing our own centered title directly into that same
-            // reserved band (`.ignoresSafeArea` lets it render there
-            // without pushing the tab row down further) gets both a
-            // centered title *and* zero gap under the traffic lights.
-            VStack(spacing: 0) {
-                Text(selectedTab.label)
-                    .font(.headline)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .frame(height: 28)
-                    .allowsHitTesting(false)
-                    .animation(nil, value: selectedTab)
-
-                headerBar
-                    .padding(.horizontal, 16)
-                    .padding(.top, 4)
-                    .padding(.bottom, 6)
-
-                // Hairline separating the title/tab row from the card
-                // content below.
-                Divider()
-            }
-            // Belt-and-braces companion to the pill's own scoped animation
-            // (see `headerBar`): this header block sits at the top of a
-            // window whose height AppKit is animating, and any vertical
-            // shift it picks up mid-resize must land instantly rather than
-            // ease. An eased shift is exactly what was showing up as the
-            // pill "bouncing" on General↔Appearance — measured at 60fps as
-            // a 39px vertical dip that recovered over the animation's full
-            // 200ms. Modifiers closer to the leaf win, so the pill's own
-            // `.animation(tabTransitionAnimation, ...)` still drives its
-            // horizontal slide; this only suppresses easing on the
-            // container's layout.
-            .animation(nil, value: selectedTab)
-            .ignoresSafeArea(edges: .top)
-            // Measured *after* `.ignoresSafeArea`, not before — that
-            // modifier grows this block's rendered footprint to bleed
-            // into the top safe-area inset (so the title sits flush
-            // under the traffic lights, no gap), and a `GeometryReader`
-            // placed before it reports the pre-inset size, which is
-            // ~28pt too small. Since the goal is reserving exactly as
-            // much space in the card below as this header visually
-            // occupies on screen, measuring the final, post-inset
-            // size is the correct one to use.
-            .background(
-                GeometryReader { proxy in
-                    Color.clear.preference(key: HeaderHeightPreferenceKey.self, value: proxy.size.height)
                 }
-            )
-        }
-        .background(
-            GeometryReader { proxy in
-                Color.clear.preference(key: TopInsetPreferenceKey.self, value: proxy.safeAreaInsets.top)
             }
-        )
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        }
+        .frame(minWidth: Self.minimumWidth, minHeight: 220)
+        .background(Color(nsColor: .windowBackgroundColor))
+        .onPreferenceChange(SettingsContentHeightKey.self, perform: onContentHeightChange)
         .preferredColorScheme(settings.theme.colorScheme)
-        .onPreferenceChange(TopInsetPreferenceKey.self) { topInset = $0 }
-        .onAppear { onChangeWindow(selectedTab.label, selectedTab.windowSize) }
-        // Updates the window title immediately (it shouldn't lag
-        // behind the click) using `tab.windowSize` — the per-tab
-        // estimate table — as this tab's best guess, NOT the previous
-        // tab's `measuredHeight`: that was a real bug (a different
-        // tab's actual content height is not a useful guess for this
-        // one) that made the window visibly resize to the wrong
-        // height for a beat before the debounced real measurement
-        // corrected it a moment later — two resizes, the first one
-        // wrong, reading as a stutter. Setting `measuredHeight` to
-        // this same guess here means that if the real measurement
-        // (arriving via the preference below) turns out to match it —
-        // the common case, since the table was tuned against real
-        // content — the 0.5pt-delta guard suppresses a redundant
-        // second resize entirely.
-        .onChange(of: selectedTab) { _, tab in
-            let guess = knownHeights[tab] ?? tab.windowSize.height
-            measuredHeight = guess
-            onChangeWindow(tab.label, CGSize(width: SettingsTab.width, height: guess))
-        }
-        .onPreferenceChange(ContentHeightPreferenceKey.self) { cardHeight in
-            let totalHeight = cardHeight + headerHeight
-            guard cardHeight > 0, abs(totalHeight - measuredHeight) > 0.5 else { return }
-            // Debounced: a tab switch (and even normal layout passes,
-            // e.g. a `Picker` settling its own intrinsic size) can
-            // report a couple of slightly-different heights across
-            // consecutive frames before settling. Resizing the window
-            // on every one of those fired off overlapping/interrupting
-            // `NSAnimationContext` animations — each new one canceling
-            // the last mid-flight — which is what actually read as
-            // "glitchy": not the animation curve itself, but multiple
-            // competing animations racing each other. Only the height
-            // that's still current after a short quiet period gets
-            // applied, so exactly one clean resize happens per switch.
-            pendingResize?.cancel()
-            let label = selectedTab.label
-            let tab = selectedTab
-            let work = DispatchWorkItem {
-                measuredHeight = totalHeight
-                knownHeights[tab] = totalHeight
-                onChangeWindow(label, CGSize(width: SettingsTab.width, height: totalHeight))
-            }
-            pendingResize = work
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.03, execute: work)
-        }
-        .onPreferenceChange(HeaderHeightPreferenceKey.self) { headerHeight = $0 }
+        .onAppear { reminderNotifications.refresh() }
         .sheet(isPresented: Binding(
-            get: { pickingTimezoneFor != nil },
-            set: { if !$0 { pickingTimezoneFor = nil } }
+            get: { pickingTimezoneFor != nil || addingClock },
+            set: { if !$0 { pickingTimezoneFor = nil; addingClock = false } }
         )) {
-            if let id = pickingTimezoneFor, let binding = worldClockBinding(id) {
+            if addingClock {
+                TimezonePickerView(selection: Binding(
+                    get: { TimeZone.current.identifier },
+                    set: { settings.addWorldClock(timezoneID: $0) }
+                ))
+                .frame(width: 480, height: 540)
+            } else if let id = pickingTimezoneFor, let binding = worldClockBinding(id) {
                 TimezonePickerView(selection: binding.timezoneID)
-                    .frame(width: 460, height: 520)
+                    .frame(width: 480, height: 540)
             }
         }
-    }
-
-    /// No `ScrollView` — the window is sized to fit this content exactly
-    /// (see `ContentHeightPreferenceKey` above), so there's never overflow
-    /// to scroll. A `ScrollView` here would also break the height
-    /// measurement: it reports its *own* size, not its content's natural
-    /// height.
-    ///
-    /// No crossfade on `selectedTabContent` either, deliberately — an
-    /// `.id(selectedTab)` + `.transition(.opacity)` here previously meant
-    /// this exact subtree (the one `GeometryReader` measures above) briefly
-    /// held *both* the outgoing and incoming tab's content mid-fade, so the
-    /// measured height wobbled across several frames of the transition
-    /// instead of changing once. Each wobble fired its own window-resize
-    /// animation, and those competing resizes were the actual glitch — not
-    /// the resize curve itself. A clean instant swap, with the window
-    /// resize alone providing the sense of motion, reads far smoother.
-    private var content: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            selectedTabContent
-        }
-        .padding(.horizontal, 16)
-        .padding(.bottom, 16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    /// Fixed geometry for the tab row. The pill's position is derived
-    /// arithmetically from these (see `headerBar`), so they must stay in
-    /// sync with the button `.frame(width:height:)` below.
-    private static let tabWidth: CGFloat = 96
-    private static let tabHeight: CGFloat = 40
-    private static let tabSpacing: CGFloat = 2
-
-    /// Left edge of the selection pill, measured from the tab row's own
-    /// leading edge — pure arithmetic from the tab's index, with no
-    /// dependency on the layout system whatsoever.
-    private static func pillOffset(for tab: SettingsTab) -> CGFloat {
-        let index = SettingsTab.allCases.firstIndex(of: tab) ?? 0
-        return CGFloat(index) * (tabWidth + tabSpacing)
-    }
-
-    private var headerBar: some View {
-        HStack(spacing: Self.tabSpacing) {
-            ForEach(SettingsTab.allCases) { tab in
-                Button {
-                    // `selectedTab` is assigned OUTSIDE the animation
-                    // transaction and only `pillX` inside it. That split is
-                    // the entire fix — see the pill's `.offset` below.
-                    selectedTab = tab
-                    let target = Self.pillOffset(for: tab)
-                    if let animation = tabTransitionAnimation {
-                        withAnimation(animation) { pillX = target }
-                    } else {
-                        pillX = target
-                    }
-                } label: {
-                    VStack(spacing: 3) {
-                        Image(systemName: tab.icon)
-                        Text(tab.label)
-                            .font(.caption2)
-                            .lineLimit(1)
-                    }
-                    .frame(width: Self.tabWidth, height: Self.tabHeight)
-                }
-                .buttonStyle(.borderless)
-                .foregroundStyle(selectedTab == tab ? .white : .primary)
-            }
-        }
-        // ONE pill for the whole row, positioned by an explicit `.offset`
-        // read from `pillX` — a plain `@State` number driven by
-        // `withAnimation` in the button action above. Deliberately NOT a
-        // per-button background, NOT `matchedGeometryEffect`, and NOT an
-        // `.animation(_:value:)` modifier on this view. Each of those was
-        // tried and each produced the reported "bounces on General→
-        // Appearance, slides cleanly everywhere else" asymmetry:
-        //
-        //  • Per-button backgrounds: four rectangles independently
-        //    cross-fading their fill, so two tinted shapes visibly
-        //    co-existed mid-switch.
-        //  • `matchedGeometryEffect`: resolves its source/target frames
-        //    through the layout system, so a transient re-layout skewed the
-        //    interpolation (measured: the pill vanished for 2 frames, then
-        //    popped in mid-slide).
-        //  • `.animation(_:value:)` on the pill: that modifier animates
-        //    EVERY animatable change in its subtree, including position
-        //    changes that come from layout rather than from the offset. A
-        //    transient layout re-resolution therefore got eased into a
-        //    diagonal arc — measured at 60fps as the pill's top edge
-        //    dipping 64→103px and recovering over the full 200ms, with its
-        //    height squashing 79→46px on the way. Frame captures show it
-        //    travelling down-and-right, then arcing back up. That arc is
-        //    exactly what reads as a bounce.
-        //
-        // Assigning `selectedTab` outside the transaction and only `pillX`
-        // inside it means the animation applies to a single scalar and
-        // nothing else. The pill's own layout position is not animatable
-        // here (no `.animation` modifier is attached), so any layout change
-        // lands instantly and invisibly, while `pillX` — pure arithmetic,
-        // horizontal only — is the sole thing that eases. Every tab pair
-        // now runs the identical single-value interpolation.
-        .background(alignment: .leading) {
-            RoundedRectangle(cornerRadius: 8)
-                .fill(Color.accentColor)
-                .frame(width: Self.tabWidth, height: Self.tabHeight)
-                .offset(x: pillX)
-        }
-        .frame(maxWidth: .infinity, alignment: .center)
-        .onAppear { pillX = Self.pillOffset(for: selectedTab) }
     }
 
     @ViewBuilder
     private var selectedTabContent: some View {
         switch selectedTab {
         case .general:
-            settingsCard("Startup") {
-                Toggle("Show desktop clock", isOn: $settings.showDesktopOverlay)
-                Toggle("Launch at login", isOn: $settings.launchAtLogin)
+            clockPreview
+            settingsCard {
+                SettingsRow("Desktop clock", detail: "Keep the time visible on your wallpaper.") {
+                    Toggle("Desktop clock", isOn: $settings.showDesktopOverlay).fixedSize()
+                }
+                Divider()
+                SettingsRow("Launch at login", detail: "Ready whenever you start your Mac.") {
+                    Toggle("Launch at login", isOn: $settings.launchAtLogin).fixedSize()
+                }
             }
+            settingsCard("Reminders") {
+                SettingsRow("Notifications", detail: reminderNotifications.statusMessage) {
+                    if reminderNotifications.authorizationStatus == .notDetermined {
+                        Button("Enable Notifications") { reminderNotifications.enable() }
+                            .disabled(reminderNotifications.isRequestingPermission)
+                    } else {
+                        Text(reminderNotifications.authorizationStatus == .denied ? "Blocked" : "Allowed")
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                Divider()
+                SettingsRow("Notification sound") {
+                    HStack(spacing: 8) {
+                        Picker("Notification sound", selection: $settings.reminderSound) {
+                            ForEach(ReminderSound.all) { Text($0.label).tag($0) }
+                        }
+                        .pickerStyle(.menu)
+                        Button { reminderNotifications.playPreview(settings.reminderSound) } label: {
+                            Image(systemName: "speaker.wave.2.fill").frame(width: 24, height: 24)
+                        }
+                        .buttonStyle(.borderless)
+                        .disabled(settings.reminderSound == .systemDefault)
+                        .help("Preview notification sound")
+                        .accessibilityLabel("Preview notification sound")
+                    }
+                }
+                if let error = reminderNotifications.errorMessage {
+                    Text(error).font(.caption).foregroundStyle(.red)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            Label("Click the menu bar clock for your calendar, timer and stopwatch.", systemImage: "cursorarrow.click")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
         case .appearance:
-            settingsCard("Theme") {
-                Picker("Appearance", selection: $settings.theme) {
-                    ForEach(AppTheme.allCases) { theme in
-                        Text(theme.label).tag(theme)
+            clockPreview
+            settingsCard {
+                SettingsRow("Appearance") {
+                    Picker("Appearance", selection: $settings.theme) {
+                        ForEach(AppTheme.allCases) { Text($0.label).tag($0) }
                     }
+                    .pickerStyle(.segmented)
                 }
-                .pickerStyle(.segmented)
-
-                Picker("AM/PM style", selection: $settings.meridiemStyle) {
-                    ForEach(MeridiemStyle.allCases) { style in
-                        Text(style.label).tag(style)
+                Divider()
+                SettingsRow("AM/PM style") {
+                    Picker("AM/PM style", selection: $settings.meridiemStyle) {
+                        ForEach(MeridiemStyle.allCases) { Text($0.label).tag($0) }
                     }
+                    .pickerStyle(.segmented)
                 }
-                .pickerStyle(.segmented)
+                Divider()
+                SettingsRow("Digit font") {
+                    Picker("Digit font", selection: $settings.widgetFont) {
+                        ForEach(WidgetFont.all) { font in
+                            Text(font.label)
+                                .font(font.postscriptName.map { .custom($0, size: 14) } ?? .system(size: 14))
+                                .tag(font)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                }
             }
 
-            settingsCard("Font") {
-                Picker("Font", selection: $settings.widgetFont) {
-                    ForEach(WidgetFont.all) { font in
-                        Text(font.label).tag(font)
-                    }
-                }
-                .pickerStyle(.menu)
-            }
         case .desktopClock:
-            settingsCard("Display") {
-                Picker("Size", selection: $settings.overlaySize) {
-                    ForEach(OverlaySize.allCases) { size in
-                        Text(size.label).tag(size)
+            clockPreview
+            settingsCard("Layout") {
+                SettingsRow("Size") {
+                    Picker("Size", selection: $settings.overlaySize) {
+                        ForEach(OverlaySize.allCases) { Text($0.label).tag($0) }
                     }
+                    .pickerStyle(.segmented)
                 }
-                .pickerStyle(.segmented)
-
-                Picker("Time format", selection: $settings.timeFormat) {
-                    ForEach(TimeFormat.allCases) { format in
-                        Text(format.label).tag(format)
+                Divider()
+                SettingsRow("Time format") {
+                    Picker("Time format", selection: $settings.timeFormat) {
+                        ForEach(TimeFormat.allCases) { Text($0.label).tag($0) }
                     }
+                    .pickerStyle(.segmented)
                 }
-                .pickerStyle(.segmented)
-
-                Picker("Color style", selection: $settings.widgetColorStyle) {
-                    ForEach(WidgetColorStyle.allCases) { style in
-                        Text(style.label).tag(style)
+                Divider()
+                SettingsRow("Show date") {
+                    Toggle("Show date", isOn: $settings.showDateOnOverlay).fixedSize()
+                }
+            }
+            settingsCard("Behaviour") {
+                SettingsRow("Colour style") {
+                    Picker("Colour style", selection: $settings.widgetColorStyle) {
+                        ForEach(WidgetColorStyle.allCases) { Text($0.label).tag($0) }
                     }
+                    .pickerStyle(.segmented)
                 }
-                .pickerStyle(.segmented)
-
-                // Without this the picker looks broken while macOS is set to
-                // Monochrome: "Full Color" is selected and nothing happens,
-                // because the system style is deliberately allowed to win so
-                // the widget tracks the native ones beside it.
                 if settings.systemWidgetDimming != .never {
                     Text(settings.systemWidgetDimming == .always
-                         ? "macOS is set to always dim desktop widgets, so this widget stays dimmed too. Change it in System Settings › Desktop & Dock › “Dim widgets on desktop”."
-                         : "Like macOS’s own widgets, this one dims while an app is in front and turns vivid when you click the wallpaper.")
+                         ? "Always dimmed to match macOS. Change this in System Settings › Desktop & Dock › Dim widgets on desktop."
+                         : "Dims when an app is in front, just like macOS widgets.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-
-                Toggle("Show day, date, month, year", isOn: $settings.showDateOnOverlay)
-                Toggle("Float across the screen", isOn: $settings.floatAcrossScreen)
-                    .disabled(settings.fillScreen)
-                Toggle("Fill screen", isOn: $settings.fillScreen)
+                Divider()
+                SettingsRow("Fill screen") {
+                    Toggle("Fill screen", isOn: $settings.fillScreen).fixedSize()
+                }
+                SettingsRow("Float across screen") {
+                    Toggle("Float across screen", isOn: $settings.floatAcrossScreen).fixedSize()
+                        .disabled(settings.fillScreen)
+                }
+                if settings.fillScreen {
+                    Text("Turn off Fill screen to let the clock float.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
+
         case .worldClocks:
+            if settings.worldClocks.isEmpty {
+                VStack(spacing: 12) {
+                    Image(systemName: "globe.europe.africa")
+                        .font(.system(size: 40, weight: .light))
+                        .foregroundStyle(.secondary)
+                    Text("A world of time")
+                        .font(.title3.weight(.semibold))
+                    Text("Add a city to see its time in your menu bar or on your desktop.")
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 20)
+            }
             ForEach(settings.worldClocks) { clock in
                 if let binding = worldClockBinding(clock.id) {
                     WorldClockCard(clock: binding) {
@@ -516,27 +254,62 @@ struct SettingsView: View {
                     }
                 }
             }
-
-            HStack(spacing: 8) {
+            HStack {
+                Text("\(settings.worldClocks.count) of \(WorldClock.maxCount) clocks")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Spacer()
                 Button {
-                    settings.addWorldClock()
-                    // Straight into choosing where the new clock is.
-                    pickingTimezoneFor = settings.worldClocks.last?.id
+                    addingClock = true
                 } label: {
                     Label("Add Clock", systemImage: "plus")
                 }
+                .buttonStyle(.borderedProminent)
                 .disabled(!settings.canAddWorldClock)
-                Text(settings.canAddWorldClock
-                     ? "\(settings.worldClocks.count) of \(WorldClock.maxCount) — each shows its name in the menu bar"
-                     : "Up to \(WorldClock.maxCount) world clocks")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
             }
         }
     }
 
-    /// Bound by ID, not index, so removing one clock can't leave a card
-    /// editing its neighbour.
+    private var clockPreview: some View {
+        VStack(spacing: 8) {
+            SplitFlapClockFace(
+                tick: Self.previewTick, scale: 0.6, showPedestal: false,
+                meridiemStyle: settings.meridiemStyle, timeFormat: settings.timeFormat,
+                glassCard: true, showOwnGlassPanel: false,
+                fontName: settings.widgetFont.postscriptName
+            )
+            if selectedTab == .desktopClock && settings.showDateOnOverlay {
+                DateFlapRow(date: Self.previewTick.date, scale: 0.6,
+                            isDark: colorScheme == .dark, glassCard: true,
+                            fontName: settings.widgetFont.postscriptName)
+            }
+            Text("CLOCK PREVIEW")
+                .font(.system(size: 9, weight: .semibold))
+                .tracking(1.8)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 14)
+        .background(Color.primary.opacity(0.035), in: RoundedRectangle(cornerRadius: 12))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Clock preview, 10:09:30, \(settings.widgetFont.label) font")
+    }
+
+    private func settingsCard<Content: View>(_ title: String? = nil, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            if let title {
+                Text(title).font(.caption).foregroundStyle(.secondary).accessibilityAddTraits(.isHeader)
+            }
+            content()
+        }
+        .toggleStyle(.switch)
+        .controlSize(.regular)
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 12))
+        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Color.primary.opacity(0.06)))
+    }
+
     private func worldClockBinding(_ id: WorldClock.ID) -> Binding<WorldClock>? {
         guard settings.worldClocks.contains(where: { $0.id == id }) else { return nil }
         return Binding(
@@ -547,33 +320,79 @@ struct SettingsView: View {
             }
         )
     }
+}
 
-    // Plain `VStack` + background instead of `GroupBox` — `GroupBox` (even
-    // under a fully custom `GroupBoxStyle`) retains hidden internal
-    // label-to-content padding on macOS that a style's `makeBody` can't
-    // strip out, which is what was leaving a large, unexplained gap
-    // between the tab row's divider and the first card's label no matter
-    // how tightly the style itself was configured. This card shape (bold
-    // label directly above a rounded, tinted content box) still matches
-    // the standard macOS settings-pane look — it's just built directly
-    // instead of going through `GroupBox`, giving exact control over the
-    // label-to-box gap: 8pt, HIG Rule 9.6's spacing unit for related
-    // elements.
-    @ViewBuilder
-    private func settingsCard<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(title)
-                .font(.headline)
-            VStack(alignment: .leading, spacing: 12) {
-                content()
+private struct SettingsNavigationCard: View {
+    let tab: SettingsTab
+    let isSelected: Bool
+    let action: () -> Void
+    @State private var isHovered = false
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 10) {
+                Image(systemName: tab.icon)
+                    .font(.system(size: 17, weight: .medium))
+                    .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
+                    .frame(width: 20, height: 20)
+                    .accessibilityHidden(true)
+                Text(tab.label)
+                    .font(.system(size: 13, weight: isSelected ? .semibold : .medium))
+                    .fixedSize(horizontal: true, vertical: false)
+                Spacer(minLength: 0)
             }
-            .padding(12)
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .foregroundStyle(.primary)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
             .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color(nsColor: .controlBackgroundColor))
+                isSelected ? Color.accentColor.opacity(0.12)
+                    : Color(nsColor: .controlBackgroundColor).opacity(isHovered ? 1 : 0.65),
+                in: RoundedRectangle(cornerRadius: 10)
             )
+            .overlay {
+                RoundedRectangle(cornerRadius: 10)
+                    .strokeBorder(isSelected ? Color.accentColor.opacity(0.35)
+                                  : Color.primary.opacity(isHovered ? 0.14 : 0.06))
+            }
+            .contentShape(RoundedRectangle(cornerRadius: 10))
         }
+        .buttonStyle(.plain)
+        .onHover { isHovered = $0 }
+        .accessibilityAddTraits(isSelected ? [.isSelected] : [])
+    }
+}
+
+private struct SettingsContentHeightKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = max(value, nextValue())
+    }
+}
+
+struct SettingsRow<Content: View>: View {
+    let title: String
+    let detail: String?
+    let content: Content
+
+    init(_ title: String, detail: String? = nil, @ViewBuilder content: () -> Content) {
+        self.title = title
+        self.detail = detail
+        self.content = content()
+    }
+
+    var body: some View {
+        HStack(spacing: 16) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title)
+                if let detail {
+                    Text(detail).font(.caption).foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            content.labelsHidden().frame(width: 220, alignment: .trailing)
+        }
+        .frame(maxWidth: .infinity)
     }
 }
 
@@ -581,64 +400,89 @@ private struct TimezonePickerView: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var selection: String
     @State private var filterText = ""
+    @State private var pendingSelection: String
+    @State private var choices: [TimeZoneChoice]
+    @FocusState private var searchFocused: Bool
 
-    // `TimeZone.knownTimeZoneIdentifiers` is the full IANA database macOS
-    // ships (every zone `NSTimeZone`/`systemsetup -listtimezones` knows
-    // about) — sorted here by actual UTC offset (ascending), the order the
-    // user asked for, rather than the default alphabetical-by-identifier
-    // order which groups zones by region name instead of by time.
-    private var sortedIdentifiers: [String] {
-        TimeZone.knownTimeZoneIdentifiers.sorted { lhs, rhs in
-            let lhsOffset = TimeZone(identifier: lhs)?.secondsFromGMT() ?? 0
-            let rhsOffset = TimeZone(identifier: rhs)?.secondsFromGMT() ?? 0
-            if lhsOffset != rhsOffset { return lhsOffset < rhsOffset }
-            return lhs < rhs
-        }
+    init(selection: Binding<String>) {
+        _selection = selection
+        _pendingSelection = State(initialValue: selection.wrappedValue)
+        _choices = State(initialValue: TimeZoneChoice.all(including: selection.wrappedValue))
     }
 
-    private var timezones: [String] {
-        guard !filterText.isEmpty else { return sortedIdentifiers }
-        return sortedIdentifiers.filter {
-            $0.localizedCaseInsensitiveContains(filterText)
-        }
-    }
-
-    private func offsetLabel(for identifier: String) -> String {
-        guard let seconds = TimeZone(identifier: identifier)?.secondsFromGMT() else { return "" }
-        let hours = seconds / 3600
-        let minutes = abs(seconds / 60) % 60
-        return String(format: "UTC%+03d:%02d", hours, minutes)
+    private var filteredChoices: [TimeZoneChoice] {
+        choices.filter { $0.matches(filterText) }
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            HStack {
-                TextField("Search time zone", text: $filterText)
-                    .textFieldStyle(.roundedBorder)
-            }
-            .padding(16)
-
-            List(selection: $selection) {
-                ForEach(timezones, id: \.self) { zone in
-                    HStack {
-                        Text(zone)
-                            .lineLimit(1)
-                            .truncationMode(.middle)
-                        Spacer()
-                        Text(offsetLabel(for: zone))
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+        let matches = filteredChoices
+        VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Choose a time zone")
+                    .font(.title2.weight(.semibold))
+                HStack(spacing: 8) {
+                    Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
+                    TextField("Search city or region", text: $filterText)
+                        .textFieldStyle(.plain)
+                        .focused($searchFocused)
+                        .accessibilityLabel("Search city or region")
+                    if !filterText.isEmpty {
+                        Button { filterText = "" } label: {
+                            Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Clear search")
                     }
-                    .tag(zone)
+                }
+                .padding(10)
+                .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 8))
+            }
+            .padding(20)
+
+            Divider()
+            ScrollViewReader { proxy in
+                List(selection: $pendingSelection) {
+                    ForEach(matches) { choice in
+                        HStack {
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(choice.city).fontWeight(.medium)
+                                Text(choice.id.replacingOccurrences(of: "_", with: " "))
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            Text(choice.offsetLabel)
+                                .font(.system(.caption, design: .monospaced))
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(.vertical, 5)
+                        .tag(choice.id)
+                        .id(choice.id)
+                    }
+                }
+                .onAppear { proxy.scrollTo(pendingSelection, anchor: .center) }
+                .overlay {
+                    if matches.isEmpty {
+                        ContentUnavailableView.search(text: filterText)
+                    }
                 }
             }
-
+            Divider()
             HStack {
+                Text("Sorted by UTC offset")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                 Spacer()
-                Button("Done") { dismiss() }
-                    .keyboardShortcut(.defaultAction)
+                Button("Cancel") { dismiss() }.keyboardShortcut(.cancelAction)
+                Button("Choose") {
+                    selection = pendingSelection
+                    dismiss()
+                }
+                .buttonStyle(.borderedProminent)
+                .keyboardShortcut(.defaultAction)
             }
-            .padding(16)
+            .padding(20)
         }
+        .onAppear { searchFocused = true }
     }
 }

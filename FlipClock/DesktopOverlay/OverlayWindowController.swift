@@ -95,6 +95,7 @@ final class OverlayWindowController {
             .sink { [weak self] _ in
                 self?.applySize(anchorTopRight: false)
                 self?.startBackdropCaptureIfNeeded()
+                if let self { self.setFloating(self.settings.floatAcrossScreen) }
             }
             .store(in: &cancellables)
 
@@ -104,21 +105,32 @@ final class OverlayWindowController {
             }
             .store(in: &cancellables)
 
-        // A reminder banner appearing/disappearing changes the widget's
-        // ideal height (see `OverlayContentView.windowSize`'s
-        // `hasReminderBanner` parameter) — resize whenever the due/
-        // upcoming set actually changes, not just on a timer, so the
-        // banner's arrival doesn't get clipped or leave dead space.
+        visibility.$isVisible
+            .dropFirst()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                guard let self else { return }
+                self.setFloating(self.settings.floatAcrossScreen)
+            }
+            .store(in: &cancellables)
+
+        // Footer row count changes the window height; changes to text alone don't.
         reminderStore.$reminders
             .dropFirst()
             // `@Published` fires from `willSet`, before `reminders` is
             // actually updated — deferring to the next run-loop turn
             // (as `settings.$overlaySize` does above, for the same
-            // reason) is what lets `hasReminderBanner` below read the
+            // reason) is what lets the footer below read the
             // real, current value instead of the stale pre-change one.
             .receive(on: DispatchQueue.main)
-            .map { [weak reminderStore] _ in reminderStore?.hasReminderBanner ?? false }
+            .map { [weak reminderStore] _ in min(reminderStore?.widgetReminders.count ?? 0, OverlayContentView.maxVisibleReminders + 1) }
             .removeDuplicates()
+            .sink { [weak self] _ in self?.applySize(anchorTopRight: false) }
+            .store(in: &cancellables)
+
+        NotificationCenter.default.publisher(for: .NSCalendarDayChanged)
+            .merge(with: NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange))
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.applySize(anchorTopRight: false) }
             .store(in: &cancellables)
     }
@@ -157,7 +169,7 @@ final class OverlayWindowController {
             scale: settings.overlaySize.scale,
             showDate: settings.showDateOnOverlay,
             showMeridiem: settings.timeFormat == .twelveHour,
-            hasReminderBanner: reminderStore.hasReminderBanner
+            reminderCount: reminderStore.widgetReminders.count
         )
         let previousTopLeft: NSPoint
         if let savedTopLeft = preFillScreenTopLeft {
@@ -261,11 +273,11 @@ final class OverlayWindowController {
         // Dragging and auto-drift fight each other — floating mode owns
         // positioning while it's on; turning it off hands control back to
         // the user's drag.
-        window.isMovableByWindowBackground = !floating
+        window.isMovableByWindowBackground = !floating && !settings.fillScreen
         // Never actually run the drift timer while the overlay is hidden —
         // `setVisible` re-applies the user's real `floatAcrossScreen`
         // preference when it shows the window again.
-        guard floating, settings.showDesktopOverlay else {
+        guard floating, settings.showDesktopOverlay, !settings.fillScreen, visibility.isVisible else {
             floatPosition = nil
             return
         }

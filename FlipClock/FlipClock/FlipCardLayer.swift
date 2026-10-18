@@ -33,6 +33,7 @@ struct FlipCardLayer: NSViewRepresentable {
     /// faces are rendered ahead of time, so a vivid <-> dimmed switch never
     /// has to rasterise glyphs on the frame it starts.
     var upcomingStyles: [Style] = []
+    var expectedChangeInterval: CFTimeInterval? = nil
 
     func makeNSView(context: Context) -> FlapAnimatingNSView {
         let view = FlapAnimatingNSView(value: value)
@@ -43,7 +44,7 @@ struct FlipCardLayer: NSViewRepresentable {
     func updateNSView(_ nsView: FlapAnimatingNSView, context: Context) {
         nsView.upcomingStyles = upcomingStyles
         nsView.update(cardSize: cardSize, style: style)
-        nsView.show(value)
+        nsView.show(value, expectedChangeInterval: expectedChangeInterval)
     }
 }
 
@@ -87,18 +88,22 @@ final class FlapAnimatingNSView: NSView {
     /// flip. Cards that change once a second or slower keep the full speed.
     private var changeInterval: CFTimeInterval = .infinity
     private var lastChangeTime: CFTimeInterval = 0
-    private var durationScale: Double = 1
+    private(set) var durationScale: Double = 1
 
     static func durationScale(forChangeInterval interval: CFTimeInterval) -> Double {
         min(1, interval * pacingHeadroom / (phase1Duration + phase2Duration))
     }
 
-    private func recordChange() {
+    private func recordChange(expectedInterval: CFTimeInterval?) {
         let now = CACurrentMediaTime()
-        let interval = now - lastChangeTime
+        let interval = lastChangeTime > 0 ? now - lastChangeTime : .infinity
         lastChangeTime = now
-        // Averaged so one late tick doesn't make the next flip lurch slower.
-        changeInterval = changeInterval.isFinite ? (changeInterval + interval) / 2 : interval
+        if let expectedInterval {
+            // Known fast sources must be paced from their first change, including after a pause.
+            changeInterval = expectedInterval
+        } else {
+            changeInterval = changeInterval.isFinite ? (changeInterval + interval) / 2 : interval
+        }
         durationScale = Self.durationScale(forChangeInterval: changeInterval)
     }
 
@@ -214,10 +219,10 @@ final class FlapAnimatingNSView: NSView {
         )
     }
 
-    func show(_ value: String) {
+    func show(_ value: String, expectedChangeInterval: CFTimeInterval? = nil) {
         guard value != targetValue else { return }
         targetValue = value
-        recordChange()
+        recordChange(expectedInterval: expectedChangeInterval)
         guard !isFlipping else { return }
         play(value)
     }

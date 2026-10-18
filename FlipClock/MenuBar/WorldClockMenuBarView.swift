@@ -22,6 +22,7 @@ struct WorldClockMenuBarView: View {
     let timeProvider: TimeProvider
     let clock: WorldClock
     @ObservedObject var settings: AppSettings
+    @Environment(\.colorScheme) private var systemColorScheme
 
     private var tick: ClockTick {
         ClockTick.at(date: timeProvider.tick.date, calendar: ClockTick.calendar(for: clock.timeZone))
@@ -45,9 +46,9 @@ struct WorldClockMenuBarView: View {
                 fontName: settings.widgetFont.postscriptName,
                 // An explicit parameter rather than `.preferredColorScheme` —
                 // that environment value doesn't reliably reach views hosted
-                // in a status item (see `MenuBarClockView.pulseColorScheme`),
+                // in a status item (see `MenuBarClockView`),
                 // and it would also have forced the name tag's colour.
-                isDarkOverride: settings.theme.colorScheme.map { $0 == .dark },
+                isDarkOverride: settings.theme.resolvedColorScheme(system: systemColorScheme) == .dark,
                 // Menu-bar room is scarce on a notched MacBook (macOS hides
                 // items that don't fit, behind the notch), and seconds are
                 // identical in every zone.

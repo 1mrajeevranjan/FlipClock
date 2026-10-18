@@ -6,7 +6,7 @@ struct FlipClockApp: App {
 
     var body: some Scene {
         Settings {
-            SettingsView()
+            SettingsView(reminderNotifications: appDelegate.reminderNotifications)
                 .environmentObject(appDelegate.settings)
         }
     }

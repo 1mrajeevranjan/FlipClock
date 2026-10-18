@@ -27,6 +27,10 @@ enum AppTheme: String, CaseIterable, Identifiable {
         case .system: return nil
         }
     }
+
+    func resolvedColorScheme(system: ColorScheme) -> ColorScheme {
+        colorScheme ?? system
+    }
 }
 
 enum OverlaySize: String, CaseIterable, Identifiable, Codable {
@@ -319,6 +323,10 @@ final class AppSettings: ObservableObject {
         didSet { defaults.set(widgetColorStyle.rawValue, forKey: Keys.widgetColorStyle) }
     }
 
+    @Published var reminderSound: ReminderSound {
+        didSet { defaults.set(reminderSound.id, forKey: Keys.reminderSound) }
+    }
+
     /// Mirror of the system's widget-dimming setting (see
     /// `SystemWidgetDimming`), refreshed by
     /// `startWatchingSystemWidgetAppearance()`. Not persisted — it belongs to
@@ -437,6 +445,7 @@ final class AppSettings: ObservableObject {
         static let fillScreen = "fillScreen"
         static let widgetFont = "widgetFont"
         static let widgetColorStyle = "widgetColorStyle"
+        static let reminderSound = "reminderSound"
     }
 
     init(defaults: UserDefaults = .standard) {
@@ -466,6 +475,7 @@ final class AppSettings: ObservableObject {
         fillScreen = defaults.object(forKey: Keys.fillScreen) as? Bool ?? false
         widgetFont = (defaults.string(forKey: Keys.widgetFont)).map(WidgetFont.byID) ?? .system
         widgetColorStyle = (defaults.string(forKey: Keys.widgetColorStyle)).flatMap(WidgetColorStyle.init(rawValue:)) ?? .full
+        reminderSound = defaults.string(forKey: Keys.reminderSound).map(ReminderSound.byID) ?? .systemDefault
         // Seed it here as well as in the watcher: the watcher only runs while
         // a widget is actually on screen, but Settings can be opened without
         // one, and a stale default there would show the wrong explanation.

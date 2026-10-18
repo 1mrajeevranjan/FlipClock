@@ -1,9 +1,36 @@
 import XCTest
+import Combine
 @testable import FlipClock
 
 final class ReminderStoreTests: XCTestCase {
     private var suiteName: String!
     private var defaults: UserDefaults!
+
+    func testAcknowledgedRemindersDisappearFromCalendarBadgesAndHoverDetails() {
+        let store = ReminderStore(defaults: defaults)
+        let date = Date()
+        store.add(title: "Done", date: date)
+        store.acknowledge(store.reminders[0])
+        XCTAssertTrue(store.reminders(on: date).isEmpty)
+        XCTAssertFalse(store.hasReminder(on: date))
+        XCTAssertTrue(store.widgetReminders.isEmpty)
+        XCTAssertEqual(store.reminders.count, 1, "Acknowledgment history remains persisted without active UI entries")
+    }
+
+    func testBulkAcknowledgmentPublishesOnceAndRepeatedAcknowledgmentDoesNoWork() {
+        let store = ReminderStore(defaults: defaults)
+        for index in 0..<20 { store.add(title: "Reminder \(index)", date: Date()) }
+        var updates = 0
+        let subscription = store.$reminders.dropFirst().sink { _ in updates += 1 }
+        defer { subscription.cancel() }
+        store.acknowledgeAllDueToday()
+        XCTAssertEqual(updates, 1)
+        store.acknowledgeAllDueToday()
+        for reminder in store.reminders { store.acknowledge(reminder) }
+        store.remove(Reminder(date: Date(), title: "Missing"))
+        XCTAssertEqual(updates, 1)
+        XCTAssertTrue(ReminderStore(defaults: defaults).reminders.allSatisfy(\.isAcknowledged))
+    }
 
     override func setUp() {
         super.setUp()
@@ -132,6 +159,17 @@ final class ReminderStoreTests: XCTestCase {
 
         store.add(title: "today", date: Date())
         XCTAssertTrue(store.hasReminderBanner)
+    }
+
+    func testWidgetRemindersAreSortedAndAcknowledgedItemsDisappear() {
+        let store = ReminderStore(defaults: defaults)
+        let start = Calendar.current.startOfDay(for: Date())
+        store.add(title: "Later", date: start.addingTimeInterval(6 * 3600))
+        store.add(title: "Earlier", date: start.addingTimeInterval(5 * 3600))
+        XCTAssertEqual(store.widgetReminders.map(\.title), ["Earlier", "Later"])
+        let first = store.widgetReminders[0]
+        store.acknowledge(first)
+        XCTAssertEqual(store.widgetReminders.map(\.title), ["Later"])
     }
 
     func testLoadingCorruptedPersistedDataFallsBackToEmptyInsteadOfCrashing() {

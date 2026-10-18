@@ -2,7 +2,7 @@
 
 [![Platform](https://img.shields.io/badge/platform-macOS%2014%2B-blue)](https://www.apple.com/macos/)
 [![Swift](https://img.shields.io/badge/swift-5.0-orange)](https://swift.org)
-[![Tests](https://img.shields.io/badge/tests-61%20passing-brightgreen)](#running-tests)
+[![Tests](https://img.shields.io/badge/tests-93%20passing-brightgreen)](#running-tests)
 [![License](https://img.shields.io/badge/license-unspecified-lightgrey)](#license)
 
 A native macOS split-flap clock. Lives in the menu bar, expands into a popover with a calendar, timer and stopwatch, and puts a floating desktop widget on your wallpaper that is built to be visually indistinguishable from Apple's own.
@@ -29,6 +29,7 @@ Every character on every surface — digits, weekday, date, AM/PM — is a real 
 
 - Menu bar clock with live split-flap animation
 - Popover with three tabs — Calendar, Timer, Stopwatch
+- Native Liquid Glass controls on macOS 26+, clearer calendar/timer/stopwatch color cues, and gentle spring transitions; adaptive controls on older macOS, with Reduce Motion and Reduce Transparency support
 - Desktop widget styled to match native macOS widgets, positionable anywhere, with optional drift-across-screen and a full-screen mode
 - Up to 5 world clocks in other time zones, each as a named menu bar item ("TOKYO 07:22 PM"), its own desktop widget, or both — with its own widget size and 12/24-hour format
 
@@ -40,7 +41,13 @@ Falls back gracefully: live vibrancy before the first capture lands or if Screen
 
 **Reminders**
 
-Double-click any calendar date to add a reminder with a precise time. The day gets a pulsing badge (orange = within 24h, red = due today), the popover shows a "Due Today" banner, and the menu bar clock pulses light/dark every 5 seconds until acknowledged.
+Select a calendar date and choose Add Reminder, or double-click the date, to add a reminder with a precise time. The day gets a pulsing badge (orange = within 24h, red = due today), the popover shows a "Due Today" banner, and the menu bar clock subtly pulses in opacity every 5 seconds until acknowledged, keeping the selected theme.
+
+Timed reminders use native macOS notifications, including while FlipClock is closed. In Settings › General › Reminders, enable notifications and choose Default or a built-in macOS alert sound; the speaker button previews the selected sound. Changing the sound updates pending reminders; acknowledging or removing a reminder cancels its pending alert. Newly added overdue reminders alert immediately; historical overdue reminders aren't replayed on launch.
+
+Choose Dismiss on a notification, or close it, to acknowledge the reminder and remove its active banner/widget entry. Acknowledgment persists across relaunches; the completed reminder stays in calendar history. macOS owns notification sound playback: sounds play once, and there is no public API to interrupt them mid-playback.
+
+The desktop clock shows reminder details below the date as “Today @ time – reminder”, with up to two rows and a count of additional reminders in the calendar.
 
 **Customisation**
 
@@ -63,6 +70,8 @@ open FlipClock.xcodeproj
 ```
 
 Build and run the `FlipClock` scheme (⌘R).
+
+Or run `./script/build_and_run.sh` (also available from Codex's Run action). Use `--verify` to check launch or `--debug` to open LLDB.
 
 ### Code signing
 
@@ -94,6 +103,8 @@ xcodegen generate
 
 ## Permissions
 
+**Notifications** — enable in Settings › General › Reminders, or allow the macOS prompt when adding your first reminder. If previously denied, allow FlipClock in System Settings › Notifications. Alerts and sounds follow the system's notification and Focus settings.
+
 **Screen Recording** — required only for the desktop widget's glass, which samples the wallpaper behind the window to blur it. macOS prompts on first capture. If you decline, everything still works; the widget just falls back to softer system vibrancy.
 
 No data leaves your machine. The captured frame is blurred in memory, drawn into the widget, and never written to disk or transmitted.
@@ -102,18 +113,24 @@ No data leaves your machine. The captured frame is blurred in memory, drawn into
 
 FlipClock is an `LSUIElement` agent — no Dock icon, no app window.
 
+The app icon is generated from the root `icon.png` at every macOS icon size, shared by Finder, About, and native notifications.
+
 | Action | Result |
 |---|---|
 | Left-click menu bar clock | Opens the popover (Calendar / Timer / Stopwatch) |
 | Right-click menu bar clock | Settings, More (About, Support, Tips, FAQ, Website, Rate, Share), Quit |
-| Double-click a calendar date | Add a reminder |
+| Click a calendar date, then Add Reminder (⌘N) | Add a reminder for that day; double-click also works |
+| Click the calendar month/year heading | Show months; click the year heading again to browse years |
+| Click calendar arrows (⌘← / ⌘→) | Move by month, year, or a page of 12 years |
 | Drag the desktop widget | Reposition it |
 
 ### Settings
 
+Settings uses a resizable window with sidebar navigation, scrollable pages, and a clock preview. World-clock changes apply after choosing a time zone; Cancel leaves the current clocks unchanged.
+
 | Tab | Controls |
 |---|---|
-| General | Show desktop clock, launch at login |
+| General | Show desktop clock, launch at login, reminder notification access and sound |
 | Appearance | Theme, AM/PM style, digit font |
 | Desktop Clock | Size, time format, colour style, date row, float across screen, fill screen |
 | World Clocks | Up to 5 clocks: time zone, optional name, show in (off / menu bar / widget / both), widget size, 12/24-hour |
@@ -146,15 +163,28 @@ FlipClockTests/     Unit, stress, and performance tests
 
 Both stores take an injectable `UserDefaults` so tests never touch real preferences.
 
+## Resource use
+
+- The stopwatch keeps its 30ms display cadence only in the visible Stopwatch tab. Hidden stopwatches keep elapsed time without a repeating timer and catch up immediately on reopening.
+- Hidden countdowns use one completion alarm rather than a timer every second. Popover clock observation and reminder pulses stop when closed; calendar layout is separate from clock ticks.
+- Covered desktop widgets freeze their time updates and pause automatic drift. Date cards redraw when their local date or appearance changes.
+- Glyph bitmaps use a shared `NSCache` with a 64 MiB cost target and 2,048-entry limit, allowing macOS to reclaim cached images. This is a cache target, not a limit on total app memory.
+- Concurrent matching wallpaper requests share one capture/blur task. Duplicate drag crops are skipped, and hidden widgets release their private backdrop references. Existing 60s/180s wallpaper refresh intervals remain.
+- Bulk reminder acknowledgment publishes and persists once; repeated acknowledgments and removals of missing reminders do no work.
+
+Development spot check (2026-10-18, Debug build, popover closed): eleven one-second CPU samples averaged 1.08% before and 0.39% after. Reported memory was 113 MB in the older session and 72 MB after relaunch; session lifetimes differ, so this is not a sustained-memory comparison. GPU energy and battery runtime were not measured.
+
 ## Testing
 
 ```bash
 xcodebuild test -project FlipClock.xcodeproj -scheme FlipClock -destination 'platform=macOS'
 ```
 
-61 tests covering time and digit maths, settings persistence and fallbacks, reminders, timer and stopwatch — including stress tests (rapid start/stop/reset cycling, hundreds of reminders) and a performance suite over per-tick maths, capture gating, and persistence throughput.
+110 tests covering time and digit maths, settings persistence and fallbacks, calendar navigation, popover appearance updates, rendered timer-lens visibility and magnification in both themes and between values, reminder notification requests, sounds and dismissal, timer and stopwatch — including hidden-tool accuracy, popover reopening, concurrent capture deduplication, image-cache reuse, local-date rendering, batched reminder updates, stress tests and performance measurements.
 
-There is no UI test coverage: the menu bar, popover, and desktop overlay aren't practical to drive headlessly, so SwiftUI view code is verified manually.
+`InteractionStressTests` adds 1,000 mixed tool/control cycles, 9,600 calendar month-page moves, 300 settings/world-clock cycles, 500 reminder records, 1,000 component key events, menu-handler checks, and bundled-font/icon validation. Repeat the suite in fresh processes with `-test-iterations 3 -test-repetition-relaunch-enabled YES -parallel-testing-enabled NO`.
+
+XCTest covers models, offscreen components, rendering and menu wiring. Live click-through, native permission dialogs, audible playback, and desktop gestures still require manual verification. See [QA.md](QA.md) for results and remaining checks.
 
 ## Documentation
 

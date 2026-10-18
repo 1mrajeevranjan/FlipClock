@@ -87,6 +87,7 @@ struct WorldClockOverlayContentView: View {
                         fontName: settings.widgetFont.postscriptName,
                         timeZone: timeZone
                     )
+                    .equatable()
                 }
             }
         }

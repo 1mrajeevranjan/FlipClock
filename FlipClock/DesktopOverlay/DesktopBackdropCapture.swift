@@ -58,6 +58,8 @@ final class DesktopBackdropCapture: ObservableObject {
     private var spaceObserver: NSObjectProtocol?
     private var screenObserver: NSObjectProtocol?
     private var captureTask: Task<Void, Never>?
+    private var lastCropFrame: CGRect?
+    private var lastCropScreen: CGRect?
 
     /// Whether a capture is worth doing right now — pulled out as a pure
     /// function (no window/system calls) so it's directly unit-testable.
@@ -120,7 +122,7 @@ final class DesktopBackdropCapture: ObservableObject {
     }
 
     func start(window: NSWindow, blurRadius: CGFloat, dimmedBlurRadius: CGFloat) {
-        stop()
+        stop(releaseImages: false)
         activeWindow = window
         activeBlurRadius = blurRadius
         activeDimmedBlurRadius = dimmedBlurRadius
@@ -148,7 +150,7 @@ final class DesktopBackdropCapture: ObservableObject {
             queue: .main
         ) { [weak self, weak window] _ in
             guard let self, let window else { return }
-            self.publishCrop(for: window)
+            MainActor.assumeIsolated { self.publishCrop(for: window) }
         }
         // Each Space can have its own wallpaper, and a display change moves or
         // rescales it — the two cases the slow timer would otherwise leave
@@ -171,7 +173,7 @@ final class DesktopBackdropCapture: ObservableObject {
         }
     }
 
-    func stop() {
+    func stop(releaseImages: Bool = true) {
         timer?.invalidate()
         timer = nil
         captureTask?.cancel()
@@ -185,6 +187,13 @@ final class DesktopBackdropCapture: ObservableObject {
         spaceObserver = nil
         screenObserver = nil
         activeWindow = nil
+        if releaseImages {
+            fullBackdrop = nil
+            image = nil
+            dimmedImage = nil
+        }
+        lastCropFrame = nil
+        lastCropScreen = nil
     }
 
     /// Forces a capture outside the normal cadence. Used when a drag ends:
@@ -232,6 +241,10 @@ final class DesktopBackdropCapture: ObservableObject {
     @MainActor
     func publishCrop(for window: NSWindow) {
         guard let screen = window.screen ?? NSScreen.main, let backdrop = fullBackdrop else { return }
+        // A drag step and didMoveNotification can describe the same frame.
+        guard window.frame != lastCropFrame || screen.frame != lastCropScreen else { return }
+        lastCropFrame = window.frame
+        lastCropScreen = screen.frame
         func crop(_ full: CGImage) -> CGImage? {
             // Pixel scale comes from the image itself: the dimmed backdrop is
             // kept at a fraction of screen resolution.
@@ -276,6 +289,7 @@ final class DesktopBackdropCapture: ObservableObject {
             guard !Task.isCancelled, let backdrop, let self, let window else { return }
             await MainActor.run {
                 self.fullBackdrop = backdrop
+                self.lastCropFrame = nil
                 self.publishCrop(for: window)
             }
         }
@@ -297,14 +311,20 @@ struct BackdropPair {
 /// An `actor`, deliberately not a `@MainActor` type: the capture and the
 /// full-screen `CIGaussianBlur` are the most expensive work in the app and
 /// must not run on the main thread, or every refresh would hitch the UI.
-private actor SharedBackdrop {
+actor SharedBackdrop {
     static let shared = SharedBackdrop()
 
     private struct Entry {
         let pair: BackdropPair
+        let request: CaptureRequest
+        let captured: Date
+    }
+
+    struct CaptureRequest: Hashable {
+        let displayID: CGDirectDisplayID
         let blurRadius: CGFloat
         let dimmedBlurRadius: CGFloat
-        let captured: Date
+        let pixelScale: CGFloat
     }
 
     /// The dimmed backdrop is blurred so hard that full resolution buys
@@ -312,31 +332,56 @@ private actor SharedBackdrop {
     private static let dimmedDownsample: CGFloat = 0.25
 
     private var entries: [CGDirectDisplayID: Entry] = [:]
+    private var inFlight: [CaptureRequest: Task<BackdropPair?, Never>] = [:]
+    private let captureOverride: ((CaptureRequest) async -> BackdropPair?)?
+
+    init(capture: ((CaptureRequest) async -> BackdropPair?)? = nil) {
+        captureOverride = capture
+    }
     /// Intermediates aren't reused between captures a minute apart; keeping
     /// them cached only pinned tens of MB of blur buffers between refreshes.
     private let ciContext = CIContext(options: [.cacheIntermediates: false])
 
     /// Returns the display's blurred backdrop, re-capturing only if what's
-    /// cached has aged past the refresh interval. Two widgets on one screen
-    /// therefore cost one capture between them rather than one each — and
-    /// because this is an actor, a second caller arriving mid-capture waits
-    /// for that result instead of kicking off its own.
+    /// cached has aged past the refresh interval. Widgets with matching blur
+    /// settings share that result. Actors are reentrant across awaits, so share the in-flight
+    /// task explicitly rather than launching another capture for each widget.
     func backdrop(displayID: CGDirectDisplayID, blurRadius: CGFloat, dimmedBlurRadius: CGFloat, pixelScale: CGFloat, force: Bool = false) async -> BackdropPair? {
+        let request = CaptureRequest(displayID: displayID, blurRadius: blurRadius,
+                                     dimmedBlurRadius: dimmedBlurRadius, pixelScale: pixelScale)
         let interval = DesktopBackdropCapture.refreshInterval(
             isLowPowerModeEnabled: ProcessInfo.processInfo.isLowPowerModeEnabled
         )
         if !force,
            let entry = entries[displayID],
-           entry.blurRadius == blurRadius,
-           entry.dimmedBlurRadius == dimmedBlurRadius,
+           entry.request == request,
            Date().timeIntervalSince(entry.captured) < interval {
             return entry.pair
         }
 
+        if let task = inFlight[request] {
+            return await task.value ?? entries[displayID]?.pair
+        }
+        let task = Task { await self.capture(request) }
+        inFlight[request] = task
+        let pair = await task.value
+        inFlight[request] = nil
+        if let pair {
+            entries[displayID] = Entry(pair: pair, request: request, captured: Date())
+        }
+        return pair ?? entries[displayID]?.pair
+    }
+
+    private func capture(_ request: CaptureRequest) async -> BackdropPair? {
+        if let captureOverride { return await captureOverride(request) }
+        let displayID = request.displayID
+        let blurRadius = request.blurRadius
+        let dimmedBlurRadius = request.dimmedBlurRadius
+        let pixelScale = request.pixelScale
         do {
             let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
             guard let display = content.displays.first(where: { $0.displayID == displayID }) else {
-                return entries[displayID]?.pair
+                return nil
             }
             // Wallpaper only — the same thing native widgets sample. Excluding
             // just our own windows (the old filter) still captured every app
@@ -344,7 +389,7 @@ private actor SharedBackdrop {
             // and kept showing it after that window was minimized, until the
             // next refresh happened to land while the widget was uncovered.
             let wallpaperWindows = content.windows.filter { DesktopBackdropCapture.isWallpaperLayer($0.windowLayer) }
-            guard !wallpaperWindows.isEmpty else { return entries[displayID]?.pair }
+            guard !wallpaperWindows.isEmpty else { return nil }
             let filter = SCContentFilter(display: display, including: wallpaperWindows)
 
             let config = SCStreamConfiguration()
@@ -363,16 +408,14 @@ private actor SharedBackdrop {
                   let output = ciContext.createCGImage(blurred, from: source.extent),
                   let dimmedBlurred = blur(small, radius: dimmedRadius * pixelScale * Self.dimmedDownsample),
                   let dimmedOutput = ciContext.createCGImage(dimmedBlurred, from: small.extent) else {
-                return entries[displayID]?.pair
+                return nil
             }
-            let pair = BackdropPair(vivid: output, dimmed: dimmedOutput)
-            entries[displayID] = Entry(pair: pair, blurRadius: blurRadius, dimmedBlurRadius: dimmedBlurRadius, captured: Date())
-            return pair
+            return BackdropPair(vivid: output, dimmed: dimmedOutput)
         } catch {
             // Denied Screen Recording permission or a transient capture
             // failure — the last good backdrop (or none) stays in place and
             // `WidgetGlassBackground` falls back gracefully.
-            return entries[displayID]?.pair
+            return nil
         }
     }
 

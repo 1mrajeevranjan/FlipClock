@@ -1,7 +1,64 @@
 import XCTest
+import Combine
 @testable import FlipClock
 
 final class StopwatchTests: XCTestCase {
+    @MainActor
+    func testPopoverReopenAndTabSwitchResumeOnlyTheVisibleTool() async throws {
+        let timeProvider = TimeProvider()
+        let timer = CountdownTimer()
+        let stopwatch = Stopwatch()
+        let presentation = PopoverPresentation(timeProvider: timeProvider, timerModel: timer, stopwatch: stopwatch)
+        presentation.selectedTab = .stopwatch
+        presentation.setPresented(true, timeProvider: timeProvider)
+        stopwatch.start()
+        defer { stopwatch.stop() }
+        var updates = 0
+        let subscription = stopwatch.$centiseconds.dropFirst().sink { _ in updates += 1 }
+        defer { subscription.cancel() }
+        try await Task.sleep(for: .milliseconds(150))
+        XCTAssertGreaterThan(updates, 0)
+
+        presentation.setPresented(false, timeProvider: timeProvider)
+        let hiddenUpdates = updates
+        try await Task.sleep(for: .milliseconds(150))
+        XCTAssertEqual(updates, hiddenUpdates)
+        presentation.setPresented(true, timeProvider: timeProvider)
+        XCTAssertGreaterThan(updates, hiddenUpdates, "Reopen must refresh even if SwiftUI never rendered the hidden state")
+
+        presentation.selectedTab = .calendar
+        let calendarUpdates = updates
+        try await Task.sleep(for: .milliseconds(150))
+        XCTAssertEqual(updates, calendarUpdates, "Switching tabs must suspend the hidden stopwatch")
+        presentation.selectedTab = .stopwatch
+        XCTAssertGreaterThan(updates, calendarUpdates)
+    }
+
+    @MainActor
+    func testHiddenStopwatchStopsPublishingAndCatchesUpWhenShownOrStopped() async throws {
+        let stopwatch = Stopwatch()
+        var displayUpdates = 0
+        let subscription = stopwatch.$centiseconds.dropFirst().sink { _ in displayUpdates += 1 }
+        defer { subscription.cancel(); stopwatch.stop() }
+        stopwatch.start()
+        try await Task.sleep(for: .milliseconds(250))
+        XCTAssertGreaterThan(displayUpdates, 3, "The visible stopwatch keeps its smooth display cadence")
+
+        stopwatch.setDisplayActive(false)
+        let updatesBeforeHiding = displayUpdates
+        try await Task.sleep(for: .milliseconds(1100))
+        XCTAssertTrue(stopwatch.isRunning)
+        XCTAssertEqual(displayUpdates, updatesBeforeHiding, "Hidden stopwatch must have zero display-timer updates")
+
+        stopwatch.setDisplayActive(true)
+        XCTAssertGreaterThanOrEqual(stopwatch.elapsedSeconds, 1, "Showing the display catches up immediately")
+        stopwatch.setDisplayActive(false)
+        let beforeStop = stopwatch.elapsedSeconds * 100 + stopwatch.centiseconds
+        try await Task.sleep(for: .milliseconds(100))
+        stopwatch.stop()
+        XCTAssertGreaterThan(stopwatch.elapsedSeconds * 100 + stopwatch.centiseconds, beforeStop)
+    }
+
     func testStartsAtZeroAndNotRunning() {
         let stopwatch = Stopwatch()
         XCTAssertFalse(stopwatch.isRunning)

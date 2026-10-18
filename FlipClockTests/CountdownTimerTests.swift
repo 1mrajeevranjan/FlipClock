@@ -1,7 +1,58 @@
 import XCTest
+import Combine
 @testable import FlipClock
 
 final class CountdownTimerTests: XCTestCase {
+    func testStartWhileRunningDoesNotOverwriteTheActiveCountdown() {
+        let timer = CountdownTimer()
+        timer.inputMinutes = 0
+        timer.inputSeconds = 5
+        timer.start()
+        defer { timer.reset() }
+        timer.inputSeconds = 30
+        timer.start()
+        XCTAssertEqual(timer.remainingSeconds, 5, "Repeated Start must not replace the display while keeping the old deadline")
+    }
+
+    @MainActor
+    func testShowingCountdownNearItsDeadlineDoesNotDelayCompletion() async throws {
+        let timer = CountdownTimer()
+        timer.inputMinutes = 0
+        timer.inputSeconds = 2
+        timer.setDisplayActive(false)
+        timer.start()
+        defer { timer.reset() }
+        try await Task.sleep(for: .milliseconds(1600))
+        timer.setDisplayActive(true)
+        try await Task.sleep(for: .milliseconds(600))
+        XCTAssertTrue(timer.isFinished, "Reopening the timer must preserve its original completion deadline")
+        XCTAssertEqual(timer.remainingSeconds, 0)
+    }
+
+    @MainActor
+    func testHiddenCountdownSleepsUntilCompletionAndCatchesUpWhenShown() async throws {
+        let timer = CountdownTimer()
+        timer.inputMinutes = 0
+        timer.inputSeconds = 3
+        timer.setDisplayActive(false)
+        timer.start()
+        defer { timer.reset() }
+        var displayUpdates = 0
+        let subscription = timer.$remainingSeconds.dropFirst().sink { _ in displayUpdates += 1 }
+        defer { subscription.cancel() }
+
+        try await Task.sleep(for: .milliseconds(1200))
+        XCTAssertEqual(displayUpdates, 0)
+        XCTAssertTrue(timer.isRunning)
+        timer.setDisplayActive(true)
+        XCTAssertEqual(timer.remainingSeconds, 2)
+        timer.setDisplayActive(false)
+        try await Task.sleep(for: .milliseconds(2100))
+        XCTAssertTrue(timer.isFinished, "Completion still fires while the popover is closed")
+        XCTAssertFalse(timer.isRunning)
+        XCTAssertEqual(timer.remainingSeconds, 0)
+    }
+
     func testStartWithZeroDurationDoesNothing() {
         let timer = CountdownTimer()
         timer.inputHours = 0

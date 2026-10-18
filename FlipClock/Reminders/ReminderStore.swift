@@ -10,7 +10,7 @@ import Combine
 final class ReminderStore: ObservableObject {
     @Published private(set) var reminders: [Reminder] = []
 
-    private let calendar = Calendar.current
+    private var calendar: Calendar { .current }
     private let key = "reminders"
     /// Injectable so tests can pass an isolated `UserDefaults(suiteName:)`
     /// instead of touching the real user's `.standard`.
@@ -22,7 +22,7 @@ final class ReminderStore: ObservableObject {
     }
 
     func reminders(on date: Date) -> [Reminder] {
-        reminders.filter { calendar.isDate($0.date, inSameDayAs: date) }
+        reminders.filter { !$0.isAcknowledged && calendar.isDate($0.date, inSameDayAs: date) }
     }
 
     func hasReminder(on date: Date) -> Bool {
@@ -35,12 +35,14 @@ final class ReminderStore: ObservableObject {
     }
 
     func remove(_ reminder: Reminder) {
+        guard reminders.contains(where: { $0.id == reminder.id }) else { return }
         reminders.removeAll { $0.id == reminder.id }
         save()
     }
 
     func acknowledge(_ reminder: Reminder) {
-        guard let index = reminders.firstIndex(where: { $0.id == reminder.id }) else { return }
+        guard let index = reminders.firstIndex(where: { $0.id == reminder.id }),
+              !reminders[index].isAcknowledged else { return }
         reminders[index].isAcknowledged = true
         save()
     }
@@ -49,16 +51,20 @@ final class ReminderStore: ObservableObject {
     /// dismisses the menu bar's pulse without opening the popover to
     /// individually check each one off.
     func acknowledgeAllDueToday() {
+        var updated = reminders
         var changed = false
         for index in reminders.indices where calendar.isDateInToday(reminders[index].date) && !reminders[index].isAcknowledged {
-            reminders[index].isAcknowledged = true
+            updated[index].isAcknowledged = true
             changed = true
         }
-        if changed { save() }
+        if changed {
+            reminders = updated
+            save()
+        }
     }
 
     /// Reminders due today that haven't been acknowledged yet — what
-    /// drives the menu bar's light/dark pulse and the widget's stronger
+    /// drives the menu bar's subtle pulse and the widget's stronger
     /// flash.
     var dueTodayUnacknowledged: [Reminder] {
         reminders.filter { calendar.isDateInToday($0.date) && !$0.isAcknowledged }
@@ -75,9 +81,12 @@ final class ReminderStore: ObservableObject {
         }
     }
 
-    /// Whether the desktop widget's top reminder banner should be showing
-    /// right now — used by `OverlayWindowController` to know when the
-    /// widget's window needs resizing for the banner appearing/leaving.
+    var widgetReminders: [Reminder] {
+        let today = dueTodayUnacknowledged
+        return (today.isEmpty ? upcomingWithin24Hours : today).sorted { $0.date < $1.date }
+    }
+
+    /// Retained for callers that only need to know whether reminder details are visible.
     var hasReminderBanner: Bool {
         !dueTodayUnacknowledged.isEmpty || !upcomingWithin24Hours.isEmpty
     }

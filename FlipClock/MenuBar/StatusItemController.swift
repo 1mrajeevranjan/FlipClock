@@ -13,15 +13,13 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
     private let reminderStore: ReminderStore
     private let timerModel: CountdownTimer
     private let stopwatch: Stopwatch
+    private let popoverPresentation: PopoverPresentation
     private let onOpenSettings: () -> Void
     private var hosting: NSHostingView<MenuBarClockView>?
     private var cancellables = Set<AnyCancellable>()
 
-    /// Every 5s while a reminder is due today and unacknowledged, this
-    /// flips between `.light`/`.dark` and gets force-fed into
-    /// `MenuBarClockView`. `nil` when nothing's due, which falls back to
-    /// the user's real theme setting.
-    private var pulseColorScheme: ColorScheme? {
+    /// Reminder pulses change emphasis without overriding the chosen theme.
+    private var reminderPulseDimmed = false {
         didSet { updateHostedRootView() }
     }
     private var pulseTimer: Timer?
@@ -32,12 +30,12 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         self.reminderStore = reminderStore
         self.timerModel = timerModel
         self.stopwatch = stopwatch
+        popoverPresentation = PopoverPresentation(timeProvider: timeProvider, timerModel: timerModel, stopwatch: stopwatch)
         self.onOpenSettings = onOpenSettings
-        self.pulseColorScheme = nil
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         super.init()
 
-        applyItemSize()
+        applyItemSize(timeFormat: settings.timeFormat)
 
         if let button = statusItem.button {
             button.target = self
@@ -48,7 +46,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         popover.behavior = .transient
         popover.delegate = self
         popover.contentViewController = VibrantHostingController(
-            rootView: PopoverClockView(timeProvider: timeProvider, settings: settings, reminderStore: reminderStore, timerModel: timerModel, stopwatch: stopwatch),
+            rootView: PopoverClockView(timeProvider: timeProvider, settings: settings, reminderStore: reminderStore, timerModel: timerModel, stopwatch: stopwatch, presentation: popoverPresentation),
             settings: settings
         )
 
@@ -57,21 +55,33 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         // never ends up with leftover empty space or clipped content.
         settings.$timeFormat
             .dropFirst()
-            .sink { [weak self] _ in self?.applyItemSize() }
+            .sink { [weak self] format in self?.applyItemSize(timeFormat: format) }
+            .store(in: &cancellables)
+
+        settings.$theme
+            .dropFirst()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.updateHostedRootView() }
             .store(in: &cancellables)
 
         reminderStore.$reminders
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.updatePulseState() }
             .store(in: &cancellables)
+        NotificationCenter.default.publisher(for: .NSCalendarDayChanged)
+            .merge(with: NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange))
+            .merge(with: NSWorkspace.shared.notificationCenter.publisher(for: NSWorkspace.didWakeNotification))
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.updatePulseState() }
+            .store(in: &cancellables)
         updatePulseState()
     }
 
-    private func applyItemSize() {
-        let itemSize = MenuBarClockView.itemSize(timeFormat: settings.timeFormat)
+    private func applyItemSize(timeFormat: TimeFormat) {
+        let itemSize = MenuBarClockView.itemSize(timeFormat: timeFormat)
         statusItem.length = itemSize.width
 
-        let hosting = NSHostingView(rootView: MenuBarClockView(timeProvider: timeProvider, settings: settings, pulseColorScheme: pulseColorScheme))
+        let hosting = NSHostingView(rootView: MenuBarClockView(timeProvider: timeProvider, settings: settings, reminderPulseDimmed: reminderPulseDimmed))
         hosting.frame = NSRect(x: 0, y: 0, width: itemSize.width, height: itemSize.height)
         self.hosting = hosting
 
@@ -92,7 +102,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
     /// it needs to be told explicitly, on the *button* itself (not just
     /// the hosted subview), that its content changed.
     private func updateHostedRootView() {
-        hosting?.rootView = MenuBarClockView(timeProvider: timeProvider, settings: settings, pulseColorScheme: pulseColorScheme)
+        hosting?.rootView = MenuBarClockView(timeProvider: timeProvider, settings: settings, reminderPulseDimmed: reminderPulseDimmed)
         statusItem.button?.needsDisplay = true
     }
 
@@ -101,14 +111,18 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         guard isDue else {
             pulseTimer?.invalidate()
             pulseTimer = nil
-            pulseColorScheme = nil
+            reminderPulseDimmed = false
             return
         }
         guard pulseTimer == nil else { return }
-        pulseColorScheme = .dark
+        reminderPulseDimmed = true
         let timer = Timer(timeInterval: 5, repeats: true) { [weak self] _ in
             guard let self else { return }
-            self.pulseColorScheme = self.pulseColorScheme == .dark ? .light : .dark
+            if self.reminderStore.dueTodayUnacknowledged.isEmpty {
+                self.updatePulseState()
+            } else {
+                self.reminderPulseDimmed.toggle()
+            }
         }
         timer.tolerance = 0.5
         RunLoop.main.add(timer, forMode: .common)
@@ -139,8 +153,17 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
             // directly to the effect view itself (see
             // VibrantHostingController), which is the correct place to
             // control it without touching the frame's own resolution.
+            popover.animates = !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
         }
+    }
+
+    func popoverWillShow(_ notification: Notification) {
+        popoverPresentation.setPresented(true, timeProvider: timeProvider)
+    }
+
+    func popoverDidClose(_ notification: Notification) {
+        popoverPresentation.setPresented(false, timeProvider: timeProvider)
     }
 
     private func showMenu() {
@@ -153,7 +176,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
 
         let moreItem = menu.addItem(withTitle: "More", action: nil, keyEquivalent: "")
         moreItem.attributedTitle = Self.iconTitle("More", symbol: "ellipsis.circle")
-        moreItem.submenu = makeMoreMenu()
+        moreItem.submenu = Self.makeMoreMenu(target: self)
 
         menu.addItem(.separator())
 
@@ -174,25 +197,29 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         NSApp.terminate(nil)
     }
 
-    private func makeMoreMenu() -> NSMenu {
+    static func makeMoreMenu(target: NSObject) -> NSMenu {
         let submenu = NSMenu()
-        func item(_ title: String, symbol: String, action: Selector) {
+        func item(_ title: String, symbol: String, action: Selector? = nil) {
             let menuItem = submenu.addItem(withTitle: title, action: action, keyEquivalent: "")
-            menuItem.target = self
+            menuItem.target = target
+            if action == nil {
+                menuItem.isEnabled = false
+                menuItem.toolTip = "No destination has been configured for this command."
+            }
             if let attributed = Self.iconTitle(title, symbol: symbol) {
                 menuItem.attributedTitle = attributed
             }
         }
         item("About", symbol: "info.circle", action: #selector(showAbout))
-        item("Support & Feedback", symbol: "bubble.left", action: #selector(showSupport))
+        item("Support & Feedback", symbol: "bubble.left")
         submenu.addItem(.separator())
         item("Tips", symbol: "lightbulb", action: #selector(showTips))
         item("FAQ", symbol: "questionmark.circle", action: #selector(showFAQ))
-        item("Website", symbol: "globe", action: #selector(showWebsite))
+        item("Website", symbol: "globe")
         submenu.addItem(.separator())
-        item("Rate App", symbol: "star", action: #selector(rateApp))
-        item("Share App", symbol: "square.and.arrow.up", action: #selector(shareApp))
-        item("More Apps by Me", symbol: "square.stack.3d.up", action: #selector(showMoreApps))
+        item("Rate App", symbol: "star")
+        item("Share App", symbol: "square.and.arrow.up")
+        item("More Apps by Me", symbol: "square.stack.3d.up")
         return submenu
     }
 
@@ -227,12 +254,38 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         NSApp.orderFrontStandardAboutPanel(nil)
     }
 
-    // TODO: wire to real destinations once available.
-    @objc private func showSupport() {}
-    @objc private func showTips() {}
-    @objc private func showFAQ() {}
-    @objc private func showWebsite() {}
-    @objc private func rateApp() {}
-    @objc private func shareApp() {}
-    @objc private func showMoreApps() {}
+    @objc private func showTips() {
+        showHelp(title: "FlipClock Tips", text: """
+        Click the menu bar clock to open Calendar, Timer, and Stopwatch. Right-click it for Settings and Quit.
+
+        In the calendar, click the month and year to browse months, then years. Click empty space to go back one level. Double-click a day, or select it and press ⌘N, to add a reminder.
+
+        Scroll a timer column, or click it and use ↑ / ↓, to adjust the duration. Space pauses or resumes an active timer or stopwatch; ⌘R resets it. Use ⌘1–⌘3 to switch tools.
+
+        Drag a desktop widget to move it. Right-click a widget to open Settings or hide it.
+        """)
+    }
+
+    @objc private func showFAQ() {
+        showHelp(title: "FlipClock FAQ", text: """
+        Where are Settings? Right-click the menu bar clock and choose Settings…
+
+        Why is a widget hidden? Desktop widgets sit beneath other app windows. Show the desktop to reveal them.
+
+        Why is the glass softer? Stronger wallpaper diffusion needs Screen Recording permission. The clock still works with system vibrancy when permission is unavailable.
+
+        How do reminder sounds work? Choose a native sound in General settings and allow FlipClock alerts and sounds in System Settings › Notifications. Dismiss acknowledges the reminder and clears it from active views. macOS controls playback of its one-shot notification sound.
+
+        Do timers continue when the popover closes? Yes. Reopening immediately shows the current time without keeping hidden display animations running.
+        """)
+    }
+
+    private func showHelp(title: String, text: String) {
+        let alert = NSAlert()
+        alert.messageText = title
+        alert.informativeText = text
+        alert.addButton(withTitle: "Done")
+        NSApp.activate(ignoringOtherApps: true)
+        alert.runModal()
+    }
 }

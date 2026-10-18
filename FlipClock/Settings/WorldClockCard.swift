@@ -1,83 +1,84 @@
 import SwiftUI
 
-/// Settings for one world clock, laid out like the other settings cards (bold
-/// title above a tinted box) but kept to two rows so all five clocks fit the
-/// window without scrolling.
 struct WorldClockCard: View {
     @Binding var clock: WorldClock
     let onPickTimezone: () -> Void
     let onRemove: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text(clock.displayName)
-                    .font(.headline)
-                    .lineLimit(1)
-                Text(WorldClock.offsetLabel(for: clock.timeZone))
-                    .font(.caption)
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 10) {
+                Image(systemName: "globe")
+                    .font(.title2.weight(.light))
                     .foregroundStyle(.secondary)
+                    .accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(clock.displayName)
+                        .font(.headline)
+                        .lineLimit(1)
+                    Text(WorldClock.offsetLabel(for: clock.timeZone))
+                        .font(.system(.caption, design: .monospaced))
+                        .foregroundStyle(.secondary)
+                }
                 Spacer()
                 Button(role: .destructive, action: onRemove) {
                     Image(systemName: "minus.circle")
+                        .frame(width: 28, height: 28)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.borderless)
                 .help("Remove this clock")
                 .accessibilityLabel("Remove \(clock.displayName) clock")
             }
 
-            VStack(alignment: .leading, spacing: 10) {
-                HStack(spacing: 8) {
-                    Button(action: onPickTimezone) {
-                        Label(clock.timezoneID, systemImage: "globe")
+            SettingsRow("Time zone") {
+                Button(action: onPickTimezone) {
+                    HStack {
+                        Text(clock.timezoneID.replacingOccurrences(of: "_", with: " "))
                             .lineLimit(1)
                             .truncationMode(.middle)
+                        Spacer(minLength: 4)
+                        Image(systemName: "chevron.up.chevron.down").font(.caption2)
                     }
-                    .help("Choose time zone")
-                    Spacer(minLength: 8)
-                    TextField(WorldClock.cityName(for: clock.timezoneID), text: $clock.customLabel)
-                        .textFieldStyle(.roundedBorder)
-                        .frame(width: 150)
-                        .help("Name shown in the menu bar and on the widget — leave empty to use the city")
-                        .accessibilityLabel("Clock name")
+                    .padding(6)
+                    .background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 6))
+                    .contentShape(Rectangle())
                 }
-
-                HStack(spacing: 12) {
-                    Picker("Show in", selection: $clock.display) {
-                        ForEach(WorldClockDisplay.allCases) { option in
-                            Text(option.label).tag(option)
-                        }
-                    }
-                    .fixedSize()
-
-                    Picker("Size", selection: $clock.widgetSize) {
-                        ForEach(OverlaySize.allCases) { size in
-                            Text(size.label).tag(size)
-                        }
-                    }
-                    .fixedSize()
-                    .disabled(!clock.showsAsWidget)
-                    .help(clock.showsAsWidget ? "Widget size" : "Show this clock as a widget to size it")
-
-                    Spacer(minLength: 0)
-
-                    Picker("Format", selection: $clock.timeFormat) {
-                        ForEach(TimeFormat.allCases) { format in
-                            Text(format == .twelveHour ? "12h" : "24h").tag(format)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .labelsHidden()
-                    .fixedSize()
-                    .accessibilityLabel("Time format")
-                }
+                .buttonStyle(.plain)
+                .help("Choose time zone")
+                .accessibilityLabel("Time zone, \(clock.timezoneID). Choose time zone")
             }
-            .padding(12)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color(nsColor: .controlBackgroundColor))
-            )
+
+            SettingsRow("Name") {
+                TextField("Clock name", text: $clock.customLabel, prompt: Text(WorldClock.cityName(for: clock.timezoneID)))
+                    .textFieldStyle(.roundedBorder)
+                    .help("Leave empty to use the city name")
+            }
+            Divider()
+            SettingsRow("Show in") {
+                Picker("Show in", selection: $clock.display) {
+                    ForEach(WorldClockDisplay.allCases) { Text($0.label).tag($0) }
+                }
+                .pickerStyle(.segmented)
+            }
+
+            SettingsRow("Size") {
+                Picker("Size", selection: $clock.widgetSize) {
+                    ForEach(OverlaySize.allCases) { Text($0.label).tag($0) }
+                }
+                .disabled(!clock.showsAsWidget)
+                .help(clock.showsAsWidget ? "Widget size" : "Show this clock as a widget to size it")
+            }
+            SettingsRow("Time format") {
+                Picker("Time format", selection: $clock.timeFormat) {
+                    ForEach(TimeFormat.allCases) { Text($0.label).tag($0) }
+                }
+                .pickerStyle(.segmented)
+            }
         }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 12))
+        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Color.primary.opacity(0.06)))
     }
 }

@@ -7,10 +7,24 @@ import SwiftUI
 /// every tick — it just swaps cached CGImages between static cards and the
 /// animating flap layer.
 enum DigitFaceRenderer {
-    private static var fullCache: [SizeKey: [String: CGImage]] = [:]
-    private static var halfCache: [HalfKey: CGImage] = [:]
+    private static let imageCache: NSCache<ImageKey, CGImage> = {
+        let cache = NSCache<ImageKey, CGImage>()
+        cache.totalCostLimit = 64 * 1024 * 1024
+        cache.countLimit = 2048
+        return cache
+    }()
+
+    private final class ImageKey: NSObject {
+        let value: AnyHashable
+        init(_ value: AnyHashable) { self.value = value }
+        override var hash: Int { value.hashValue }
+        override func isEqual(_ object: Any?) -> Bool {
+            (object as? ImageKey)?.value == value
+        }
+    }
 
     private struct SizeKey: Hashable {
+        let value: String
         let width: Int
         let height: Int
         let isDark: Bool
@@ -45,13 +59,12 @@ enum DigitFaceRenderer {
     }
 
     static func face(for value: String, size: CGSize, isDark: Bool, textColor: NSColor?, transparentBackground: Bool = false, fontName: String? = nil, isMonospacedSystemFont: Bool = false) -> CGImage {
-        let key = SizeKey(width: Int(size.width.rounded()), height: Int(size.height.rounded()), isDark: isDark, transparentBackground: transparentBackground, fillColor: "leaf", fontIdentifier: fontIdentifier(fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont))
-        let cacheKey = cacheKey(for: value, textColor: textColor)
-        if let image = fullCache[key]?[cacheKey] {
+        let key = ImageKey(SizeKey(value: cacheKey(for: value, textColor: textColor), width: Int(size.width.rounded()), height: Int(size.height.rounded()), isDark: isDark, transparentBackground: transparentBackground, fillColor: "leaf", fontIdentifier: fontIdentifier(fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont)))
+        if let image = imageCache.object(forKey: key) {
             return image
         }
         let image = render(value: value, fullSize: size, half: nil, isDark: isDark, textColor: textColor, transparentBackground: transparentBackground, fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont)
-        fullCache[key, default: [:]][cacheKey] = image
+        imageCache.setObject(image, forKey: key, cost: image.bytesPerRow * image.height)
         return image
     }
 
@@ -82,7 +95,7 @@ enum DigitFaceRenderer {
     /// layer's edge changed every frame and read as the line's thickness
     /// visibly pulsing mid-flip.
     static func halfFace(for value: String, cardSize: CGSize, top: Bool, isDark: Bool, textColor: NSColor?, transparentBackground: Bool = false, fillColor: NSColor? = nil, fontName: String? = nil, isMonospacedSystemFont: Bool = false, hingeThickness: CGFloat = 0, tintsIcons: Bool = false) -> CGImage {
-        let key = HalfKey(
+        let key = ImageKey(HalfKey(
             value: cacheKey(for: value, textColor: textColor),
             width: Int(cardSize.width.rounded()),
             height: Int(cardSize.height.rounded()),
@@ -93,12 +106,12 @@ enum DigitFaceRenderer {
             fontIdentifier: fontIdentifier(fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont),
             hingeThickness: Int((hingeThickness * 10).rounded()),
             tintsIcons: tintsIcons
-        )
-        if let image = halfCache[key] {
+        ))
+        if let image = imageCache.object(forKey: key) {
             return image
         }
         let image = render(value: value, fullSize: cardSize, half: top ? .top : .bottom, isDark: isDark, textColor: textColor, transparentBackground: transparentBackground, fillColor: fillColor, fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont, hingeThickness: hingeThickness, tintsIcons: tintsIcons)
-        halfCache[key] = image
+        imageCache.setObject(image, forKey: key, cost: image.bytesPerRow * image.height)
         return image
     }
 
