@@ -20,8 +20,18 @@ final class CountdownTimer: ObservableObject {
 
     private var timer: Timer?
     private var endDate: Date?
+    private var isDisplayActive = true
+
+    func setDisplayActive(_ active: Bool) {
+        guard active != isDisplayActive else { return }
+        isDisplayActive = active
+        guard isRunning else { return }
+        tick()
+        if isRunning { scheduleTick() }
+    }
 
     func start() {
+        guard !isRunning else { return }
         let total = inputHours * 3600 + inputMinutes * 60 + inputSeconds
         guard total > 0 else { return }
         remainingSeconds = total
@@ -37,6 +47,10 @@ final class CountdownTimer: ObservableObject {
     }
 
     func pause() {
+        if let endDate {
+            let remaining = max(0, Int(ceil(endDate.timeIntervalSinceNow)))
+            if remaining != remainingSeconds { remainingSeconds = remaining }
+        }
         isRunning = false
         timer?.invalidate()
         timer = nil
@@ -51,7 +65,11 @@ final class CountdownTimer: ObservableObject {
 
     private func scheduleTick() {
         timer?.invalidate()
-        let newTimer = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
+        guard let endDate else { return }
+        let nextTick = endDate.addingTimeInterval(-max(0, ceil(endDate.timeIntervalSinceNow) - 1))
+        // Hidden countdowns need a completion alarm, not a once-per-second display tick.
+        let newTimer = Timer(fire: isDisplayActive ? nextTick : endDate,
+                             interval: isDisplayActive ? 1 : 0, repeats: isDisplayActive) { [weak self] _ in
             self?.tick()
         }
         RunLoop.main.add(newTimer, forMode: .common)
@@ -64,7 +82,7 @@ final class CountdownTimer: ObservableObject {
         if remaining <= 0 {
             remainingSeconds = 0
             finish()
-        } else {
+        } else if remaining != remainingSeconds {
             remainingSeconds = remaining
         }
     }
@@ -73,5 +91,9 @@ final class CountdownTimer: ObservableObject {
         pause()
         isFinished = true
         NSSound(named: "Glass")?.play()
+    }
+
+    deinit {
+        timer?.invalidate()
     }
 }

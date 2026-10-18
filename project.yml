@@ -31,6 +31,14 @@ targets:
         buildPhase: resources
       - path: moon.png
         buildPhase: resources
+    postBuildScripts:
+      - name: Copy native reminder sounds
+        basedOnDependencyAnalysis: false
+        script: |
+          set -eu
+          destination="${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}"
+          mkdir -p "$destination"
+          cp /System/Library/Sounds/*.aiff "$destination/"
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.rajeevranjan.flipclock

@@ -57,3 +57,34 @@ struct WorldClock: Codable, Identifiable, Equatable {
         return String(name.prefix(Self.menuBarLabelLimit - 1)) + "…"
     }
 }
+
+/// A snapshot per picker presentation keeps UTC sorting out of the typing path.
+struct TimeZoneChoice: Identifiable {
+    let id: String
+    let city: String
+    let offset: Int
+    let offsetLabel: String
+
+    init?(identifier: String, at date: Date) {
+        guard let zone = TimeZone(identifier: identifier) else { return nil }
+        id = identifier
+        city = WorldClock.cityName(for: identifier)
+        offset = zone.secondsFromGMT(for: date)
+        offsetLabel = WorldClock.offsetLabel(for: zone, at: date)
+    }
+
+    func matches(_ query: String) -> Bool {
+        let query = query.trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: "_", with: " ").replacingOccurrences(of: "/", with: " ")
+        return query.isEmpty || id.replacingOccurrences(of: "_", with: " ")
+            .replacingOccurrences(of: "/", with: " ").localizedStandardContains(query)
+    }
+
+    static func all(including identifier: String, at date: Date = Date()) -> [Self] {
+        // macOS accepts aliases such as Asia/Kolkata that its known-identifiers list omits.
+        var identifiers = TimeZone.knownTimeZoneIdentifiers
+        if !identifiers.contains(identifier) { identifiers.append(identifier) }
+        return identifiers.compactMap { Self(identifier: $0, at: date) }
+            .sorted { $0.offset == $1.offset ? $0.id < $1.id : $0.offset < $1.offset }
+    }
+}

@@ -1,5 +1,6 @@
 import AppKit
 
+@MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let timeProvider = TimeProvider()
     let settings = AppSettings()
@@ -10,7 +11,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItemController: StatusItemController?
     private var overlayWindowController: OverlayWindowController?
     private var worldClocksCoordinator: WorldClocksCoordinator?
-    private lazy var settingsWindowController = SettingsWindowController(settings: settings)
+    lazy var reminderNotifications = ReminderNotifications(store: reminderStore, settings: settings)
+    private lazy var settingsWindowController = SettingsWindowController(settings: settings, reminderNotifications: reminderNotifications)
+
+    func applicationWillFinishLaunching(_ notification: Notification) {
+        // Unit tests must not change the real user's pending alerts or request permission.
+        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil {
+            reminderNotifications.start()
+        }
+    }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         WidgetFont.registerAll()

@@ -8,8 +8,10 @@ import SwiftUI
 struct ReminderBadge: View {
     var isDue: Bool
     var diameter: CGFloat = 8
+    var isActive = true
 
     @State private var isPulsing = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var color: Color { isDue ? .red : .orange }
 
@@ -20,9 +22,12 @@ struct ReminderBadge: View {
             .opacity(isPulsing ? 0.35 : 1)
             .scaleEffect(isPulsing ? 1.25 : 1)
             .animation(
-                .easeInOut(duration: isDue ? 0.6 : 1.1).repeatForever(autoreverses: true),
+                isActive && !reduceMotion ? .easeInOut(duration: isDue ? 0.6 : 1.1).repeatForever(autoreverses: true) : nil,
                 value: isPulsing
             )
-            .onAppear { isPulsing = true }
+            .onAppear { isPulsing = isActive && !reduceMotion }
+            .onChange(of: isActive) { _, active in isPulsing = active && !reduceMotion }
+            .onChange(of: reduceMotion) { _, reduced in isPulsing = isActive && !reduced }
+            .onDisappear { isPulsing = false }
     }
 }

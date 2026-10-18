@@ -28,11 +28,12 @@ struct SplitFlapDigit: View {
     /// Retained for source compatibility with existing call sites; no
     /// longer affects rendering.
     var showOwnGlassPanel: Bool = true
+    var expectedChangeInterval: TimeInterval? = nil
 
     @Environment(\.glassTone) private var tone
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    init(value: String, cardSize: CGSize, isDark: Bool = true, compact: Bool = false, textColor: NSColor? = nil, fusedLeading: Bool = false, fusedTrailing: Bool = false, glassCard: Bool = false, showOwnGlassPanel: Bool = true, fontName: String? = nil, isMonospacedSystemFont: Bool = false) {
+    init(value: String, cardSize: CGSize, isDark: Bool = true, compact: Bool = false, textColor: NSColor? = nil, fusedLeading: Bool = false, fusedTrailing: Bool = false, glassCard: Bool = false, showOwnGlassPanel: Bool = true, fontName: String? = nil, isMonospacedSystemFont: Bool = false, expectedChangeInterval: TimeInterval? = nil) {
         self.value = value
         self.cardSize = cardSize
         self.isDark = isDark
@@ -44,6 +45,7 @@ struct SplitFlapDigit: View {
         self.showOwnGlassPanel = showOwnGlassPanel
         self.fontName = fontName
         self.isMonospacedSystemFont = isMonospacedSystemFont
+        self.expectedChangeInterval = expectedChangeInterval
     }
 
     static let cardCornerRadius: CGFloat = 6
@@ -105,7 +107,8 @@ struct SplitFlapDigit: View {
                 value: value,
                 cardSize: cardSize,
                 style: layerStyle(for: tone),
-                upcomingStyles: upcomingStyles
+                upcomingStyles: upcomingStyles,
+                expectedChangeInterval: expectedChangeInterval
             )
             .frame(width: cardSize.width, height: cardSize.height)
             .clipShape(cardShape)

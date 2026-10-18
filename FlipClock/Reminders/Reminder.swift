@@ -16,4 +16,19 @@ struct Reminder: Identifiable, Codable, Equatable {
         self.title = title
         self.isAcknowledged = isAcknowledged
     }
+
+    func summary(relativeTo now: Date, calendar: Calendar = .current) -> String {
+        let day: String
+        if calendar.isDate(date, inSameDayAs: now) {
+            day = "Today"
+        } else if let tomorrow = calendar.date(byAdding: .day, value: 1, to: now),
+                  calendar.isDate(date, inSameDayAs: tomorrow) {
+            day = "Tomorrow"
+        } else {
+            day = date.formatted(date: .abbreviated, time: .omitted)
+        }
+        var format = Date.FormatStyle(date: .omitted, time: .shortened)
+        format.timeZone = calendar.timeZone
+        return "\(day) @ \(date.formatted(format)) – \(title)"
+    }
 }

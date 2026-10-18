@@ -1,62 +1,60 @@
 import SwiftUI
 
-/// Stopwatch control shown in the popover's Stopwatch tab — same
-/// flip-card display and centered layout as `CountdownTimerView`, in the
-/// user's selected font, counting up instead of down.
 struct StopwatchView: View {
     @ObservedObject var stopwatch: Stopwatch
     @ObservedObject var settings: AppSettings
     @Environment(\.colorScheme) private var colorScheme
 
-    private var isDark: Bool { colorScheme == .dark }
-
-    private var components: [Int] {
-        let hours = stopwatch.elapsedSeconds / 3600
-        let minutes = (stopwatch.elapsedSeconds / 60) % 60
-        let seconds = stopwatch.elapsedSeconds % 60
-        return [hours, minutes, seconds, stopwatch.centiseconds]
-    }
-
     private var hasElapsed: Bool { stopwatch.elapsedSeconds > 0 || stopwatch.centiseconds > 0 }
 
     var body: some View {
-        // No "Stopwatch" heading: the selected tab already says it.
-        VStack(spacing: 12) {
+        VStack(spacing: 26) {
+            Label(stopwatch.isRunning ? "Recording time" : (hasElapsed ? "Paused" : "Ready when you are"),
+                  systemImage: stopwatch.isRunning ? "stopwatch" : "stopwatch.fill")
+                .font(.callout.weight(.medium))
+                .foregroundStyle(.primary)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(Color.teal.opacity(stopwatch.isRunning ? 0.12 : 0.06), in: Capsule())
+
             FlipTimeDisplay(
-                components: components,
-                isDark: isDark,
+                components: [stopwatch.elapsedSeconds / 3600, (stopwatch.elapsedSeconds / 60) % 60,
+                             stopwatch.elapsedSeconds % 60, stopwatch.centiseconds],
+                isDark: colorScheme == .dark,
                 fontName: settings.widgetFont.postscriptName,
-                unitLabels: ["hr", "min", "sec", "ms"]
+                // Hundredths use their actual unit, rather than the former misleading “ms”.
+                unitLabels: ["hr", "min", "sec", "1/100"],
+                lastComponentChangeIntervals: (0.1, Stopwatch.updateInterval)
             )
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Elapsed time")
+            .accessibilityValue("\(stopwatch.elapsedSeconds / 3600) hours, \((stopwatch.elapsedSeconds / 60) % 60) minutes, \(stopwatch.elapsedSeconds % 60) seconds")
 
-            HStack(spacing: 8) {
-                Button(stopwatch.isRunning ? "Stop" : "Start") {
-                    if stopwatch.isRunning {
-                        stopwatch.stop()
-                    } else {
-                        stopwatch.start()
-                    }
-                }
-                .buttonStyle(.borderedProminent)
-                // Space is the conventional start/stop key for a stopwatch.
-                .keyboardShortcut(.space, modifiers: [])
-                .help("Start or stop (Space)")
-
+            HStack(spacing: 12) {
                 Button("Reset") { stopwatch.reset() }
-                    .buttonStyle(.bordered)
+                    .popoverActionButton()
                     .keyboardShortcut("r", modifiers: .command)
                     .help("Reset (⌘R)")
-                    // Stopped part-way through the first second still has
-                    // something to reset — the old check looked at whole
-                    // seconds only.
                     .disabled(!hasElapsed && !stopwatch.isRunning)
+                Button {
+                    if stopwatch.isRunning { stopwatch.stop() } else { stopwatch.start() }
+                } label: {
+                    Label(stopwatch.isRunning ? "Pause" : (hasElapsed ? "Resume" : "Start"),
+                          systemImage: stopwatch.isRunning ? "pause.fill" : "play.fill")
+                        .frame(minWidth: 78)
+                }
+                .popoverActionButton(prominent: true)
+                .keyboardShortcut(.space, modifiers: [])
+                .help("Start or pause (Space)")
             }
+            Text("Space to \(stopwatch.isRunning ? "pause" : "start") · ⌘R to reset")
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
-        .frame(maxWidth: .infinity)
-        .padding(12)
-        .background(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(Color.primary.opacity(0.06))
-        )
+        .controlSize(.large)
+        .tint(.teal)
+        .frame(maxWidth: .infinity, minHeight: 280)
+        .padding(20)
+        .modifier(PopoverCardSurface(tint: .teal))
     }
 }

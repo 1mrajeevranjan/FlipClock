@@ -1,292 +1,352 @@
 import SwiftUI
 
-/// Current-month calendar grid with prev/next navigation arrows on either
-/// side of the month title, matching a typical menu-bar calendar widget.
-struct CalendarMonthView: View {
-    @ObservedObject var reminderStore: ReminderStore
+struct CalendarNavigation {
+    enum Level { case days, months, years }
 
-    @State private var displayedMonth: Date = Calendar.current.startOfMonth(for: Date())
-    /// The day currently showing the "New Reminder" popover, or `nil` if
-    /// none is open — set by a double-click on a day cell.
-    @State private var addingReminderFor: Date? = nil
-    /// The day currently showing the hover preview popover — separate from
-    /// `addingReminderFor` so the two can never fight over the same
-    /// presentation state. `nil` means no hover card is showing.
-    @State private var hoveredDate: Date? = nil
-    /// Debounces hover-in so a fast mouse sweep across a whole week row
-    /// doesn't flash a popover open-then-closed on every cell it crosses —
-    /// only the cell the pointer actually settles on for a moment gets one.
-    @State private var hoverTask: Task<Void, Never>? = nil
-    /// The day under the pointer, for its hover highlight (HIG 6.1) — set
-    /// immediately, unlike the debounced reminder preview above.
-    @State private var hoveredCell: Date? = nil
+    let calendar: Calendar
+    private(set) var displayedMonth: Date
+    var selectedDate: Date
+    private(set) var level: Level = .days
 
-    private let calendar = Calendar.current
-    private let today = Calendar.current.startOfDay(for: Date())
-
-    private static let titleFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.dateFormat = "MMMM yyyy"
-        return f
-    }()
-
-    private let weekdaySymbols: [String] = {
-        let calendar = Calendar.current
-        let symbols = calendar.veryShortStandaloneWeekdaySymbols
-        let firstWeekdayIndex = calendar.firstWeekday - 1
-        return Array(symbols[firstWeekdayIndex...] + symbols[..<firstWeekdayIndex])
-    }()
-
-    private var isShowingCurrentMonth: Bool {
-        calendar.isDate(displayedMonth, equalTo: today, toGranularity: .month)
+    init(date: Date = Date(), calendar: Calendar = .current) {
+        self.calendar = calendar
+        displayedMonth = calendar.dateInterval(of: .month, for: date)?.start ?? date
+        selectedDate = calendar.startOfDay(for: date)
     }
 
-    /// Space between week rows. The reminder dot sits inside this gap, below
-    /// its date, instead of reserving its own strip under every date — that
-    /// strip made rows uneven and left the bottom margin visibly deeper than
-    /// the top.
+    var year: Int { calendar.component(.year, from: displayedMonth) }
+
+    var yearPage: ClosedRange<Int> {
+        let start = ((year - 1) / 12) * 12 + 1
+        return start...min(start + 11, 9999)
+    }
+
+    var months: [Date] {
+        guard let start = calendar.dateInterval(of: .year, for: displayedMonth)?.start,
+              let range = calendar.range(of: .month, in: .year, for: displayedMonth) else { return [] }
+        return range.compactMap { calendar.date(byAdding: .month, value: $0 - range.lowerBound, to: start) }
+    }
+
+    var weeks: [[Date?]] {
+        guard let range = calendar.range(of: .day, in: .month, for: displayedMonth) else { return [] }
+        let weekday = calendar.component(.weekday, from: displayedMonth)
+        let blanks = (weekday - calendar.firstWeekday + 7) % 7
+        let dates = range.compactMap { calendar.date(byAdding: .day, value: $0 - range.lowerBound, to: displayedMonth) }
+        let cells = Array<Date?>(repeating: nil, count: blanks) + dates.map { Optional($0) }
+        let padded = cells + Array<Date?>(repeating: nil, count: (7 - cells.count % 7) % 7)
+        return stride(from: 0, to: padded.count, by: 7).map { Array(padded[$0..<$0 + 7]) }
+    }
+
+    mutating func showLargerRange() {
+        switch level {
+        case .days: level = .months
+        case .months: level = .years
+        case .years: break
+        }
+    }
+
+    mutating func showSmallerRange(today: Date = Date()) {
+        switch level {
+        case .years: level = .months
+        case .months: self = CalendarNavigation(date: today, calendar: calendar)
+        case .days: break
+        }
+    }
+
+    func pageTarget(by direction: Int) -> Date? {
+        let target: Date?
+        if level == .years {
+            var components = calendar.dateComponents([.era, .month], from: displayedMonth)
+            components.year = yearPage.lowerBound + direction * 12
+            components.day = 1
+            target = calendar.date(from: components)
+        } else {
+            target = calendar.date(byAdding: level == .days ? .month : .year, value: direction, to: displayedMonth)
+        }
+        guard let date = target,
+              (1...9999).contains(calendar.component(.year, from: date)),
+              calendar.component(.era, from: date) == calendar.component(.era, from: displayedMonth) else { return nil }
+        return date
+    }
+
+    mutating func page(by direction: Int) {
+        guard let date = pageTarget(by: direction) else { return }
+        selectedDate = level == .days
+            ? (calendar.date(byAdding: .month, value: direction, to: selectedDate) ?? date)
+            : date
+        displayedMonth = date
+    }
+
+    mutating func chooseYear(_ year: Int) {
+        guard (1...9999).contains(year) else { return }
+        var components = calendar.dateComponents([.era, .month], from: displayedMonth)
+        components.year = year
+        components.day = 1
+        guard let date = calendar.date(from: components) else { return }
+        displayedMonth = date
+        selectedDate = date
+        level = .months
+    }
+
+    mutating func chooseMonth(_ date: Date) {
+        guard calendar.isDate(date, equalTo: displayedMonth, toGranularity: .year),
+              let start = calendar.dateInterval(of: .month, for: date)?.start else { return }
+        displayedMonth = start
+        selectedDate = start
+        level = .days
+    }
+}
+
+struct CalendarMonthView: View {
+    @ObservedObject var reminderStore: ReminderStore
+    @Binding var navigation: CalendarNavigation
+    var today = Date()
+    var isVisible = true
+    @State private var addingReminderFor: Date?
+    @State private var hoveredDate: Date?
+    @State private var hoveredCell: Date?
+    @State private var hoverTask: Task<Void, Never>?
+    @State private var presentationID = 0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private var calendar: Calendar { navigation.calendar }
     private static let rowSpacing: CGFloat = 8
-    private static let daySize: CGFloat = 24
+    private static let daySize: CGFloat = 30
+    private let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 3)
+
+    private var title: String {
+        switch navigation.level {
+        case .days: return navigation.displayedMonth.formatted(.dateTime.month(.wide).year())
+        case .months: return String(navigation.year)
+        case .years: return "\(navigation.yearPage.lowerBound)–\(navigation.yearPage.upperBound)"
+        }
+    }
+
+    private var pageUnit: String {
+        switch navigation.level {
+        case .days: return "month"
+        case .months: return "year"
+        case .years: return "12 years"
+        }
+    }
 
     var body: some View {
-        // One 7-column `Grid` for the header, weekday letters and dates, so
-        // everything shares the same columns: the arrows sit centred over the
-        // first and last day columns, and the title over the middle five. As
-        // separate stacks the arrows drifted out of line with the dates.
-        Grid(horizontalSpacing: 0, verticalSpacing: Self.rowSpacing) {
-            GridRow {
-                NavButton(systemName: "chevron.left", label: "Previous Month", shortcut: .leftArrow) { shiftMonth(by: -1) }
-                    .frame(maxWidth: .infinity)
-                titleCell
-                    .gridCellColumns(5)
-                    .frame(maxWidth: .infinity)
-                NavButton(systemName: "chevron.right", label: "Next Month", shortcut: .rightArrow) { shiftMonth(by: 1) }
-                    .frame(maxWidth: .infinity)
+        VStack(spacing: 12) {
+            if let date = addingReminderFor {
+                // Inline presentation avoids unreliable nested NSPopovers and fits the form's height.
+                AddReminderView(date: date, onSave: { title, preciseDate in
+                    reminderStore.add(title: title, date: preciseDate)
+                    addingReminderFor = nil
+                }, onCancel: { addingReminderFor = nil })
+            } else {
+                navigationHeader
+                switch navigation.level {
+                case .days: dayGrid
+                case .months: monthGrid
+                case .years: yearGrid
+                }
+                if navigation.level == .days {
+                    Divider()
+                    HStack {
+                        Text(navigation.selectedDate, format: .dateTime.month(.abbreviated).day())
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Button { addingReminderFor = navigation.selectedDate } label: {
+                            Label("Add Reminder", systemImage: "plus")
+                        }
+                        .popoverActionButton(prominent: true)
+                        .controlSize(.large)
+                        .buttonBorderShape(.capsule)
+                        .tint(.accentColor)
+                        .keyboardShortcut("n", modifiers: .command)
+                        .help("Add reminder for the selected date (⌘N)")
+                    }
+                }
             }
-            .padding(.bottom, 4)
+        }
+        .modifier(PopoverEntrance(trigger: presentationID))
+        .onChange(of: navigation.displayedMonth) { _, _ in clearHover(); presentationID += 1 }
+        .onChange(of: navigation.level) { _, _ in clearHover(); presentationID += 1 }
+        .onChange(of: addingReminderFor) { _, _ in presentationID += 1 }
+        .onDisappear(perform: clearHover)
+        .accessibilityActions {
+            if navigation.level != .days {
+                Button(navigation.level == .years ? "Back to months" : "Back to today’s calendar") {
+                    navigation.showSmallerRange()
+                }
+            }
+        }
+    }
 
+    private var navigationHeader: some View {
+        HStack(spacing: 12) {
+            CalendarNavButton(systemName: "chevron.left", label: "Previous \(pageUnit)", shortcut: .leftArrow) {
+                navigation.page(by: -1)
+            }
+            .disabled(navigation.pageTarget(by: -1) == nil)
+            Spacer(minLength: 0)
+            Group {
+                if navigation.level == .years {
+                    Text(title)
+                } else {
+                    Button { navigation.showLargerRange() } label: {
+                        Text(title)
+                            .frame(height: 32)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(title)
+                    .accessibilityHint(navigation.level == .days ? "Show months" : "Show years")
+                    .help(navigation.level == .days ? "Choose a month; click again to choose a year" : "Choose a year")
+                }
+            }
+            .font(.headline)
+            .monospacedDigit()
+            .foregroundStyle(.primary)
+            .frame(height: 32)
+            Spacer(minLength: 0)
+            CalendarNavButton(systemName: "chevron.right", label: "Next \(pageUnit)", shortcut: .rightArrow) {
+                navigation.page(by: 1)
+            }
+            .disabled(navigation.pageTarget(by: 1) == nil)
+        }
+    }
+
+    private var monthGrid: some View {
+        LazyVGrid(columns: columns, spacing: 8) {
+            ForEach(navigation.months, id: \.self) { month in
+                CalendarSelectionButton(title: month.formatted(.dateTime.month(.abbreviated)),
+                                        isSelected: calendar.isDate(month, equalTo: navigation.displayedMonth, toGranularity: .month)) {
+                    navigation.chooseMonth(month)
+                }
+                .accessibilityLabel(month.formatted(.dateTime.month(.wide).year()))
+            }
+        }
+    }
+
+    private var yearGrid: some View {
+        LazyVGrid(columns: columns, spacing: 8) {
+            ForEach(Array(navigation.yearPage), id: \.self) { year in
+                CalendarSelectionButton(title: String(year), isSelected: year == navigation.year) {
+                    navigation.chooseYear(year)
+                }
+            }
+        }
+    }
+
+    private var dayGrid: some View {
+        let symbols = calendar.veryShortStandaloneWeekdaySymbols
+        let first = calendar.firstWeekday - 1
+        let weekdays = Array(symbols[first...] + symbols[..<first])
+        return Grid(horizontalSpacing: 0, verticalSpacing: Self.rowSpacing) {
             GridRow {
-                ForEach(Array(weekdaySymbols.enumerated()), id: \.offset) { index, symbol in
+                ForEach(Array(weekdays.enumerated()), id: \.offset) { column, symbol in
                     Text(symbol)
                         .font(.caption2.weight(.semibold))
-                        .foregroundStyle(index == sundayColumn ? Color.red : Color.secondary)
+                        .foregroundStyle(column == sundayColumn ? Color.red : Color.secondary)
                         .frame(maxWidth: .infinity)
                         .accessibilityHidden(true)
                 }
             }
-
-            ForEach(Array(weeks.enumerated()), id: \.offset) { _, week in
+            ForEach(Array(navigation.weeks.enumerated()), id: \.offset) { _, week in
                 GridRow {
-                    ForEach(Array(week.enumerated()), id: \.offset) { column, day in
-                        dayCell(day, column: column)
+                    ForEach(Array(week.enumerated()), id: \.offset) { column, date in
+                        dayCell(date, column: column)
                     }
                 }
             }
         }
-        // A `.popover` triggered from *inside* content that's already
-        // itself presented as a popover (this whole view lives inside
-        // `PopoverClockView`, hosted via `NSPopover`) doesn't reliably
-        // present — confirmed live, it silently did nothing on hover. This
-        // overlay is plain inline SwiftUI content in the same view tree,
-        // not a second presentation layer, so it can't fail that way.
         .overlay(alignment: .top) {
-            if let hoveredDate, let reminders = hoveredReminders, !reminders.isEmpty {
-                ReminderHoverCard(date: hoveredDate, reminders: reminders)
-                    .background(
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
-                            .fill(.regularMaterial)
-                            .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
-                    )
-                    .offset(y: -8)
-                    .transition(.opacity.combined(with: .move(edge: .top)))
-                    .allowsHitTesting(false)
-                    .zIndex(1)
+            if let hoveredDate {
+                let reminders = reminderStore.reminders(on: hoveredDate)
+                if !reminders.isEmpty {
+                    ReminderHoverCard(date: hoveredDate, reminders: reminders)
+                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10))
+                        .shadow(color: .black.opacity(0.18), radius: 8, y: 4)
+                        .offset(y: -8)
+                        .transition(.opacity)
+                        .allowsHitTesting(false)
+                }
             }
         }
-        .animation(.easeOut(duration: 0.12), value: hoveredDate)
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.12), value: hoveredDate)
     }
 
-    private var hoveredReminders: [Reminder]? {
-        guard let hoveredDate else { return nil }
-        return reminderStore.reminders(on: hoveredDate)
-    }
-
-    /// Month title, plus a way back to the current month once you've wandered
-    /// off it (Calendar-app convention).
-    private var titleCell: some View {
-        HStack(spacing: 8) {
-            Text(Self.titleFormatter.string(from: displayedMonth))
-                .font(.headline)
-                .foregroundStyle(.primary)
-                .accessibilityAddTraits(.isHeader)
-            if !isShowingCurrentMonth {
-                Button("Today") { displayedMonth = calendar.startOfMonth(for: today) }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
-                    .keyboardShortcut("t", modifiers: .command)
-                    .help("Go to today (⌘T)")
-            }
-        }
-    }
-
-    private func dayCell(_ day: Int?, column: Int) -> some View {
-        Group {
-            if let day {
-                let cellDate = date(for: day)
-                let cellReminders = reminderStore.reminders(on: cellDate)
-                Text("\(day)")
-                    .font(.callout.weight(isToday(day) ? .semibold : .regular))
+    @ViewBuilder
+    private func dayCell(_ date: Date?, column: Int) -> some View {
+        if let date {
+            let isToday = calendar.isDate(date, inSameDayAs: today)
+            let isSelected = calendar.isDate(date, inSameDayAs: navigation.selectedDate)
+            let reminders = reminderStore.reminders(on: date)
+            Button { navigation.selectedDate = date } label: {
+                Text("\(calendar.component(.day, from: date))")
+                    .font(.callout.weight(isToday ? .semibold : .regular))
                     .monospacedDigit()
-                    .foregroundStyle(textColor(day: day, column: column))
+                    .foregroundStyle(isToday ? Color.white : (column == sundayColumn ? .red : .primary))
                     .frame(width: Self.daySize, height: Self.daySize)
-                    .background(dayBackground(day: day, date: cellDate))
-                    .clipShape(Circle())
-                    // Drawn in the row gap below the date (see `rowSpacing`),
-                    // so it costs no layout height.
+                    .background(isToday ? Color.accentColor : (isSelected ? Color.accentColor.opacity(0.12) : Color.primary.opacity(hoveredCell == date ? 0.08 : 0)), in: Circle())
+                    .overlay(Circle().strokeBorder(isSelected && !isToday ? Color.accentColor.opacity(0.65) : .clear, lineWidth: 1.5))
                     .overlay(alignment: .bottom) {
-                        if !cellReminders.isEmpty {
-                            ReminderBadge(isDue: calendar.isDateInToday(cellDate) && cellReminders.contains { !$0.isAcknowledged }, diameter: 5)
+                        if !reminders.isEmpty {
+                            ReminderBadge(isDue: isToday && reminders.contains { !$0.isAcknowledged }, diameter: 5, isActive: isVisible)
                                 .offset(y: Self.rowSpacing - 1)
                         }
                     }
-                .frame(maxWidth: .infinity)
-                .contentShape(Rectangle())
-                .onTapGesture(count: 2) { addingReminderFor = cellDate }
-                // HIG 6.2: the double-click action, discoverable on right-click.
-                .contextMenu {
-                    Button("Add Reminder…") { addingReminderFor = cellDate }
-                }
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel(accessibilityLabel(for: cellDate, reminderCount: cellReminders.count))
-                .accessibilityAddTraits(.isButton)
-                .accessibilityAction(named: "Add Reminder") { addingReminderFor = cellDate }
-                .onHover { isHovering in
-                    hoveredCell = isHovering ? cellDate : (hoveredCell == cellDate ? nil : hoveredCell)
-                    hoverTask?.cancel()
-                    guard isHovering, !cellReminders.isEmpty else {
-                        if hoveredDate == cellDate { hoveredDate = nil }
-                        return
-                    }
-                    hoverTask = Task {
-                        try? await Task.sleep(nanoseconds: 220_000_000)
-                        guard !Task.isCancelled else { return }
-                        hoveredDate = cellDate
-                    }
-                }
-                .popover(isPresented: Binding(
-                    get: { addingReminderFor == cellDate },
-                    set: { isPresented in if !isPresented { addingReminderFor = nil } }
-                )) {
-                    AddReminderView(
-                        date: cellDate,
-                        onSave: { title, preciseDate in
-                            reminderStore.add(title: title, date: preciseDate)
-                            addingReminderFor = nil
-                        },
-                        onCancel: { addingReminderFor = nil }
-                    )
-                }
-            } else {
-                Color.clear
-                    .frame(height: Self.daySize)
                     .frame(maxWidth: .infinity)
+                    .contentShape(Rectangle())
             }
+            .buttonStyle(PopoverPressStyle())
+            .simultaneousGesture(TapGesture(count: 2).onEnded { addingReminderFor = date })
+            .contextMenu { Button("Add Reminder…") { addingReminderFor = date } }
+            .accessibilityLabel(accessibilityLabel(for: date, reminderCount: reminders.count))
+            .accessibilityAddTraits(isSelected ? [.isSelected] : [])
+            .accessibilityAction(named: "Add Reminder") { addingReminderFor = date }
+            .onHover { hovering in
+                hoveredCell = hovering ? date : (hoveredCell == date ? nil : hoveredCell)
+                hoverTask?.cancel()
+                hoveredDate = nil
+                guard hovering, !reminders.isEmpty else { return }
+                hoverTask = Task {
+                    try? await Task.sleep(nanoseconds: 220_000_000)
+                    guard !Task.isCancelled else { return }
+                    hoveredDate = date
+                }
+            }
+        } else {
+            Color.clear.frame(height: Self.daySize).frame(maxWidth: .infinity)
         }
     }
 
-    /// The actual `Date` a grid day number represents, combined from
-    /// `displayedMonth`'s year/month and the cell's day-of-month.
-    private func date(for day: Int) -> Date {
-        var comps = calendar.dateComponents([.year, .month], from: displayedMonth)
-        comps.day = day
-        return calendar.date(from: comps) ?? displayedMonth
-    }
+    private var sundayColumn: Int { (1 - calendar.firstWeekday + 7) % 7 }
 
-    /// Today is marked in the user's accent colour (HIG 9.3), as macOS
-    /// Calendar does. Sunday keeps its own colour — system red, the same
-    /// Sunday marker the desktop widget's weekday row uses — so the week's
-    /// start stands out as its own column.
-    private func textColor(day: Int, column: Int) -> Color {
-        if isToday(day) { return .white }
-        return column == sundayColumn ? .red : .primary
+    private func clearHover() {
+        hoverTask?.cancel()
+        hoveredDate = nil
+        hoveredCell = nil
     }
-
-    private func dayBackground(day: Int, date: Date) -> Color {
-        if isToday(day) { return .accentColor }
-        return hoveredCell == date ? Color.primary.opacity(0.08) : .clear
-    }
-
-    /// Column index of Sunday within the (possibly rotated) week row —
-    /// Foundation's `weekday` component is 1 = Sunday...7 = Saturday.
-    private var sundayColumn: Int {
-        (1 - calendar.firstWeekday + 7) % 7
-    }
-
-    private static let spokenDateFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.dateStyle = .full
-        return f
-    }()
 
     private func accessibilityLabel(for date: Date, reminderCount: Int) -> String {
-        var parts = [Self.spokenDateFormatter.string(from: date)]
+        var parts = [date.formatted(date: .complete, time: .omitted)]
         if calendar.isDate(date, inSameDayAs: today) { parts.append("today") }
-        if reminderCount > 0 { parts.append(reminderCount == 1 ? "1 reminder" : "\(reminderCount) reminders") }
+        if reminderCount > 0 { parts.append("\(reminderCount) reminders") }
         return parts.joined(separator: ", ")
-    }
-
-    private func shiftMonth(by value: Int) {
-        if let next = calendar.date(byAdding: .month, value: value, to: displayedMonth) {
-            displayedMonth = next
-        }
-    }
-
-    private func isToday(_ day: Int) -> Bool {
-        guard isShowingCurrentMonth else { return false }
-        return day == calendar.component(.day, from: today)
-    }
-
-    /// Leading `nil`s pad the grid so day 1 lands in the correct weekday
-    /// column, followed by 1...daysInMonth.
-    private var dayCells: [Int?] {
-        guard
-            let range = calendar.range(of: .day, in: .month, for: displayedMonth)
-        else { return [] }
-
-        let firstWeekday = calendar.component(.weekday, from: displayedMonth)
-        let leadingBlanks = (firstWeekday - calendar.firstWeekday + 7) % 7
-
-        return Array(repeating: nil, count: leadingBlanks) + range.map { Optional($0) }
-    }
-
-    /// `dayCells` padded out to whole weeks and split into rows of 7.
-    private var weeks: [[Int?]] {
-        let cells = dayCells
-        let padded = cells + Array(repeating: nil, count: (7 - cells.count % 7) % 7)
-        return stride(from: 0, to: padded.count, by: 7).map { Array(padded[$0..<$0 + 7]) }
     }
 }
 
-/// Chevron step button matching the native macOS look — no border, subtle
-/// circular highlight on hover, secondary-color glyph (Rule 6.1: every
-/// interactive element needs a visible hover state), a spoken label and
-/// tooltip (11.1), and a ⌘-arrow shortcut (5.1).
-private struct NavButton: View {
+private struct CalendarNavButton: View {
     let systemName: String
     let label: String
     let shortcut: KeyEquivalent
     let action: () -> Void
-
     @State private var isHovered = false
 
     var body: some View {
         Button(action: action) {
             Image(systemName: systemName)
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(.secondary)
-                .frame(width: 24, height: 24)
-                .background(isHovered ? Color.primary.opacity(0.08) : .clear)
-                .clipShape(Circle())
+                .font(.system(size: 12, weight: .semibold))
+                .frame(width: 32, height: 32)
+                .modifier(PopoverControlSurface(tint: Color.primary.opacity(isHovered ? 0.06 : 0), cornerRadius: 16))
                 .contentShape(Circle())
         }
         .buttonStyle(.plain)
@@ -297,51 +357,47 @@ private struct NavButton: View {
     }
 }
 
-private extension Calendar {
-    func startOfMonth(for date: Date) -> Date {
-        let comps = dateComponents([.year, .month], from: date)
-        return self.date(from: comps) ?? date
+private struct CalendarSelectionButton: View {
+    let title: String
+    let isSelected: Bool
+    let action: () -> Void
+    @State private var isHovered = false
+
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.system(size: 13, weight: isSelected ? .semibold : .medium))
+                .monospacedDigit()
+                .foregroundStyle(isSelected ? Color.accentColor : Color.primary)
+                .frame(maxWidth: .infinity)
+                .frame(height: 42)
+                .background(isSelected ? Color.accentColor.opacity(0.16) : Color.primary.opacity(isHovered ? 0.08 : 0.025),
+                            in: RoundedRectangle(cornerRadius: 9))
+                .overlay(RoundedRectangle(cornerRadius: 9).strokeBorder(isSelected ? Color.accentColor.opacity(0.25) : Color.primary.opacity(0.05)))
+                .contentShape(RoundedRectangle(cornerRadius: 9))
+        }
+        .buttonStyle(PopoverPressStyle())
+        .onHover { isHovered = $0 }
+        .accessibilityAddTraits(isSelected ? [.isSelected] : [])
     }
 }
 
-/// Hover preview for a day that has one or more reminders — read-only (no
-/// acknowledge/edit controls, those live in the "Due Today" banner and the
-/// double-click "New Reminder" form respectively). This is purely "what's
-/// on this day and when."
 private struct ReminderHoverCard: View {
     let date: Date
     let reminders: [Reminder]
 
-    private static let dateFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.dateStyle = .medium
-        return f
-    }()
-
-    private static let timeFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.timeStyle = .short
-        return f
-    }()
-
-    private var sortedReminders: [Reminder] {
-        reminders.sorted { $0.date < $1.date }
-    }
-
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(Self.dateFormatter.string(from: date))
-                .font(.system(size: 12, weight: .semibold))
+            Text(date, format: .dateTime.month(.abbreviated).day().year())
+                .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
-
-            ForEach(sortedReminders) { reminder in
+            ForEach(reminders.sorted { $0.date < $1.date }) { reminder in
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    Text("@ \(Self.timeFormatter.string(from: reminder.date))")
-                        .font(.system(size: 11, weight: .medium, design: .monospaced))
-                        .foregroundStyle(reminder.isAcknowledged ? .secondary : .primary)
+                    Text(reminder.date, format: .dateTime.hour().minute())
+                        .font(.system(.caption, design: .monospaced))
+                        .foregroundStyle(.secondary)
                     Text(reminder.title)
-                        .font(.system(size: 12))
-                        .foregroundStyle(.primary)
+                        .font(.callout)
                         .strikethrough(reminder.isAcknowledged)
                 }
             }

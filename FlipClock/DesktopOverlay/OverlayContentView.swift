@@ -19,8 +19,23 @@ struct OverlayContentView: View {
         (10 * scale).clamped(to: 7...14)
     }
 
-    static func bannerHeight(scale: CGFloat) -> CGFloat {
-        (16 * scale).clamped(to: 13...20)
+    // ponytail: two rows keep the widget compact; the calendar holds the full list.
+    static let maxVisibleReminders = 2
+
+    static func reminderRowHeight(scale: CGFloat) -> CGFloat {
+        ceil((12 * scale).clamped(to: 10...15) * 2.5)
+    }
+
+    static func reminderOverflowHeight(scale: CGFloat) -> CGFloat {
+        ceil((10 * scale).clamped(to: 9...12) * 1.4)
+    }
+
+    static func reminderFooterHeight(scale: CGFloat, count: Int) -> CGFloat {
+        let rows = min(max(0, count), maxVisibleReminders)
+        guard rows > 0 else { return 0 }
+        let overflow = count > maxVisibleReminders
+        return CGFloat(rows) * reminderRowHeight(scale: scale) + CGFloat(rows - 1) * 4
+            + (overflow ? 4 + reminderOverflowHeight(scale: scale) : 0)
     }
 
     let timeProvider: TimeProvider
@@ -33,17 +48,7 @@ struct OverlayContentView: View {
 
     private var tick: ClockTick { visibility.tick(from: timeProvider) }
 
-    private var hasDueReminder: Bool { !reminderStore.dueTodayUnacknowledged.isEmpty }
-    private var hasUpcomingReminder: Bool { !reminderStore.upcomingWithin24Hours.isEmpty }
-
-    /// Due-today reminders take priority over merely-upcoming ones for the
-    /// top banner — same escalation `ReminderBadge` uses (red = due now,
-    /// orange = coming up within 24h).
-    private var bannerGroup: (reminders: [Reminder], isDue: Bool)? {
-        if hasDueReminder { return (reminderStore.dueTodayUnacknowledged, true) }
-        if hasUpcomingReminder { return (reminderStore.upcomingWithin24Hours, false) }
-        return nil
-    }
+    private var reminders: [Reminder] { reminderStore.widgetReminders }
 
     /// Digit/frost tone strictly follows the app's theme setting (or the
     /// system appearance, for `.system`) — same as every other surface.
@@ -59,13 +64,13 @@ struct OverlayContentView: View {
     /// `SplitFlapClockFace.idealSize`) rather than measured via AppKit,
     /// since fitting-size queries aren't reliable on the same runloop turn
     /// the hosting view is attached to a window.
-    static func windowSize(scale: CGFloat, showDate: Bool, showMeridiem: Bool, hasReminderBanner: Bool = false) -> CGSize {
+    static func windowSize(scale: CGFloat, showDate: Bool, showMeridiem: Bool, reminderCount: Int = 0) -> CGSize {
         let face = SplitFlapClockFace.idealSize(scale: scale, compact: false, showPedestal: false, showMeridiem: showMeridiem)
         let dateSize = showDate ? dateRowSize(scale: scale) : .zero
         let contentPadding = padding(scale: scale)
-        let bannerHeight = hasReminderBanner ? Self.bannerHeight(scale: scale) + dateSpacing(scale: scale) : 0
+        let footerHeight = reminderCount > 0 ? reminderFooterHeight(scale: scale, count: reminderCount) + dateSpacing(scale: scale) : 0
         let width = max(face.width, dateSize.width) + contentPadding * 2
-        let height = bannerHeight + face.height + (showDate ? dateSpacing(scale: scale) + dateSize.height : 0) + contentPadding * 2
+        let height = footerHeight + face.height + (showDate ? dateSpacing(scale: scale) + dateSize.height : 0) + contentPadding * 2
         return CGSize(width: width, height: height)
     }
 
@@ -96,10 +101,6 @@ struct OverlayContentView: View {
 
     var body: some View {
         VStack(spacing: Self.dateSpacing(scale: settings.overlaySize.scale)) {
-            if let bannerGroup {
-                ReminderTopBanner(reminders: bannerGroup.reminders, isDue: bannerGroup.isDue, scale: effectiveScale)
-            }
-
             SplitFlapClockFace(
                 tick: tick,
                 scale: effectiveScale,
@@ -114,6 +115,10 @@ struct OverlayContentView: View {
 
             if settings.showDateOnOverlay {
                 DateFlapRow(date: tick.date, scale: effectiveScale, isDark: effectiveIsDark, glassCard: true, fontName: settings.widgetFont.postscriptName)
+                    .equatable()
+            }
+            if !reminders.isEmpty {
+                ReminderFooter(reminders: reminders, now: tick.date, scale: effectiveScale)
             }
         }
         .padding(Self.padding(scale: settings.overlaySize.scale))
@@ -139,46 +144,50 @@ struct OverlayContentView: View {
 
     private var accessibilityText: String {
         let time = Self.spokenTime(tick.date, showDate: settings.showDateOnOverlay)
-        guard let bannerGroup, let first = bannerGroup.reminders.first else { return time }
-        return "\(time). Reminder \(bannerGroup.isDue ? "due today" : "coming up"): \(first.title)"
+        return ([time] + reminders.map { $0.summary(relativeTo: tick.date) }).joined(separator: ". ")
     }
 }
 
-/// One-line reminder callout at the top of the desktop widget — replaces
-/// the old top-trailing corner dot with something the user can actually
-/// read without opening the popover. Due-today reminders show in red,
-/// merely-upcoming ones in orange, matching `ReminderBadge`'s escalation.
-private struct ReminderTopBanner: View {
+private struct ReminderFooter: View {
     let reminders: [Reminder]
-    let isDue: Bool
+    let now: Date
     let scale: CGFloat
     @Environment(\.glassTone) private var tone
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// Status colour only in full colour; Monochrome and dimmed widgets are
     /// single-colour throughout, like the system's.
-    private var color: Color {
+    private func color(for reminder: Reminder) -> Color {
         guard tone == .vivid else { return Color(nsColor: FlapColors.glassGlyph(isDark: colorScheme == .dark, tone: tone)) }
-        return isDue ? .red : .orange
-    }
-
-    private var displayText: String {
-        guard let first = reminders.first else { return "" }
-        let extra = reminders.count - 1
-        return extra > 0 ? "\(first.title) +\(extra)" : first.title
+        return reminder.date <= now ? .red : .orange
     }
 
     var body: some View {
-        HStack(spacing: (6 * scale).clamped(to: 4...8)) {
-            Image(systemName: "bell.fill")
-                .font(.system(size: (11 * scale).clamped(to: 9...14)))
-            Text(displayText)
-                .font(.system(size: (12 * scale).clamped(to: 10...15), weight: .semibold))
-                .lineLimit(1)
-                .truncationMode(.tail)
+        VStack(alignment: .leading, spacing: 4) {
+            ForEach(Array(reminders.prefix(OverlayContentView.maxVisibleReminders))) { reminder in
+                HStack(alignment: .center, spacing: 6) {
+                    Image(systemName: "bell.fill")
+                        .font(.system(size: (10 * scale).clamped(to: 9...12)))
+                        .accessibilityHidden(true)
+                    Text(reminder.summary(relativeTo: now))
+                        .font(.system(size: (12 * scale).clamped(to: 10...15), weight: .medium))
+                        .lineLimit(2)
+                        .truncationMode(.tail)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .foregroundStyle(color(for: reminder))
+                .frame(height: OverlayContentView.reminderRowHeight(scale: scale))
+                .help(reminder.summary(relativeTo: now))
+            }
+            if reminders.count > OverlayContentView.maxVisibleReminders {
+                Text("+\(reminders.count - OverlayContentView.maxVisibleReminders) more in calendar")
+                    .font(.system(size: (10 * scale).clamped(to: 9...12)))
+                    .foregroundStyle(Color(nsColor: FlapColors.glassGlyph(isDark: colorScheme == .dark, tone: tone)))
+                    .frame(height: OverlayContentView.reminderOverflowHeight(scale: scale))
+            }
         }
-        .foregroundStyle(color)
-        .animation(GlassTone.transition, value: tone)
+        .animation(reduceMotion ? nil : GlassTone.transition, value: tone)
     }
 }
 
@@ -187,13 +196,21 @@ private struct ReminderTopBanner: View {
 /// so existing call sites are unaffected; the second-clock widget passes
 /// its own chosen timezone so the weekday/date reflect that zone's date,
 /// not the system's (they can disagree near midnight).
-struct DateFlapRow: View {
+struct DateFlapRow: View, Equatable {
     let date: Date
     let scale: CGFloat
     let isDark: Bool
     var glassCard: Bool = false
     var fontName: String? = nil
     var timeZone: TimeZone = .current
+
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        guard lhs.scale == rhs.scale, lhs.isDark == rhs.isDark, lhs.glassCard == rhs.glassCard,
+              lhs.fontName == rhs.fontName, lhs.timeZone == rhs.timeZone else { return false }
+        var calendar = Calendar.current
+        calendar.timeZone = lhs.timeZone
+        return calendar.isDate(lhs.date, inSameDayAs: rhs.date)
+    }
 
     // `DateFlapRow` is rebuilt every second (it's driven by `timeProvider.tick`),
     // and `body` reads `weekdayCharacters`/`dateGroups` — each of which used to

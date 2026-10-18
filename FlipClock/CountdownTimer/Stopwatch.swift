@@ -1,16 +1,17 @@
 import Foundation
 
 /// Simple count-up stopwatch for the popover — start/stop/reset, elapsed
-/// time in whole seconds plus hundredths ("ms" card — true millisecond
+/// time in whole seconds plus hundredths ("1/100" card — true millisecond
 /// resolution would be a third digit and doesn't fit the app's two-digit
 /// flip-card convention). Mirrors `CountdownTimer`'s absolute-time
 /// approach (track a start reference plus accumulated time, rather than
 /// decrementing/incrementing a counter each tick) so a stalled run loop
 /// can't drift the displayed time from the real elapsed time.
 final class Stopwatch: ObservableObject {
+    static let updateInterval: TimeInterval = 0.03
     @Published private(set) var elapsedSeconds: Int = 0
-    /// Hundredths of a second (0–99) — ticks every 30ms while running so
-    /// the "ms" flip card visibly updates, unlike `elapsedSeconds` which
+    /// Hundredths of a second (0–99) — ticks every 30ms while running and visible so
+    /// the "1/100" flip card visibly updates, unlike `elapsedSeconds` which
     /// only needs a once-a-second cadence.
     @Published private(set) var centiseconds: Int = 0
     @Published private(set) var isRunning: Bool = false
@@ -18,6 +19,19 @@ final class Stopwatch: ObservableObject {
     private var timer: Timer?
     private var startReference: Date?
     private var accumulated: TimeInterval = 0
+    private var isDisplayActive = true
+
+    func setDisplayActive(_ active: Bool) {
+        guard active != isDisplayActive else { return }
+        isDisplayActive = active
+        timer?.invalidate()
+        timer = nil
+        guard isRunning else { return }
+        if active {
+            tick()
+            scheduleTick()
+        }
+    }
 
     func start() {
         guard !isRunning else { return }
@@ -31,6 +45,7 @@ final class Stopwatch: ObservableObject {
         if let startReference {
             accumulated += Date().timeIntervalSince(startReference)
         }
+        publish(accumulated)
         isRunning = false
         startReference = nil
         timer?.invalidate()
@@ -45,7 +60,8 @@ final class Stopwatch: ObservableObject {
     }
 
     private func scheduleTick() {
-        let newTimer = Timer(timeInterval: 0.03, repeats: true) { [weak self] _ in
+        guard isDisplayActive else { return }
+        let newTimer = Timer(timeInterval: Self.updateInterval, repeats: true) { [weak self] _ in
             self?.tick()
         }
         RunLoop.main.add(newTimer, forMode: .common)
@@ -55,7 +71,17 @@ final class Stopwatch: ObservableObject {
     private func tick() {
         guard let startReference else { return }
         let total = accumulated + Date().timeIntervalSince(startReference)
-        elapsedSeconds = Int(total)
-        centiseconds = Int((total - total.rounded(.down)) * 100)
+        publish(total)
+    }
+
+    private func publish(_ total: TimeInterval) {
+        let seconds = Int(total)
+        let hundredths = Int((total - total.rounded(.down)) * 100)
+        if seconds != elapsedSeconds { elapsedSeconds = seconds }
+        if hundredths != centiseconds { centiseconds = hundredths }
+    }
+
+    deinit {
+        timer?.invalidate()
     }
 }

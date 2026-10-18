@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Lists today's unacknowledged reminders inside the popover — this is
-/// where the menu bar's light/dark pulse points the user to. Checking a
+/// where the menu bar's subtle pulse points the user to. Checking a
 /// reminder off here (or via `ReminderStore.acknowledgeAllDueToday()` from
 /// the menu bar itself) is what stops the pulse.
 struct DueReminderBanner: View {
@@ -35,9 +35,11 @@ struct DueReminderBanner: View {
                         onAcknowledge(reminder)
                     } label: {
                         Image(systemName: "checkmark.circle.fill")
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.green)
+                            .frame(width: 28, height: 28)
+                            .contentShape(Rectangle())
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(PopoverPressStyle())
                     .help("Acknowledge")
                     // HIG 11.1: an icon-only button needs a spoken label.
                     .accessibilityLabel("Acknowledge \(reminder.title)")
@@ -47,7 +49,8 @@ struct DueReminderBanner: View {
         .padding(12)
         .background(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(Color.red.opacity(0.12))
+                .fill(Color.red.opacity(0.07))
         )
+        .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color.red.opacity(0.18)))
     }
 }

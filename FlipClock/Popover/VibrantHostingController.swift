@@ -75,19 +75,25 @@ final class VibrantHostingController<Content: View>: NSViewController {
         // — so the frame/arrow (drawn by NSPopover itself) and this nested
         // view resolve vibrancy along the same default path, and only our
         // own content's light/dark actually changes with the setting.
-        applyAppearance(to: effectView)
+        applyAppearance(settings.theme, to: effectView)
         applyGlassiness()
 
         settings.$theme
-            .sink { [weak self, weak effectView] _ in
+            .sink { [weak self, weak effectView] theme in
                 guard let self, let effectView else { return }
-                self.applyAppearance(to: effectView)
+                self.applyAppearance(theme, to: effectView)
+                self.applyGlassiness()
             }
+            .store(in: &cancellables)
+
+        NSWorkspace.shared.notificationCenter.publisher(for: NSWorkspace.accessibilityDisplayOptionsDidChangeNotification)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.applyGlassiness() }
             .store(in: &cancellables)
     }
 
-    private func applyAppearance(to effectView: NSVisualEffectView) {
-        switch settings.theme {
+    private func applyAppearance(_ theme: AppTheme, to effectView: NSVisualEffectView) {
+        switch theme {
         case .light: effectView.appearance = NSAppearance(named: .aqua)
         case .dark: effectView.appearance = NSAppearance(named: .darkAqua)
         case .system: effectView.appearance = nil
@@ -100,9 +106,11 @@ final class VibrantHostingController<Content: View>: NSViewController {
         // accommodation, not an app preference — it still overrides this,
         // same as `WidgetGlassBackground` does for the desktop overlay.
         let scrimAlpha: CGFloat = NSWorkspace.shared.accessibilityDisplayShouldReduceTransparency ? 1 : 0
-        scrim.layer?.backgroundColor = NSColor.windowBackgroundColor
-            .withAlphaComponent(scrimAlpha)
-            .cgColor
+        view.effectiveAppearance.performAsCurrentDrawingAppearance {
+            scrim.layer?.backgroundColor = NSColor.windowBackgroundColor
+                .withAlphaComponent(scrimAlpha)
+                .cgColor
+        }
     }
 
     // NSPopover re-parents its `contentViewController.view` into a fresh
@@ -118,7 +126,7 @@ final class VibrantHostingController<Content: View>: NSViewController {
     override func viewWillAppear() {
         super.viewWillAppear()
         if let effectView = view as? NSVisualEffectView {
-            applyAppearance(to: effectView)
+            applyAppearance(settings.theme, to: effectView)
         }
         applyGlassiness()
         hostingController.rootView = hostingController.rootView
@@ -131,7 +139,8 @@ final class VibrantHostingController<Content: View>: NSViewController {
     // before any layout has run).
     override func viewDidLayout() {
         super.viewDidLayout()
-        preferredContentSize = hostingController.view.fittingSize
+        let size = hostingController.view.fittingSize
+        if preferredContentSize != size { preferredContentSize = size }
         // `scrim.layer` may not exist yet the first time `applyGlassiness`
         // runs in `loadView` (AppKit can defer backing-layer creation
         // until the view actually enters a window) — reapplying here,

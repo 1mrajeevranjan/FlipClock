@@ -1,169 +1,189 @@
 import SwiftUI
 
-private enum PopoverTab: String, CaseIterable, Identifiable {
+enum PopoverTab: String, CaseIterable, Identifiable {
     case calendar, timer, stopwatch
-
     var id: String { rawValue }
-
-    var label: String {
+    var label: String { rawValue.capitalized }
+    var icon: String { rawValue }
+    var color: Color {
         switch self {
-        case .calendar: return "Calendar"
-        case .timer: return "Timer"
-        case .stopwatch: return "Stopwatch"
-        }
-    }
-
-    var icon: String {
-        switch self {
-        case .calendar: return "calendar"
-        case .timer: return "timer"
-        case .stopwatch: return "stopwatch"
+        case .calendar: return .accentColor
+        case .timer: return .orange
+        case .stopwatch: return .teal
         }
     }
 }
 
-/// Full popover content, split into three tabs (Calendar / Timer /
-/// Stopwatch, ⌘1-⌘3) via a top icon+label tab row — a Mac-idiomatic stand-in for
-/// the "separate tab per tool" structure of iOS's Clock app (World Clock/
-/// Alarms/Stopwatch/Timers). A literal bottom iOS tab bar is a documented
-/// Mac anti-pattern (Mac apps use toolbars/segmented controls, not bottom
-/// tab bars), so this reuses `SettingsView`'s own tab-row pattern instead
-/// of a `Picker(.segmented)` — macOS's segmented control style silently
-/// drops the icon from a `Label` and renders text-only, so a custom row
-/// was the only way to actually show the SF Symbols.
-///
-/// Width is derived from `SplitFlapClockFace.idealSize` — the same
-/// analytic-size approach used for the desktop overlay and menu bar item
-/// — and stays constant across all three tabs; only height changes
-/// per tab, matching the fix applied to `SettingsView` (varying width
-/// too made switching feel like it was sliding sideways).
+final class PopoverPresentation: ObservableObject {
+    @Published var selectedTab: PopoverTab = .calendar {
+        didSet { updateDisplayActivity() }
+    }
+    @Published private(set) var isPresented = false
+    private var frozenTick: ClockTick
+    private let timerModel: CountdownTimer
+    private let stopwatch: Stopwatch
+
+    init(timeProvider: TimeProvider, timerModel: CountdownTimer, stopwatch: Stopwatch) {
+        frozenTick = timeProvider.tick
+        self.timerModel = timerModel
+        self.stopwatch = stopwatch
+        updateDisplayActivity()
+    }
+
+    func setPresented(_ presented: Bool, timeProvider: TimeProvider) {
+        if !presented { frozenTick = timeProvider.tick }
+        isPresented = presented
+        updateDisplayActivity()
+    }
+
+    func tick(from timeProvider: TimeProvider) -> ClockTick {
+        isPresented ? timeProvider.tick : frozenTick
+    }
+
+    private func updateDisplayActivity() {
+        timerModel.setDisplayActive(isPresented && selectedTab == .timer)
+        stopwatch.setDisplayActive(isPresented && selectedTab == .stopwatch)
+    }
+}
+
 struct PopoverClockView: View {
     private static let clockScale: CGFloat = 0.8
     private static let padding: CGFloat = 20
 
     static var width: CGFloat {
-        // Sized for the meridiem card present (12-hour, the wider case) so
-        // the popover never needs to resize if the user switches formats.
         SplitFlapClockFace.idealSize(scale: clockScale, compact: false, showPedestal: false, showMeridiem: true).width + padding * 2
     }
 
     let timeProvider: TimeProvider
     @ObservedObject var settings: AppSettings
     @ObservedObject var reminderStore: ReminderStore
-    @ObservedObject var timerModel: CountdownTimer
-    @ObservedObject var stopwatch: Stopwatch
+    // Child tools observe their own ticks; the whole popover needn't redraw at 30 Hz.
+    let timerModel: CountdownTimer
+    let stopwatch: Stopwatch
+    @ObservedObject var presentation: PopoverPresentation
 
-    @State private var selectedTab: PopoverTab = .calendar
+    @State private var calendarNavigation = CalendarNavigation()
+    @State private var today = Date()
 
     var body: some View {
-        // HIG 9.6: 20pt between groups (tab bar / content), 20pt margins.
-        VStack(spacing: 20) {
+        glassContent
+            .padding(Self.padding)
+            .frame(width: Self.width)
+            .fixedSize(horizontal: false, vertical: true)
+            .background {
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture { calendarNavigation.showSmallerRange() }
+                    .allowsHitTesting(presentation.selectedTab == .calendar && calendarNavigation.level != .days)
+            }
+            .preferredColorScheme(settings.theme.colorScheme)
+            .onAppear { today = Date() }
+            .onChange(of: presentation.isPresented) { _, visible in
+                if visible { today = Date() }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged)) { _ in today = Date() }
+    }
+
+    @ViewBuilder
+    private var glassContent: some View {
+        if #available(macOS 26.0, *) {
+            GlassEffectContainer(spacing: 6) { content }
+        } else {
+            content
+        }
+    }
+
+    private var content: some View {
+        VStack(spacing: 18) {
             tabRow
 
-            switch selectedTab {
-            case .calendar:
-                calendarContent
-            case .timer:
-                CountdownTimerView(timerModel: timerModel, settings: settings)
-            case .stopwatch:
-                StopwatchView(stopwatch: stopwatch, settings: settings)
+            Group {
+                switch presentation.selectedTab {
+                case .calendar:
+                    calendarContent
+                case .timer:
+                    CountdownTimerView(timerModel: timerModel, settings: settings)
+                case .stopwatch:
+                    StopwatchView(stopwatch: stopwatch, settings: settings)
+                }
             }
+            .modifier(PopoverEntrance(trigger: presentation.selectedTab))
         }
-        .padding(Self.padding)
-        .frame(width: Self.width)
-        // Explicit clear (not omitted) — NSHostingController's view
-        // defaults to an opaque background otherwise, which would sit on
-        // top of VibrantHostingController's blur+scrim and hide both
-        // completely. This is the SwiftUI-level way to make it
-        // transparent; doing it via `hostedView.layer` directly from
-        // VibrantHostingController broke `.preferredColorScheme`
-        // reactivity for this view.
-        .background(Color.clear)
-        .preferredColorScheme(settings.theme.colorScheme)
     }
 
     private var tabRow: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: 6) {
             ForEach(Array(PopoverTab.allCases.enumerated()), id: \.element) { index, tab in
-                PopoverTabButton(tab: tab, isSelected: selectedTab == tab) {
-                    selectedTab = tab
+                PopoverTabButton(tab: tab, isSelected: presentation.selectedTab == tab) {
+                    presentation.selectedTab = tab
                 }
-                // HIG 5.1: every mouse action has a keyboard equivalent.
                 .keyboardShortcut(KeyEquivalent(Character("\(index + 1)")), modifiers: .command)
+                .help("\(tab.label) (⌘\(index + 1))")
             }
         }
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("Popover sections")
+        .accessibilityLabel("Clock tools")
     }
 
     private var calendarContent: some View {
-        // Related pieces 8-12pt apart, the calendar as its own group 20pt below.
-        VStack(spacing: 12) {
-            DateHeaderView(date: timeProvider.tick.date)
-
+        VStack(spacing: 18) {
+            PopoverClockHeader(timeProvider: timeProvider, settings: settings, presentation: presentation)
             if !reminderStore.dueTodayUnacknowledged.isEmpty {
-                DueReminderBanner(reminders: reminderStore.dueTodayUnacknowledged) { reminder in
-                    reminderStore.acknowledge(reminder)
+                DueReminderBanner(reminders: reminderStore.dueTodayUnacknowledged) {
+                    reminderStore.acknowledge($0)
                 }
             }
+            Divider()
+            CalendarMonthView(reminderStore: reminderStore, navigation: $calendarNavigation, today: today, isVisible: presentation.isPresented)
+        }
+    }
 
-            // `showOwnGlassPanel: false` — this view already sits on
-            // `VibrantHostingController`'s own blur; a second independent
-            // `NSVisualEffectView` per card just grays everything out
-            // instead of compositing (confirmed visually). `glassCard`
-            // still gets the cards transparent digit rendering and the
-            // matching translucent/shadowless flip animation, so they
-            // read as glass sitting on the popover's existing vibrancy.
-            SplitFlapClockFace(
-                tick: timeProvider.tick,
-                scale: Self.clockScale,
-                compact: false,
-                showPedestal: false,
-                meridiemStyle: settings.meridiemStyle,
-                timeFormat: settings.timeFormat,
-                glassCard: true,
-                showOwnGlassPanel: false,
-                fontName: settings.widgetFont.postscriptName
-            )
-            CalendarMonthView(reminderStore: reminderStore)
-                .padding(.top, 8)
+    private struct PopoverClockHeader: View {
+        let timeProvider: TimeProvider
+        @ObservedObject var settings: AppSettings
+        @ObservedObject var presentation: PopoverPresentation
+
+        var body: some View {
+            let tick = presentation.tick(from: timeProvider)
+            VStack(spacing: 12) {
+                DateHeaderView(date: tick.date)
+                SplitFlapClockFace(
+                    tick: tick,
+                    scale: PopoverClockView.clockScale,
+                    compact: false,
+                    showPedestal: false,
+                    meridiemStyle: settings.meridiemStyle,
+                    timeFormat: settings.timeFormat,
+                    glassCard: true,
+                    showOwnGlassPanel: false,
+                    fontName: settings.widgetFont.postscriptName
+                )
+            }
         }
     }
 }
 
-/// One section button in the popover's top row. Styled like macOS's own
-/// icon-over-label tab rows (System Settings, Xcode inspectors) rather than
-/// the old solid-accent slab with white text, which read as an iOS control:
-/// the selected tab gets a quiet fill with its icon and label in the accent
-/// colour; the others get a hover highlight (HIG 6.1). The icon sits in a
-/// fixed-height frame so every label lands on the same baseline — the
-/// symbols differ in height, which is what pushed "Calendar" out of line.
 private struct PopoverTabButton: View {
     let tab: PopoverTab
     let isSelected: Bool
     let action: () -> Void
-
     @State private var isHovered = false
 
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 4) {
+            Label {
+                Text(tab.label).foregroundStyle(.primary)
+            } icon: {
                 Image(systemName: tab.icon)
-                    .font(.system(size: 15, weight: .medium))
-                    .frame(height: 18)
-                Text(tab.label)
-                    .font(.caption)
-                    .fontWeight(isSelected ? .semibold : .regular)
-                    .lineLimit(1)
+                    .symbolRenderingMode(.hierarchical)
+                    .foregroundStyle(tab.color)
             }
-            .foregroundStyle(isSelected ? Color.accentColor : Color.primary)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 6)
-            .background(
-                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                    .fill(Color.primary.opacity(isSelected ? 0.1 : (isHovered ? 0.05 : 0)))
-            )
-            .contentShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                .font(.system(size: 13, weight: isSelected ? .semibold : .medium))
+                .frame(maxWidth: .infinity)
+                .frame(height: 38)
+                .modifier(PopoverControlSurface(tint: tab.color.opacity(isSelected ? 0.2 : (isHovered ? 0.07 : 0)), cornerRadius: 12))
+                .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(isSelected ? tab.color.opacity(0.35) : .clear))
+                .contentShape(RoundedRectangle(cornerRadius: 12))
         }
         .buttonStyle(.plain)
         .onHover { isHovered = $0 }

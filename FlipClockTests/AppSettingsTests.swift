@@ -6,6 +6,31 @@ import XCTest
 /// are safe to run against a machine that also has the real app installed
 /// (this repo's own dev environment does).
 final class AppSettingsTests: XCTestCase {
+    func testExplicitMenuBarThemeWinsOverSystemAppearance() {
+        XCTAssertEqual(AppTheme.light.resolvedColorScheme(system: .dark), .light)
+        XCTAssertEqual(AppTheme.light.resolvedColorScheme(system: .light), .light)
+        XCTAssertEqual(AppTheme.dark.resolvedColorScheme(system: .light), .dark)
+        XCTAssertEqual(AppTheme.dark.resolvedColorScheme(system: .dark), .dark)
+        XCTAssertEqual(AppTheme.system.resolvedColorScheme(system: .light), .light)
+        XCTAssertEqual(AppTheme.system.resolvedColorScheme(system: .dark), .dark)
+    }
+
+    func testTimeZoneSearchAndOffsetOrdering() throws {
+        let winter = Date(timeIntervalSince1970: 1_736_942_400)
+        let choices = TimeZoneChoice.all(including: "Asia/Kolkata", at: winter)
+        XCTAssertFalse(choices.isEmpty)
+        XCTAssertEqual(choices.map(\.offset), choices.map(\.offset).sorted())
+        XCTAssertEqual(Set(choices.map(\.id)).count, choices.count)
+        let newYork = try XCTUnwrap(choices.first { $0.id == "America/New_York" })
+        XCTAssertTrue(newYork.matches("  new york\n"))
+        XCTAssertTrue(newYork.matches("America"))
+        XCTAssertTrue(newYork.matches("America/New_York"))
+        XCTAssertTrue(newYork.matches(""))
+        XCTAssertFalse(newYork.matches("Tokyo"))
+        XCTAssertEqual(newYork.offsetLabel, "UTC-05:00")
+        XCTAssertEqual(choices.first { $0.id == "Asia/Kolkata" }?.offsetLabel, "UTC+05:30")
+    }
+
     private var suiteName: String!
     private var defaults: UserDefaults!
 
@@ -31,6 +56,7 @@ final class AppSettingsTests: XCTestCase {
         XCTAssertTrue(settings.worldClocks.isEmpty)
         XCTAssertEqual(settings.timeFormat, .twelveHour)
         XCTAssertEqual(settings.widgetColorStyle, .full)
+        XCTAssertEqual(settings.reminderSound, .systemDefault)
     }
 
     func testChangesPersistAcrossANewInstanceReadingTheSameSuite() {
@@ -42,12 +68,14 @@ final class AppSettingsTests: XCTestCase {
         first.worldClocks[0].widgetSize = .triple
         first.worldClocks[0].timeFormat = .twentyFourHour
         first.timeFormat = .twentyFourHour
+        first.reminderSound = .byID("Glass.aiff")
 
         let second = AppSettings(defaults: defaults)
         XCTAssertEqual(second.theme, .dark)
         XCTAssertEqual(second.overlaySize, .double)
         XCTAssertEqual(second.worldClocks, first.worldClocks)
         XCTAssertEqual(second.timeFormat, .twentyFourHour)
+        XCTAssertEqual(second.reminderSound.id, "Glass.aiff")
     }
 
     func testWorldClockDisplayRoundTripsAllFourStates() {

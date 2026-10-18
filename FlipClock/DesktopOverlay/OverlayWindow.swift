@@ -127,27 +127,32 @@ private final class ActionMenuItem: NSMenuItem {
 /// window is covered, and the first frame after it's uncovered catches up.
 final class WindowVisibility: ObservableObject {
     @Published private(set) var isVisible = true
-    private(set) var frozenTick: ClockTick?
+    private(set) var frozenTick: ClockTick
     private var observer: NSObjectProtocol?
 
     init(window: NSWindow, timeProvider: TimeProvider) {
+        frozenTick = timeProvider.tick
+        isVisible = window.occlusionState.contains(.visible)
         observer = NotificationCenter.default.addObserver(
             forName: NSWindow.didChangeOcclusionStateNotification,
             object: window,
             queue: .main
         ) { [weak self, weak window, weak timeProvider] _ in
             guard let self, let window, let timeProvider else { return }
-            let visible = window.occlusionState.contains(.visible)
-            guard visible != self.isVisible else { return }
-            if !visible { self.frozenTick = timeProvider.tick }
-            self.isVisible = visible
+            self.setVisible(window.occlusionState.contains(.visible), timeProvider: timeProvider)
         }
+    }
+
+    func setVisible(_ visible: Bool, timeProvider: TimeProvider) {
+        guard visible != isVisible else { return }
+        if !visible { frozenTick = timeProvider.tick }
+        isVisible = visible
     }
 
     /// The time a content view should render: live while visible, frozen
     /// (and therefore not observed) while covered.
     func tick(from timeProvider: TimeProvider) -> ClockTick {
-        isVisible ? timeProvider.tick : (frozenTick ?? timeProvider.tick)
+        isVisible ? timeProvider.tick : frozenTick
     }
 
     deinit {

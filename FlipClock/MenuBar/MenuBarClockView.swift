@@ -13,17 +13,8 @@ struct MenuBarClockView: View {
 
     let timeProvider: TimeProvider
     @ObservedObject var settings: AppSettings
-    /// Overrides `settings.theme` while a reminder is due and
-    /// unacknowledged — `StatusItemController` flips this between
-    /// `.light`/`.dark` every 5s. Fed into `SplitFlapClockFace` as an
-    /// explicit `isDarkOverride` *parameter*, not `.preferredColorScheme()`
-    /// — confirmed (the hard way) that `.preferredColorScheme()`'s
-    /// environment value doesn't reliably re-propagate to
-    /// `@Environment(\.colorScheme)` reads further down the tree on
-    /// updates when this view is hosted inside an `NSStatusItem` button,
-    /// even though plain view parameters (proven with a diagnostic
-    /// background-color toggle) update correctly in that same context.
-    var pulseColorScheme: ColorScheme? = nil
+    @Environment(\.colorScheme) private var systemColorScheme
+    var reminderPulseDimmed = false
 
     var body: some View {
         SplitFlapClockFace(
@@ -33,8 +24,9 @@ struct MenuBarClockView: View {
             meridiemStyle: settings.meridiemStyle,
             timeFormat: settings.timeFormat,
             fontName: settings.widgetFont.postscriptName,
-            isDarkOverride: pulseColorScheme.map { $0 == .dark }
+            // Status-item hosting doesn't reliably propagate preferredColorScheme.
+            isDarkOverride: settings.theme.resolvedColorScheme(system: systemColorScheme) == .dark
         )
-        .preferredColorScheme(settings.theme.colorScheme)
+        .opacity(reminderPulseDimmed ? 0.65 : 1)
     }
 }
