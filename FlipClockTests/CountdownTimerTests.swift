@@ -3,8 +3,31 @@ import Combine
 @testable import FlipClock
 
 final class CountdownTimerTests: XCTestCase {
+    @MainActor
+    func testIdlePausedAndResetCountdownsNeverPlaySound() async throws {
+        var sounds = 0
+        let idle = CountdownTimer { sounds += 1 }
+        let paused = CountdownTimer { sounds += 1 }
+        let reset = CountdownTimer { sounds += 1 }
+        for timer in [paused, reset] {
+            timer.inputMinutes = 0
+            timer.inputSeconds = 1
+            timer.start()
+        }
+        paused.pause()
+        reset.reset()
+        for _ in 0..<100 {
+            for timer in [idle, paused, reset] {
+                timer.setDisplayActive(false)
+                timer.setDisplayActive(true)
+            }
+        }
+        try await Task.sleep(for: .milliseconds(1300))
+        XCTAssertEqual(sounds, 0, "Idle clocks and canceled countdown callbacks must stay silent")
+    }
+
     func testStartWhileRunningDoesNotOverwriteTheActiveCountdown() {
-        let timer = CountdownTimer()
+        let timer = CountdownTimer(playCompletionSound: {})
         timer.inputMinutes = 0
         timer.inputSeconds = 5
         timer.start()
@@ -16,7 +39,7 @@ final class CountdownTimerTests: XCTestCase {
 
     @MainActor
     func testShowingCountdownNearItsDeadlineDoesNotDelayCompletion() async throws {
-        let timer = CountdownTimer()
+        let timer = CountdownTimer(playCompletionSound: {})
         timer.inputMinutes = 0
         timer.inputSeconds = 2
         timer.setDisplayActive(false)
@@ -31,7 +54,7 @@ final class CountdownTimerTests: XCTestCase {
 
     @MainActor
     func testHiddenCountdownSleepsUntilCompletionAndCatchesUpWhenShown() async throws {
-        let timer = CountdownTimer()
+        let timer = CountdownTimer(playCompletionSound: {})
         timer.inputMinutes = 0
         timer.inputSeconds = 3
         timer.setDisplayActive(false)
@@ -54,7 +77,7 @@ final class CountdownTimerTests: XCTestCase {
     }
 
     func testStartWithZeroDurationDoesNothing() {
-        let timer = CountdownTimer()
+        let timer = CountdownTimer(playCompletionSound: {})
         timer.inputHours = 0
         timer.inputMinutes = 0
         timer.inputSeconds = 0
@@ -66,7 +89,7 @@ final class CountdownTimerTests: XCTestCase {
     }
 
     func testStartSeedsRemainingSecondsFromInputsAndBeginsRunning() {
-        let timer = CountdownTimer()
+        let timer = CountdownTimer(playCompletionSound: {})
         timer.inputHours = 0
         timer.inputMinutes = 1
         timer.inputSeconds = 30
@@ -79,7 +102,7 @@ final class CountdownTimerTests: XCTestCase {
     }
 
     func testPauseStopsTheCountdownWithoutResettingRemainingTime() {
-        let timer = CountdownTimer()
+        let timer = CountdownTimer(playCompletionSound: {})
         timer.inputMinutes = 0
         timer.inputSeconds = 5
         timer.start()
@@ -91,7 +114,7 @@ final class CountdownTimerTests: XCTestCase {
     }
 
     func testResumeAfterPauseContinuesFromWhereItLeftOff() {
-        let timer = CountdownTimer()
+        let timer = CountdownTimer(playCompletionSound: {})
         timer.inputMinutes = 0
         timer.inputSeconds = 5
         timer.start()
@@ -106,14 +129,14 @@ final class CountdownTimerTests: XCTestCase {
     }
 
     func testResumeWithZeroRemainingSecondsDoesNothing() {
-        let timer = CountdownTimer()
+        let timer = CountdownTimer(playCompletionSound: {})
         // Never started — remainingSeconds is still 0 from init.
         timer.resume()
         XCTAssertFalse(timer.isRunning)
     }
 
     func testResetClearsRemainingTimeAndFinishedFlag() {
-        let timer = CountdownTimer()
+        let timer = CountdownTimer(playCompletionSound: {})
         timer.inputSeconds = 5
         timer.start()
 
@@ -128,7 +151,7 @@ final class CountdownTimerTests: XCTestCase {
     /// confirms the countdown actually counts down in real time, not just
     /// that the initial seed value is correct.
     func testCountsDownInRealTime() {
-        let timer = CountdownTimer()
+        let timer = CountdownTimer(playCompletionSound: {})
         timer.inputMinutes = 0
         timer.inputSeconds = 3
         timer.start()
@@ -142,8 +165,9 @@ final class CountdownTimerTests: XCTestCase {
         wait(for: [expectation], timeout: 5)
     }
 
-    func testFinishesAndPlaysThroughToIsFinishedTrue() {
-        let timer = CountdownTimer()
+    func testCompletionPlaysSoundExactlyOnce() {
+        var sounds = 0
+        let timer = CountdownTimer { sounds += 1 }
         timer.inputMinutes = 0
         timer.inputSeconds = 1
         timer.start()
@@ -153,6 +177,10 @@ final class CountdownTimerTests: XCTestCase {
             XCTAssertTrue(timer.isFinished)
             XCTAssertFalse(timer.isRunning)
             XCTAssertEqual(timer.remainingSeconds, 0)
+            timer.setDisplayActive(false)
+            timer.setDisplayActive(true)
+            timer.resume()
+            XCTAssertEqual(sounds, 1, "Showing a finished timer must not replay its alarm")
             expectation.fulfill()
         }
         wait(for: [expectation], timeout: 5)
@@ -165,7 +193,7 @@ final class CountdownTimerTests: XCTestCase {
     /// timers racing to decrement the same counter twice as fast) or a
     /// dangling closure keeping a stale timer alive after `reset()`.
     func testStressRapidStartPauseResumeResetCyclingLeavesConsistentState() {
-        let timer = CountdownTimer()
+        let timer = CountdownTimer(playCompletionSound: {})
         timer.inputSeconds = 10
 
         for _ in 0..<100 {

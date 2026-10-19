@@ -19,21 +19,35 @@ final class PopoverPresentation: ObservableObject {
         didSet { updateDisplayActivity() }
     }
     @Published private(set) var isPresented = false
+    @Published var calendarNavigation: CalendarNavigation
+    @Published private(set) var today: Date
     private var frozenTick: ClockTick
     private let timerModel: CountdownTimer
     private let stopwatch: Stopwatch
 
-    init(timeProvider: TimeProvider, timerModel: CountdownTimer, stopwatch: Stopwatch) {
+    init(timeProvider: TimeProvider, timerModel: CountdownTimer, stopwatch: Stopwatch, date: Date = Date()) {
         frozenTick = timeProvider.tick
+        calendarNavigation = CalendarNavigation(date: date)
+        today = Calendar.current.startOfDay(for: date)
         self.timerModel = timerModel
         self.stopwatch = stopwatch
         updateDisplayActivity()
     }
 
-    func setPresented(_ presented: Bool, timeProvider: TimeProvider) {
+    func setPresented(_ presented: Bool, timeProvider: TimeProvider, date: Date = Date()) {
+        if presented { refreshCalendar(date: date, resetSelection: true) }
         if !presented { frozenTick = timeProvider.tick }
         isPresented = presented
         updateDisplayActivity()
+    }
+
+    func refreshCalendar(date: Date = Date(), resetSelection: Bool = false) {
+        let calendar = Calendar.current
+        let day = calendar.startOfDay(for: date)
+        if resetSelection || day != today || calendar != calendarNavigation.calendar {
+            calendarNavigation = CalendarNavigation(date: date, calendar: calendar)
+        }
+        if today != day { today = day }
     }
 
     func tick(from timeProvider: TimeProvider) -> ClockTick {
@@ -62,9 +76,6 @@ struct PopoverClockView: View {
     let stopwatch: Stopwatch
     @ObservedObject var presentation: PopoverPresentation
 
-    @State private var calendarNavigation = CalendarNavigation()
-    @State private var today = Date()
-
     var body: some View {
         glassContent
             .padding(Self.padding)
@@ -73,15 +84,15 @@ struct PopoverClockView: View {
             .background {
                 Color.clear
                     .contentShape(Rectangle())
-                    .onTapGesture { calendarNavigation.showSmallerRange() }
-                    .allowsHitTesting(presentation.selectedTab == .calendar && calendarNavigation.level != .days)
+                    .onTapGesture { presentation.calendarNavigation.showSmallerRange() }
+                    .allowsHitTesting(presentation.selectedTab == .calendar && presentation.calendarNavigation.level != .days)
             }
             .preferredColorScheme(settings.theme.colorScheme)
-            .onAppear { today = Date() }
-            .onChange(of: presentation.isPresented) { _, visible in
-                if visible { today = Date() }
+            .onAppear { presentation.refreshCalendar() }
+            .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged)
+                .merge(with: NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange))) { _ in
+                presentation.refreshCalendar()
             }
-            .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged)) { _ in today = Date() }
     }
 
     @ViewBuilder
@@ -134,7 +145,8 @@ struct PopoverClockView: View {
                 }
             }
             Divider()
-            CalendarMonthView(reminderStore: reminderStore, navigation: $calendarNavigation, today: today, isVisible: presentation.isPresented)
+            CalendarMonthView(reminderStore: reminderStore, navigation: $presentation.calendarNavigation,
+                              today: presentation.today, isVisible: presentation.isPresented)
         }
     }
 

@@ -154,7 +154,9 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
             // VibrantHostingController), which is the correct place to
             // control it without touching the frame's own resolution.
             popover.animates = !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+            NSApp.activate(ignoringOtherApps: true)
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+            popover.contentViewController?.view.window?.makeKey()
         }
     }
 

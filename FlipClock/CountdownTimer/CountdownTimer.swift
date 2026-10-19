@@ -5,11 +5,8 @@ import AppKit
 /// pause/resume, reset. Counts down against an absolute `endDate` rather
 /// than decrementing a counter on each tick, so a stalled run loop (the
 /// popover closing, the Mac sleeping) can't make the displayed time drift
-/// from the real elapsed time. Finishes with a system sound rather than a
-/// `UserNotifications` alert — that framework needs the app registered
-/// with notification center (entitlements/signing this ad-hoc dev build
-/// doesn't have), and a countdown finishing while the popover is open
-/// doesn't need a system notification anyway.
+/// from the real elapsed time. Only a user-started countdown finishing
+/// plays its completion sound; tests inject a silent callback.
 final class CountdownTimer: ObservableObject {
     @Published private(set) var remainingSeconds: Int = 0
     @Published private(set) var isRunning: Bool = false
@@ -21,6 +18,15 @@ final class CountdownTimer: ObservableObject {
     private var timer: Timer?
     private var endDate: Date?
     private var isDisplayActive = true
+    private let playCompletionSound: () -> Void
+
+    init(playCompletionSound: @escaping () -> Void = {
+        let sound = NSSound(named: "Glass")
+        sound?.loops = false
+        sound?.play()
+    }) {
+        self.playCompletionSound = playCompletionSound
+    }
 
     func setDisplayActive(_ active: Bool) {
         guard active != isDisplayActive else { return }
@@ -88,9 +94,10 @@ final class CountdownTimer: ObservableObject {
     }
 
     private func finish() {
+        guard isRunning, !isFinished else { return }
         pause()
         isFinished = true
-        NSSound(named: "Glass")?.play()
+        playCompletionSound()
     }
 
     deinit {

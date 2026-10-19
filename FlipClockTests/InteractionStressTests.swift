@@ -20,7 +20,7 @@ final class InteractionStressTests: XCTestCase {
     @MainActor
     func testRapidToolSwitchesAndRepeatedControlsLeaveNoHiddenUpdates() async throws {
         let time = TimeProvider()
-        let timer = CountdownTimer()
+        let timer = CountdownTimer(playCompletionSound: {})
         timer.inputMinutes = 1
         let stopwatch = Stopwatch()
         let presentation = PopoverPresentation(timeProvider: time, timerModel: timer, stopwatch: stopwatch)

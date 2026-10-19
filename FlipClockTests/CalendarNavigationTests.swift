@@ -2,6 +2,34 @@ import XCTest
 @testable import FlipClock
 
 final class CalendarNavigationTests: XCTestCase {
+    @MainActor
+    func testPopoverReopeningAndMidnightSelectOnlyTheCurrentDay() {
+        let calendar = Calendar.current
+        let yesterday = calendar.date(from: DateComponents(year: 2026, month: 10, day: 18, hour: 12))!
+        let today = calendar.date(byAdding: .day, value: 1, to: yesterday)!
+        let tomorrow = calendar.date(byAdding: .day, value: 1, to: today)!
+        let provider = TimeProvider()
+        let presentation = PopoverPresentation(timeProvider: provider, timerModel: CountdownTimer(playCompletionSound: {}),
+                                               stopwatch: Stopwatch(), date: yesterday)
+        presentation.calendarNavigation.showLargerRange()
+        presentation.setPresented(true, timeProvider: provider, date: today)
+        XCTAssertEqual(presentation.today, calendar.startOfDay(for: today))
+        XCTAssertEqual(presentation.calendarNavigation.selectedDate, presentation.today)
+        XCTAssertEqual(presentation.calendarNavigation.level, .days)
+
+        presentation.calendarNavigation.selectedDate = tomorrow
+        presentation.refreshCalendar(date: today)
+        XCTAssertEqual(presentation.calendarNavigation.selectedDate, tomorrow, "Same-day refresh must preserve deliberate browsing")
+        presentation.setPresented(false, timeProvider: provider, date: today)
+        presentation.setPresented(true, timeProvider: provider, date: today)
+        XCTAssertEqual(presentation.calendarNavigation.selectedDate, calendar.startOfDay(for: today))
+
+        presentation.refreshCalendar(date: tomorrow)
+        XCTAssertEqual(presentation.today, calendar.startOfDay(for: tomorrow))
+        XCTAssertEqual(presentation.calendarNavigation.selectedDate, presentation.today, "Midnight must clear yesterday’s selection")
+        XCTAssertEqual(presentation.calendarNavigation.displayedMonth, calendar.dateInterval(of: .month, for: tomorrow)?.start)
+    }
+
     private var calendar: Calendar {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(secondsFromGMT: 0)!
