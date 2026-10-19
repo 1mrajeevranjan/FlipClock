@@ -182,7 +182,17 @@ final class ReminderNotifications: NSObject, ObservableObject, UNUserNotificatio
 
     nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification,
                                            withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
-        completionHandler([.banner, .list, .sound])
+        Task { @MainActor [weak self] in
+            completionHandler(self?.presentationOptions(for: notification.request.identifier) ?? [])
+        }
+    }
+
+    func presentationOptions(for identifier: String, now: Date = Date()) -> UNNotificationPresentationOptions {
+        guard let reminder = store.reminders.first(where: { Self.identifier(for: $0.id) == identifier }),
+              !reminder.isAcknowledged,
+              // Calendar notification triggers have whole-second precision.
+              floor(reminder.date.timeIntervalSince1970) <= now.timeIntervalSince1970 else { return [] }
+        return [.banner, .list, .sound]
     }
 
     nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse,

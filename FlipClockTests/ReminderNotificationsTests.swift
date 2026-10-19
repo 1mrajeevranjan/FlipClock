@@ -3,6 +3,32 @@ import UserNotifications
 @testable import FlipClock
 
 final class ReminderNotificationsTests: XCTestCase {
+    @MainActor
+    func testForegroundSoundRequiresAnExistingUnacknowledgedDueReminder() throws {
+        let suite = "ReminderPresentationTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let store = ReminderStore(defaults: defaults)
+        let notifications = ReminderNotifications(store: store, settings: AppSettings(defaults: defaults))
+        let now = Date(timeIntervalSince1970: 2_000_000_000.25)
+        let unknownID = ReminderNotifications.identifier(for: UUID())
+        XCTAssertTrue(notifications.presentationOptions(for: unknownID, now: now).isEmpty)
+
+        store.add(title: "Later", date: now.addingTimeInterval(60))
+        let futureID = ReminderNotifications.identifier(for: store.reminders[0].id)
+        XCTAssertTrue(notifications.presentationOptions(for: futureID, now: now).isEmpty)
+
+        // Native calendar triggers round to a whole second.
+        store.add(title: "Due", date: now.addingTimeInterval(0.5))
+        let due = store.reminders[1]
+        let dueID = ReminderNotifications.identifier(for: due.id)
+        XCTAssertEqual(notifications.presentationOptions(for: dueID, now: now), [.banner, .list, .sound])
+        store.acknowledge(due)
+        XCTAssertTrue(notifications.presentationOptions(for: dueID, now: now).isEmpty)
+        store.remove(due)
+        XCTAssertTrue(notifications.presentationOptions(for: dueID, now: now).isEmpty)
+    }
+
     func testAlertHasStableIdentityContentSoundAndExactDeliveryDate() throws {
         let now = Date()
         let due = Date(timeIntervalSince1970: floor(now.timeIntervalSince1970) + 120)

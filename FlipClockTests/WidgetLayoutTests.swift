@@ -5,6 +5,40 @@ import AppKit
 
 final class WidgetLayoutTests: XCTestCase {
     @MainActor
+    func testCalendarReminderActionIsBlueOnFirstInactiveRender() throws {
+        let suite = "CalendarActionRendering.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let today = Calendar.current.date(from: DateComponents(year: 2026, month: 10, day: 19))!
+        let store = ReminderStore(defaults: defaults)
+        let content = CalendarMonthView(reminderStore: store,
+                                        navigation: .constant(CalendarNavigation(date: today)), today: today)
+            .frame(width: 376)
+            .padding(16)
+            .background(Color.white)
+            .environment(\.colorScheme, .light)
+            .environment(\.controlActiveState, .inactive)
+        let renderer = ImageRenderer(content: content)
+        renderer.scale = 2
+        let cgImage = try XCTUnwrap(renderer.cgImage)
+        let attachment = XCTAttachment(image: NSImage(cgImage: cgImage, size: .zero))
+        attachment.name = "Calendar first-open reminder action"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+        let bitmap = NSBitmapImageRep(cgImage: cgImage)
+        var bluePixels = 0
+        for y in max(0, bitmap.pixelsHigh - 90)..<bitmap.pixelsHigh {
+            for x in (bitmap.pixelsWide / 2)..<bitmap.pixelsWide {
+                guard let color = bitmap.colorAt(x: x, y: y)?.usingColorSpace(.deviceRGB) else { continue }
+                if color.blueComponent > color.redComponent + 0.25 && color.greenComponent > color.redComponent + 0.1 {
+                    bluePixels += 1
+                }
+            }
+        }
+        XCTAssertGreaterThan(bluePixels, 300, "The enabled Add Reminder action must retain its blue emphasis before another control is clicked")
+    }
+
+    @MainActor
     func testTimerLensMagnifiesOnlyNumbersInsideItsBand() {
         XCTAssertEqual(TimeWheelReel.magnification(atRowDistance: 0), 2.55, accuracy: 0.001)
         let edge = TimeWheelReel.selectionHeight / (2 * TimeWheelReel.rowHeight)

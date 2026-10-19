@@ -158,7 +158,8 @@ struct CalendarMonthView: View {
                         .popoverActionButton(prominent: true)
                         .controlSize(.large)
                         .buttonBorderShape(.capsule)
-                        .tint(.accentColor)
+                        .tint(.blue)
+                        .environment(\.controlActiveState, .active)
                         .keyboardShortcut("n", modifiers: .command)
                         .help("Add reminder for the selected date (⌘N)")
                     }
@@ -281,12 +282,11 @@ struct CalendarMonthView: View {
             let reminders = reminderStore.reminders(on: date)
             Button { navigation.selectedDate = date } label: {
                 Text("\(calendar.component(.day, from: date))")
-                    .font(.callout.weight(isToday ? .semibold : .regular))
+                    .font(.callout.weight(isSelected || isToday ? .semibold : .regular))
                     .monospacedDigit()
-                    .foregroundStyle(isToday ? Color.white : (column == sundayColumn ? .red : .primary))
+                    .foregroundStyle(isSelected ? Color.white : (isToday ? .blue : (column == sundayColumn ? .red : .primary)))
                     .frame(width: Self.daySize, height: Self.daySize)
-                    .background(isToday ? Color.accentColor : (isSelected ? Color.accentColor.opacity(0.12) : Color.primary.opacity(hoveredCell == date ? 0.08 : 0)), in: Circle())
-                    .overlay(Circle().strokeBorder(isSelected && !isToday ? Color.accentColor.opacity(0.65) : .clear, lineWidth: 1.5))
+                    .background(isSelected ? Color.accentColor : Color.primary.opacity(hoveredCell == date ? 0.08 : 0), in: Circle())
                     .overlay(alignment: .bottom) {
                         if !reminders.isEmpty {
                             ReminderBadge(isDue: isToday && reminders.contains { !$0.isAcknowledged }, diameter: 5, isActive: isVisible)

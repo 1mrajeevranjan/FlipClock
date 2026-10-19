@@ -1,6 +1,19 @@
-# Regression and stress results — 2026-10-18
+# Regression and stress results — 2026-10-19
 
-## Result
+## Popover bug regression — October 19
+
+114 tests passed with zero failures after the first-open button, calendar selection, and sound guards changed. The 34 focused calendar/timer/notification/rendering checks also passed.
+
+- The inactive first-render check reproduced a gray Add Reminder action before the fix. It now renders blue immediately, without another interaction.
+- Opening the popover selects the current date and month. Midnight and time-zone changes refresh calendar state; deliberate browsing remains intact during same-day refreshes. Only the selected day receives a filled selection circle.
+- Foreground notification presentation requires a matching, unacknowledged reminder whose scheduled second has arrived. Unknown, deleted, acknowledged, and future reminders cannot request sound.
+- Countdown tests now inject silent audio callbacks. Idle, paused, and reset countdowns emit no sound callback; an actual completion emits exactly one. Earlier regression runs used real macOS chimes. This confirms a test-audio source, but does not establish the sole cause of the reported live sound.
+
+Evidence: `/tmp/flipclock-popup-bugs-regression.log` and `/var/folders/2c/ds4y85f53p7cps19pr2s87gc0000gn/T/FlipClock-DerivedData/Logs/Test/Test-FlipClock-2026.10.19_12-10-33-+0530.xcresult`.
+
+Live popover interaction and speaker output remain unverified under the Computer Use restriction described below.
+
+## Previous stress run — October 18
 
 110 tests passed in each of three fresh-process runs: 330 test executions, zero failures. Debug configuration, native macOS destination, Xcode 27.
 

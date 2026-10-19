@@ -6,7 +6,7 @@ final class StopwatchTests: XCTestCase {
     @MainActor
     func testPopoverReopenAndTabSwitchResumeOnlyTheVisibleTool() async throws {
         let timeProvider = TimeProvider()
-        let timer = CountdownTimer()
+        let timer = CountdownTimer(playCompletionSound: {})
         let stopwatch = Stopwatch()
         let presentation = PopoverPresentation(timeProvider: timeProvider, timerModel: timer, stopwatch: stopwatch)
         presentation.selectedTab = .stopwatch
