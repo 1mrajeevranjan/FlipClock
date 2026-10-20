@@ -60,6 +60,9 @@ targets:
       path: FlipClock/Info.plist
       properties:
         LSUIElement: true
+        # Default to persistent "Alerts" (not auto-hiding banners) so the Dismiss button stays until the
+        # user acts on a ringing reminder. Only applies on first registration; users can still change it.
+        NSUserNotificationAlertStyle: alert
         CFBundleShortVersionString: "1.0"
         CFBundleVersion: "1"
         NSHumanReadableCopyright: ""

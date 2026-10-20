@@ -63,5 +63,5 @@ Computer Use returned **“Computer Use was not approved to use FlipClock.”** 
 - Check timer scrolling/focus, magnification, Start/Pause/Resume/Reset/Done and stopwatch Start/Pause/Resume/Reset in the actual popover.
 - Check desktop dragging, context-menu Settings/Hide, show/hide, size/date/format, fill-screen and floating transitions.
 - Verify login-item registration and notification permission states without disturbing existing user configuration.
-- Listen to sound previews and a delivered macOS reminder, then dismiss it and verify native notification removal. Automated tests validate resources, requests and the dismissal handler, not speaker output or Notification Center delivery.
+- Listen to sound previews and a delivered macOS reminder (sound must loop), then dismiss it and verify the sound stops and the reminder is deleted. Automated tests validate resources, requests and the dismissal handler, not speaker output or Notification Center delivery.
 - Open About/Tips/FAQ; configure and verify the five external destinations before enabling those commands.

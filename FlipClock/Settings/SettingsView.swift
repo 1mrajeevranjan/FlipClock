@@ -118,8 +118,10 @@ struct SettingsView: View {
                     if reminderNotifications.authorizationStatus == .notDetermined {
                         Button("Enable Notifications") { reminderNotifications.enable() }
                             .disabled(reminderNotifications.isRequestingPermission)
+                    } else if reminderNotifications.needsSystemSettings {
+                        Button("Open Settings…") { reminderNotifications.openSystemSettings() }
                     } else {
-                        Text(reminderNotifications.authorizationStatus == .denied ? "Blocked" : "Allowed")
+                        Text("Allowed")
                             .foregroundStyle(.secondary)
                     }
                 }

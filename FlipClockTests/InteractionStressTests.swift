@@ -140,14 +140,13 @@ final class InteractionStressTests: XCTestCase {
         let originals = store.reminders
         var identifiers = Set<String>()
         for (index, reminder) in originals.enumerated() {
-            let sound = ReminderSound.all[index % ReminderSound.all.count]
-            let request = try XCTUnwrap(ReminderNotifications.request(for: reminder, sound: sound, now: now))
+            let request = try XCTUnwrap(ReminderNotifications.request(for: reminder, now: now))
             XCTAssertTrue(identifiers.insert(request.identifier).inserted)
             XCTAssertEqual(request.content.body, reminder.title)
             if index % 2 == 0 {
                 store.acknowledge(reminder)
                 let acknowledged = try XCTUnwrap(store.reminders.first { $0.id == reminder.id })
-                XCTAssertNil(ReminderNotifications.request(for: acknowledged, sound: sound, now: now))
+                XCTAssertNil(ReminderNotifications.request(for: acknowledged, now: now))
                 XCTAssertFalse(store.reminders(on: reminder.date).contains { $0.id == reminder.id })
             } else {
                 store.remove(reminder)
