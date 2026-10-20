@@ -1,5 +1,4 @@
 import AppKit
-import UserNotifications
 
 struct ReminderSound: Identifiable, Hashable {
     let id: String
@@ -16,12 +15,16 @@ struct ReminderSound: Identifiable, Hashable {
         all.first { $0.id == id } ?? .systemDefault
     }
 
-    var notificationSound: UNNotificationSound {
-        url == nil ? .default : UNNotificationSound(named: UNNotificationSoundName(rawValue: id))
-    }
-
     func preview() -> NSSound? {
         guard let url else { return nil }
         return NSSound(contentsOf: url, byReference: true)
+    }
+
+    /// "Default" follows the user's system alert sound (System Settings › Sound).
+    func alarm() -> NSSound? {
+        preview()
+            ?? UserDefaults.standard.string(forKey: "com.apple.sound.beep.sound")
+                .flatMap { NSSound(contentsOfFile: $0, byReference: true) }
+            ?? NSSound(named: "Glass")
     }
 }

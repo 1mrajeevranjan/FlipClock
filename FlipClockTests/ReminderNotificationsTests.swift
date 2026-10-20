@@ -22,21 +22,21 @@ final class ReminderNotificationsTests: XCTestCase {
         store.add(title: "Due", date: now.addingTimeInterval(0.5))
         let due = store.reminders[1]
         let dueID = ReminderNotifications.identifier(for: due.id)
-        XCTAssertEqual(notifications.presentationOptions(for: dueID, now: now), [.banner, .list, .sound])
+        XCTAssertEqual(notifications.presentationOptions(for: dueID, now: now), [.banner, .list])
         store.acknowledge(due)
         XCTAssertTrue(notifications.presentationOptions(for: dueID, now: now).isEmpty)
         store.remove(due)
         XCTAssertTrue(notifications.presentationOptions(for: dueID, now: now).isEmpty)
     }
 
-    func testAlertHasStableIdentityContentSoundAndExactDeliveryDate() throws {
+    func testAlertHasStableIdentityContentAndExactDeliveryDate() throws {
         let now = Date()
         let due = Date(timeIntervalSince1970: floor(now.timeIntervalSince1970) + 120)
         let reminder = Reminder(date: due, title: "Take a break")
-        let request = try XCTUnwrap(ReminderNotifications.request(for: reminder, sound: .systemDefault, now: now))
+        let request = try XCTUnwrap(ReminderNotifications.request(for: reminder, now: now))
         XCTAssertEqual(request.identifier, ReminderNotifications.identifier(for: reminder.id))
         XCTAssertEqual(request.content.body, reminder.title)
-        XCTAssertNotNil(request.content.sound)
+        XCTAssertNil(request.content.sound, "The app's looping alarm is the sound; the alert itself stays silent")
         XCTAssertEqual(request.content.categoryIdentifier, ReminderNotifications.category.identifier)
         XCTAssertEqual(ReminderNotifications.category.actions.map(\.identifier), [ReminderNotifications.dismissActionIdentifier])
         XCTAssertEqual(ReminderNotifications.category.actions.first?.title, "Dismiss")
@@ -44,20 +44,18 @@ final class ReminderNotificationsTests: XCTestCase {
         let trigger = try XCTUnwrap(request.trigger as? UNCalendarNotificationTrigger)
         XCTAssertFalse(trigger.repeats)
         XCTAssertEqual(trigger.nextTriggerDate(), due)
-        XCTAssertEqual(ReminderNotifications.request(for: reminder, sound: .byID("Glass.aiff"), now: now)?.identifier,
-                       request.identifier, "Changing sound replaces the same alert instead of duplicating it")
     }
 
     func testAcknowledgedAndPastRemindersDoNotProduceNewAlerts() {
         let now = Date()
         XCTAssertNil(ReminderNotifications.request(for: Reminder(date: now.addingTimeInterval(-1), title: "Old"),
-                                                   sound: .systemDefault, now: now))
+                                                   now: now))
         XCTAssertNil(ReminderNotifications.request(for: Reminder(date: now.addingTimeInterval(60), title: "Done", isAcknowledged: true),
-                                                   sound: .systemDefault, now: now))
+                                                   now: now))
     }
 
     @MainActor
-    func testDismissAcknowledgesOnlyMatchingReminderAndPersistsAcrossRelaunch() throws {
+    func testDismissRemovesOnlyMatchingReminderAndPersistsAcrossRelaunch() throws {
         let suite = "ReminderNotificationDismissTests.\(UUID().uuidString)"
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
         defer { defaults.removePersistentDomain(forName: suite) }
@@ -83,27 +81,62 @@ final class ReminderNotificationsTests: XCTestCase {
         notifications.handleResponse(actionIdentifier: ReminderNotifications.dismissActionIdentifier, requestIdentifier: requestID)
         XCTAssertEqual(store.widgetReminders.map(\.id), [second.id])
         XCTAssertEqual(store.dueTodayUnacknowledged.map(\.id), [second.id])
-        let reloaded = ReminderStore(defaults: defaults)
-        XCTAssertEqual(reloaded.reminders.first(where: { $0.id == first.id })?.isAcknowledged, true)
-        XCTAssertNil(ReminderNotifications.request(for: reloaded.reminders[0], sound: .systemDefault, notifyIfOverdue: true))
+        XCTAssertEqual(store.reminders.map(\.id), [second.id])
+        XCTAssertEqual(ReminderStore(defaults: defaults).reminders.map(\.id), [second.id])
 
         notifications.handleResponse(actionIdentifier: UNNotificationDismissActionIdentifier,
                                      requestIdentifier: ReminderNotifications.identifier(for: second.id))
-        XCTAssertTrue(store.widgetReminders.isEmpty, "Closing the native alert also acknowledges it")
-        store.remove(first)
+        XCTAssertTrue(store.reminders.isEmpty, "Closing the native alert also removes it")
         notifications.handleResponse(actionIdentifier: ReminderNotifications.dismissActionIdentifier, requestIdentifier: requestID)
-        XCTAssertEqual(store.reminders.count, 1, "A stale alert must not restore a deleted reminder")
+        XCTAssertTrue(store.reminders.isEmpty, "A stale alert must not restore a deleted reminder")
+    }
+
+    @MainActor
+    func testAlarmRingsWhenDueUntilDismissedAndNeverReplaysOldReminders() throws {
+        let suite = "ReminderAlarmTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let store = ReminderStore(defaults: defaults)
+        let now = Date()
+        store.add(title: "Already overdue at launch", date: now.addingTimeInterval(-3600))
+        store.add(title: "Stand up", date: now.addingTimeInterval(60))
+        let due = store.reminders[1]
+        let notifications = ReminderNotifications(store: store, settings: AppSettings(defaults: defaults))
+        defer { notifications.stopAlarm() }
+
+        notifications.ringDueReminders(now: now)
+        XCTAssertFalse(notifications.isRinging, "Relaunching must not replay reminders that were already past due")
+
+        notifications.ringDueReminders(now: due.date)
+        XCTAssertTrue(notifications.isRinging)
+        notifications.ringDueReminders(now: due.date.addingTimeInterval(1))
+        XCTAssertTrue(notifications.isRinging, "Keeps ringing until the user acts on it")
+
+        notifications.handleResponse(actionIdentifier: ReminderNotifications.dismissActionIdentifier,
+                                     requestIdentifier: ReminderNotifications.identifier(for: due.id))
+        XCTAssertFalse(notifications.isRinging)
+        XCTAssertFalse(store.reminders.contains { $0.id == due.id }, "Dismiss removes the reminder")
+        notifications.ringDueReminders(now: due.date.addingTimeInterval(2))
+        XCTAssertFalse(notifications.isRinging)
+
+        store.add(title: "Elsewhere", date: due.date.addingTimeInterval(60))
+        let other = try XCTUnwrap(store.reminders.last)
+        notifications.ringDueReminders(now: other.date)
+        XCTAssertTrue(notifications.isRinging)
+        store.acknowledge(other)
+        notifications.ringDueReminders(now: other.date.addingTimeInterval(1))
+        XCTAssertFalse(notifications.isRinging, "Acknowledging from the popover or menu bar also silences it")
     }
 
     func testNewlyCreatedOverdueReminderAlertsWithoutReplayingHistoricalOnes() throws {
         let now = Date()
         let reminder = Reminder(date: now.addingTimeInterval(-30), title: "Due this minute")
-        let request = try XCTUnwrap(ReminderNotifications.request(for: reminder, sound: .systemDefault,
-                                                                  now: now, notifyIfOverdue: true))
+        let request = try XCTUnwrap(ReminderNotifications.request(for: reminder, now: now,
+                                                                  notifyIfOverdue: true))
         let trigger = try XCTUnwrap(request.trigger as? UNTimeIntervalNotificationTrigger)
         XCTAssertEqual(trigger.timeInterval, 1)
         XCTAssertFalse(trigger.repeats)
-        XCTAssertNil(ReminderNotifications.request(for: reminder, sound: .systemDefault, now: now))
+        XCTAssertNil(ReminderNotifications.request(for: reminder, now: now))
     }
 
     func testNativeSoundsAreBundledAndStoredSelectionIsValidated() {

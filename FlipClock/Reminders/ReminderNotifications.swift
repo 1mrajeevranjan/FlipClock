@@ -8,6 +8,8 @@ final class ReminderNotifications: NSObject, ObservableObject, UNUserNotificatio
     @Published private(set) var statusMessage = "Enable alerts and sounds for timed reminders."
     @Published private(set) var errorMessage: String?
     @Published private(set) var isRequestingPermission = false
+    /// Blocked, alerts off, or "Temporary" style (hides after a few seconds) — only fixable in System Settings.
+    @Published private(set) var needsSystemSettings = false
 
     private let store: ReminderStore
     private let settings: AppSettings
@@ -17,6 +19,11 @@ final class ReminderNotifications: NSObject, ObservableObject, UNUserNotificatio
     private var knownIDs: Set<UUID>
     private var newReminderIDs = Set<UUID>()
     private var previewSound: NSSound?
+    private var alarm: NSSound?
+    private var alarmTimer: Timer?
+    private var ringingIDs = Set<UUID>()
+    /// Reminders that already rang (or were already overdue at launch), so a relaunch never replays old alarms.
+    private var rungIDs: Set<UUID>
     nonisolated private static let prefix = "FlipClock-reminder-"
     nonisolated static let dismissActionIdentifier = "FlipClock-dismiss-reminder"
 
@@ -31,6 +38,7 @@ final class ReminderNotifications: NSObject, ObservableObject, UNUserNotificatio
         self.settings = settings
         self.center = center
         knownIDs = Set(store.reminders.map(\.id))
+        rungIDs = Set(store.reminders.filter { $0.date <= Date() }.map(\.id))
         super.init()
     }
 
@@ -38,16 +46,24 @@ final class ReminderNotifications: NSObject, ObservableObject, UNUserNotificatio
         guard cancellables.isEmpty else { return }
         center.delegate = self
         center.setNotificationCategories([Self.category])
-        store.$reminders.combineLatest(settings.$reminderSound)
+        store.$reminders
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] reminders, sound in
+            .sink { [weak self] reminders in
                 guard let self else { return }
                 let ids = Set(reminders.map(\.id))
                 self.newReminderIDs.formUnion(ids.subtracting(self.knownIDs))
                 self.newReminderIDs.formIntersection(Set(reminders.filter { !$0.isAcknowledged }.map(\.id)))
                 self.knownIDs = ids
-                self.queue(reminders: reminders, sound: sound, requestPermission: !self.newReminderIDs.isEmpty)
+                // Also covers upcoming reminders whose permission was lost (e.g. macOS dropped the app's registration).
+                let hasUpcoming = reminders.contains { !$0.isAcknowledged && $0.date > Date() }
+                self.queue(reminders: reminders, requestPermission: hasUpcoming || !self.newReminderIDs.isEmpty)
+                self.ringDueReminders()
             }
+            .store(in: &cancellables)
+        // A sleeping Mac delays the one-shot alarm timer; catch up on anything that came due meanwhile.
+        NSWorkspace.shared.notificationCenter.publisher(for: NSWorkspace.didWakeNotification)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.ringDueReminders() }
             .store(in: &cancellables)
         NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)
             .receive(on: DispatchQueue.main)
@@ -56,12 +72,50 @@ final class ReminderNotifications: NSObject, ObservableObject, UNUserNotificatio
     }
 
     func refresh() {
-        queue(reminders: store.reminders, sound: settings.reminderSound, requestPermission: false)
+        queue(reminders: store.reminders, requestPermission: false)
     }
 
     func enable() {
         guard !isRequestingPermission else { return }
-        queue(reminders: store.reminders, sound: settings.reminderSound, requestPermission: true)
+        queue(reminders: store.reminders, requestPermission: true)
+    }
+
+    /// Starts the looping alarm for reminders whose time has come, stops it once every ringing
+    /// reminder is dismissed/acknowledged anywhere, and arms a timer for the next one.
+    func ringDueReminders(now: Date = Date()) {
+        alarmTimer?.invalidate()
+        alarmTimer = nil
+        let pending = store.reminders.filter { !$0.isAcknowledged }
+        let due = pending.filter { $0.date <= now && !rungIDs.contains($0.id) }.map(\.id)
+        rungIDs.formUnion(due)
+        ringingIDs.formUnion(due)
+        ringingIDs.formIntersection(pending.map(\.id))
+        if ringingIDs.isEmpty {
+            stopAlarm()
+        } else if alarm == nil {
+            alarm = settings.reminderSound.alarm()
+            alarm?.loops = true
+            alarm?.play()
+        }
+        guard let next = pending.filter({ $0.date > now }).map(\.date).min() else { return }
+        let timer = Timer(fire: next, interval: 0, repeats: false) { [weak self] _ in
+            MainActor.assumeIsolated { self?.ringDueReminders() }
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        alarmTimer = timer
+    }
+
+    var isRinging: Bool { alarm != nil }
+
+    func stopAlarm() {
+        ringingIDs.removeAll()
+        alarm?.stop()
+        alarm = nil
+    }
+
+    func openSystemSettings() {
+        guard let url = URL(string: "x-apple.systempreferences:com.apple.preference.notifications?id=\(Bundle.main.bundleIdentifier ?? "")") else { return }
+        NSWorkspace.shared.open(url)
     }
 
     func playPreview(_ sound: ReminderSound) {
@@ -71,20 +125,26 @@ final class ReminderNotifications: NSObject, ObservableObject, UNUserNotificatio
     }
 
     func handleResponse(actionIdentifier: String, requestIdentifier: String) {
+        // Clicking the alert body silences it but keeps the reminder; only Dismiss/close removes it.
+        if actionIdentifier == UNNotificationDefaultActionIdentifier, requestIdentifier.hasPrefix(Self.prefix) {
+            stopAlarm()
+        }
         guard actionIdentifier == Self.dismissActionIdentifier || actionIdentifier == UNNotificationDismissActionIdentifier,
               requestIdentifier.hasPrefix(Self.prefix),
               let id = UUID(uuidString: String(requestIdentifier.dropFirst(Self.prefix.count))),
               requestIdentifier == Self.identifier(for: id) else { return }
         previewSound?.stop()
         newReminderIDs.remove(id)
+        ringingIDs.remove(id)
+        if ringingIDs.isEmpty { stopAlarm() }
         if let reminder = store.reminders.first(where: { $0.id == id }) {
-            store.acknowledge(reminder)
+            store.remove(reminder)
         }
         center.removePendingNotificationRequests(withIdentifiers: [requestIdentifier])
         center.removeDeliveredNotifications(withIdentifiers: [requestIdentifier])
     }
 
-    private func queue(reminders: [Reminder], sound: ReminderSound, requestPermission: Bool) {
+    private func queue(reminders: [Reminder], requestPermission: Bool) {
         let previous = schedulingTask
         previous?.cancel()
         schedulingTask = Task { [weak self] in
@@ -92,12 +152,12 @@ final class ReminderNotifications: NSObject, ObservableObject, UNUserNotificatio
             await previous?.value
             guard !Task.isCancelled else { return }
             guard let self else { return }
-            await self.reschedule(reminders: reminders, sound: sound,
+            await self.reschedule(reminders: reminders,
                                   requestPermission: requestPermission || !self.newReminderIDs.isEmpty)
         }
     }
 
-    private func reschedule(reminders: [Reminder], sound: ReminderSound, requestPermission: Bool) async {
+    private func reschedule(reminders: [Reminder], requestPermission: Bool) async {
         var permission = await center.notificationSettings()
         guard !Task.isCancelled else { return }
         errorMessage = nil
@@ -117,18 +177,20 @@ final class ReminderNotifications: NSObject, ObservableObject, UNUserNotificatio
             statusMessage = "Enable alerts and sounds for timed reminders."
         } else if authorizationStatus == .denied {
             statusMessage = "Allow FlipClock in System Settings › Notifications."
-        } else if permission.soundSetting != .enabled {
-            statusMessage = "Sounds are off in System Settings › Notifications."
         } else if permission.alertSetting != .enabled {
             statusMessage = "Alerts are off in System Settings › Notifications."
+        } else if permission.alertStyle != .alert {
+            statusMessage = "Set Alert Style to “Persistent” so reminders stay on screen until dismissed."
         } else {
             statusMessage = "Alerts play at each reminder’s scheduled time."
         }
+        needsSystemSettings = authorizationStatus == .denied || (authorizationStatus != .notDetermined
+            && (permission.alertSetting != .enabled || permission.alertStyle != .alert))
         guard authorizationStatus == .authorized || authorizationStatus == .provisional else { return }
 
         let now = Date()
         let requests = reminders.compactMap { reminder -> (Reminder, UNNotificationRequest)? in
-            guard let request = Self.request(for: reminder, sound: sound, now: now,
+            guard let request = Self.request(for: reminder, now: now,
                                              notifyIfOverdue: newReminderIDs.contains(reminder.id)) else { return nil }
             return (reminder, request)
         }
@@ -159,14 +221,14 @@ final class ReminderNotifications: NSObject, ObservableObject, UNUserNotificatio
         "\(prefix)\(id.uuidString)"
     }
 
-    nonisolated static func request(for reminder: Reminder, sound: ReminderSound, now: Date = Date(),
+    nonisolated static func request(for reminder: Reminder, now: Date = Date(),
                                    notifyIfOverdue: Bool = false) -> UNNotificationRequest? {
         guard !reminder.isAcknowledged, reminder.date > now || notifyIfOverdue else { return nil }
         let content = UNMutableNotificationContent()
         content.title = "Reminder"
         content.subtitle = reminder.date.formatted(date: .abbreviated, time: .shortened)
         content.body = reminder.title
-        content.sound = sound.notificationSound
+        // Silent on purpose: the app plays a looping alarm (`ringDueReminders`) until the user dismisses it.
         content.threadIdentifier = "FlipClock-reminders"
         content.categoryIdentifier = category.identifier
         var calendar = Calendar(identifier: .gregorian)
@@ -192,7 +254,7 @@ final class ReminderNotifications: NSObject, ObservableObject, UNUserNotificatio
               !reminder.isAcknowledged,
               // Calendar notification triggers have whole-second precision.
               floor(reminder.date.timeIntervalSince1970) <= now.timeIntervalSince1970 else { return [] }
-        return [.banner, .list, .sound]
+        return [.banner, .list]
     }
 
     nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse,
