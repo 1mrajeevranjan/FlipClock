@@ -56,6 +56,47 @@ final class WidgetLayoutTests: XCTestCase {
         XCTAssertEqual(reel.position, 59)
     }
 
+    /// The selected value must look like real, crisp text at the magnified size — not a
+    /// stretched, warped copy of the small numeral (the old pixel-strip lens bent digits).
+    @MainActor
+    func testSelectedTimerNumeralIsUndistortedTextAtMagnifiedSize() throws {
+        func inkMask<V: View>(_ content: V) throws -> (Set<Int>, Int) {
+            let renderer = ImageRenderer(content: content
+                .frame(width: 160, height: TimeWheelReel.selectionHeight)
+                .background(Color.white)
+                .environment(\.colorScheme, .light))
+            renderer.scale = 2
+            let bitmap = NSBitmapImageRep(cgImage: try XCTUnwrap(renderer.cgImage))
+            var ink = Set<Int>()
+            for y in 0..<bitmap.pixelsHigh {
+                for x in 0..<bitmap.pixelsWide {
+                    guard let color = bitmap.colorAt(x: x, y: y)?.usingColorSpace(.deviceRGB) else { continue }
+                    if (color.redComponent + color.greenComponent + color.blueComponent) / 3 < 0.5 { ink.insert(y * bitmap.pixelsWide + x) }
+                }
+            }
+            return (ink, bitmap.pixelsWide)
+        }
+        let size = 16 * TimeWheelReel.maximumMagnification
+        let reel = try inkMask(TimeWheelReel(position: 11, range: 0...59, unitLabel: "", showsUnit: true,
+                                                  isFocused: false, viewportHeight: TimeWheelReel.selectionHeight))
+        let reference = try inkMask(HStack(spacing: 4) {
+            Text("11").font(.system(size: size, weight: .semibold, design: .rounded)).monospacedDigit()
+                .frame(width: TimeWheelReel.numeralWidth, height: TimeWheelReel.selectionHeight)
+            Text("")
+        }.frame(maxWidth: .infinity))
+        XCTAssertFalse(reference.0.isEmpty)
+        // Compared by shape: align both on their ink bounds so a one-pixel layout rounding
+        // difference doesn't read as distortion.
+        func aligned(_ mask: (Set<Int>, Int)) -> Set<Int> {
+            let width = mask.1
+            let minX = mask.0.map { $0 % width }.min() ?? 0, minY = mask.0.map { $0 / width }.min() ?? 0
+            return Set(mask.0.map { ($0 / width - minY) * width + ($0 % width - minX) })
+        }
+        let a = aligned(reel), b = aligned(reference)
+        let overlap = Double(a.intersection(b).count) / Double(a.union(b).count)
+        XCTAssertGreaterThan(overlap, 0.9, "Selected numeral differs from crisp \(Int(size))pt text (overlap \(Int(overlap * 100))%)")
+    }
+
     @MainActor
     func testTimerLensRendersVisibleMagnifiedDigitsInBothAppearances() throws {
         func inkBounds(magnified: Bool, scheme: ColorScheme, position: CGFloat = 6) throws -> CGRect {

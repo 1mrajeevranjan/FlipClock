@@ -221,6 +221,10 @@ final class AppSettings: ObservableObject {
         }
     }
 
+    /// Why the login item isn't in effect (registration failed, or macOS wants the
+    /// user's approval) — shown under the toggle so it never silently does nothing.
+    @Published private(set) var launchAtLoginIssue: String?
+
     @Published var theme: AppTheme {
         didSet { defaults.set(theme.rawValue, forKey: Keys.theme) }
     }
@@ -482,18 +486,35 @@ final class AppSettings: ObservableObject {
         systemWidgetDimming = SystemWidgetDimming.current()
     }
 
+    /// Called at launch (never from `init`, so tests can't touch the real login items).
+    /// A moved or reinstalled app leaves its login item pointing at the old path, which
+    /// then never launches — re-registering from the current bundle heals that.
+    func syncLaunchAtLogin() {
+        let status = SMAppService.mainApp.status
+        if launchAtLogin, status == .notRegistered || status == .notFound {
+            applyLaunchAtLogin()
+        } else {
+            updateLaunchAtLoginIssue(status)
+        }
+    }
+
     private func applyLaunchAtLogin() {
+        let service = SMAppService.mainApp
         do {
             if launchAtLogin {
-                try SMAppService.mainApp.register()
-            } else {
-                try SMAppService.mainApp.unregister()
+                try service.register()
+            } else if service.status != .notRegistered {
+                try service.unregister()
             }
+            updateLaunchAtLoginIssue(service.status)
         } catch {
-            // Not a system-boundary failure worth surfacing to the user —
-            // login-item registration failing just means the toggle didn't
-            // take effect; log for debugging.
-            print("AppSettings: launch-at-login registration failed: \(error)")
+            launchAtLoginIssue = "Couldn’t update the login item: \(error.localizedDescription)"
+            NSLog("FlipClock: launch-at-login %@ failed: %@", launchAtLogin ? "register" : "unregister", "\(error)")
         }
+    }
+
+    private func updateLaunchAtLoginIssue(_ status: SMAppService.Status) {
+        launchAtLoginIssue = launchAtLogin && status == .requiresApproval
+            ? "Allow FlipClock in System Settings › General › Login Items." : nil
     }
 }

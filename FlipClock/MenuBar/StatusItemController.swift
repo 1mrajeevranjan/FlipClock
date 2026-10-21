@@ -131,7 +131,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
 
     @objc private func statusItemClicked() {
         guard let event = NSApp.currentEvent else { return }
-        if event.type == .rightMouseUp {
+        if event.type == .rightMouseUp || event.modifierFlags.contains(.control) {
             showMenu()
         } else {
             togglePopover()
@@ -199,29 +199,31 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         NSApp.terminate(nil)
     }
 
+    enum Links {
+        static let website = URL(string: "https://github.com/1mrajeevranjan/FlipClock")!
+        static let support = URL(string: "https://github.com/1mrajeevranjan/FlipClock/issues")!
+        static let moreApps = URL(string: "https://github.com/1mrajeevranjan")!
+    }
+
+    // ponytail: no "Rate App" until there's an App Store listing to rate on.
     static func makeMoreMenu(target: NSObject) -> NSMenu {
         let submenu = NSMenu()
-        func item(_ title: String, symbol: String, action: Selector? = nil) {
+        func item(_ title: String, symbol: String, action: Selector) {
             let menuItem = submenu.addItem(withTitle: title, action: action, keyEquivalent: "")
             menuItem.target = target
-            if action == nil {
-                menuItem.isEnabled = false
-                menuItem.toolTip = "No destination has been configured for this command."
-            }
             if let attributed = Self.iconTitle(title, symbol: symbol) {
                 menuItem.attributedTitle = attributed
             }
         }
         item("About", symbol: "info.circle", action: #selector(showAbout))
-        item("Support & Feedback", symbol: "bubble.left")
+        item("Support & Feedback", symbol: "bubble.left", action: #selector(openSupport))
         submenu.addItem(.separator())
         item("Tips", symbol: "lightbulb", action: #selector(showTips))
         item("FAQ", symbol: "questionmark.circle", action: #selector(showFAQ))
-        item("Website", symbol: "globe")
+        item("Website", symbol: "globe", action: #selector(openWebsite))
         submenu.addItem(.separator())
-        item("Rate App", symbol: "star")
-        item("Share App", symbol: "square.and.arrow.up")
-        item("More Apps by Me", symbol: "square.stack.3d.up")
+        item("Share App", symbol: "square.and.arrow.up", action: #selector(shareApp))
+        item("More Apps by Me", symbol: "square.stack.3d.up", action: #selector(openMoreApps))
         return submenu
     }
 
@@ -253,7 +255,17 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
     }
 
     @objc private func showAbout() {
+        NSApp.activate(ignoringOtherApps: true)
         NSApp.orderFrontStandardAboutPanel(nil)
+    }
+
+    @objc private func openSupport() { NSWorkspace.shared.open(Links.support) }
+    @objc private func openWebsite() { NSWorkspace.shared.open(Links.website) }
+    @objc private func openMoreApps() { NSWorkspace.shared.open(Links.moreApps) }
+
+    @objc private func shareApp() {
+        guard let button = statusItem.button else { return }
+        NSSharingServicePicker(items: [Links.website]).show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
     }
 
     @objc private func showTips() {
@@ -276,7 +288,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
 
         Why is the glass softer? Stronger wallpaper diffusion needs Screen Recording permission. The clock still works with system vibrancy when permission is unavailable.
 
-        How do reminder sounds work? Choose a native sound in General settings and allow FlipClock alerts and sounds in System Settings › Notifications. Dismiss acknowledges the reminder and clears it from active views. macOS controls playback of its one-shot notification sound.
+        How do reminder sounds work? At a reminder's time FlipClock plays the sound chosen in General settings on a loop. Click Dismiss on the notification to stop it and delete the reminder; clicking the notification itself only silences it. To keep reminders on screen until dismissed, set FlipClock's Alert Style to Persistent in System Settings › Notifications.
 
         Do timers continue when the popover closes? Yes. Reopening immediately shows the current time without keeping hidden display animations running.
         """)

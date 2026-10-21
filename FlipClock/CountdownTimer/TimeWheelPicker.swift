@@ -197,7 +197,6 @@ private struct TimeWheelNumerals: View {
     let range: ClosedRange<Int>
     let magnified: Bool
     @Environment(\.colorScheme) private var colorScheme
-    @Environment(\.displayScale) private var displayScale
 
     var body: some View {
         let position = position
@@ -205,50 +204,20 @@ private struct TimeWheelNumerals: View {
         let magnified = magnified
         let ink: Color = colorScheme == .dark ? .white : .black
         let rowHeight = TimeWheelReel.rowHeight
-        let pixelHeight = 1 / max(1, displayScale)
         return Canvas { context, size in
             let center = CGPoint(x: size.width / 2, y: size.height / 2)
             let values = max(range.lowerBound, Int(position.rounded(.down)) - 3)...min(range.upperBound, Int(position.rounded(.up)) + 3)
-            let rows = values.map { number in
+            for number in values {
                 let distance = CGFloat(number) - position
-                let weight: Font.Weight = magnified && TimeWheelReel.magnification(atRowDistance: distance) > 1.12 ? .semibold : .regular
+                // Magnified rows are laid out as real text at the larger point size, never by
+                // scaling small glyphs — stretching them warped and pixelated the selected value.
+                let scale = magnified ? TimeWheelReel.magnification(atRowDistance: distance) : 1
                 let text = context.resolve(Text("\(number)")
-                    .font(.system(size: 16, weight: weight, design: .rounded))
+                    .font(.system(size: 16 * scale, weight: scale > 1.12 ? .semibold : .regular, design: .rounded))
                     .monospacedDigit()
                     .foregroundStyle(ink))
-                return (text: text, y: center.y + distance * rowHeight,
-                        opacity: max(0.28, 1 - abs(distance) * 0.45))
-            }
-
-            func drawRows(in graphics: inout GraphicsContext, sourceTop: CGFloat, sourceBottom: CGFloat) {
-                for row in rows where row.y + 12 >= sourceTop && row.y - 12 <= sourceBottom {
-                    graphics.opacity = row.opacity
-                    graphics.draw(row.text, at: CGPoint(x: center.x, y: row.y), anchor: .center)
-                }
-            }
-
-            guard magnified else {
-                drawRows(in: &context, sourceTop: 0, sourceBottom: size.height)
-                return
-            }
-
-            // Pixel-high affine slices reproduce a convex lens without a filtered layer inside system glass.
-            func sourceY(_ destinationY: CGFloat) -> CGFloat {
-                let offset = destinationY - center.y
-                return center.y + offset / TimeWheelReel.magnification(atRowDistance: offset / rowHeight)
-            }
-
-            for top in stride(from: CGFloat.zero, to: size.height, by: pixelHeight) {
-                let bottom = min(top + pixelHeight, size.height)
-                let sourceTop = sourceY(top), sourceBottom = sourceY(bottom)
-                let distance = ((top + bottom) / 2 - center.y) / rowHeight
-                let xScale = 1 + 0.8 * (TimeWheelReel.magnification(atRowDistance: distance) - 1)
-                var slice = context
-                slice.clip(to: Path(CGRect(x: 0, y: top, width: size.width, height: bottom - top)))
-                slice.translateBy(x: center.x, y: top)
-                slice.scaleBy(x: xScale, y: (bottom - top) / (sourceBottom - sourceTop))
-                slice.translateBy(x: -center.x, y: -sourceTop)
-                drawRows(in: &slice, sourceTop: sourceTop, sourceBottom: sourceBottom)
+                context.opacity = max(0.28, 1 - abs(distance) * 0.45)
+                context.draw(text, at: CGPoint(x: center.x, y: center.y + distance * rowHeight), anchor: .center)
             }
         }
     }

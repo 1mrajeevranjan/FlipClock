@@ -180,18 +180,17 @@ final class InteractionStressTests: XCTestCase {
     }
 
     @MainActor
-    func testMoreMenuHasNoEnabledCommandsWithMissingHandlers() {
+    func testEveryMoreMenuCommandIsEnabledAndImplemented() throws {
         let menu = StatusItemController.makeMoreMenu(target: NSObject())
         let commands = menu.items.filter { !$0.isSeparatorItem }
-        XCTAssertEqual(commands.count, 8)
+        XCTAssertEqual(commands.count, 7)
         for command in commands {
-            if let action = command.action {
-                XCTAssertTrue(StatusItemController.instancesRespond(to: action), "\(command.title) must have an implemented action")
-                XCTAssertTrue(command.isEnabled)
-            } else {
-                XCTAssertFalse(command.isEnabled, "Unconfigured external commands must not look actionable")
-                XCTAssertNotNil(command.toolTip)
-            }
+            let action = try XCTUnwrap(command.action, "\(command.title) has no action — a dead menu item")
+            XCTAssertTrue(StatusItemController.instancesRespond(to: action), "\(command.title) must have an implemented action")
+            XCTAssertTrue(command.isEnabled)
+        }
+        for link in [StatusItemController.Links.website, StatusItemController.Links.support, StatusItemController.Links.moreApps] {
+            XCTAssertEqual(link.scheme, "https")
         }
     }
 }

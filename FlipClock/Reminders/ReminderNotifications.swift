@@ -71,12 +71,15 @@ final class ReminderNotifications: NSObject, ObservableObject, UNUserNotificatio
             .store(in: &cancellables)
     }
 
+    /// Both are no-ops until `start()`: rescheduling from an unstarted instance (e.g. a
+    /// test host's empty store) would delete the user's real pending reminder alerts.
     func refresh() {
+        guard !cancellables.isEmpty else { return }
         queue(reminders: store.reminders, requestPermission: false)
     }
 
     func enable() {
-        guard !isRequestingPermission else { return }
+        guard !cancellables.isEmpty, !isRequestingPermission else { return }
         queue(reminders: store.reminders, requestPermission: true)
     }
 
@@ -120,7 +123,7 @@ final class ReminderNotifications: NSObject, ObservableObject, UNUserNotificatio
 
     func playPreview(_ sound: ReminderSound) {
         previewSound?.stop()
-        previewSound = sound.preview()
+        previewSound = sound.alarm()
         previewSound?.play()
     }
 

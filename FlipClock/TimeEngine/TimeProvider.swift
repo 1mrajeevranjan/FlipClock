@@ -23,7 +23,10 @@ final class TimeProvider {
 
     private func start() {
         timer?.invalidate()
-        let t = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
+        // Anchored to the next whole second (a repeating timer keeps that phase), so
+        // the seconds flip when the real second does rather than up to 1s later.
+        let nextSecond = Date(timeIntervalSinceReferenceDate: Date().timeIntervalSinceReferenceDate.rounded(.down) + 1)
+        let t = Timer(fire: nextSecond, interval: 1, repeats: true) { [weak self] _ in
             self?.refresh()
         }
         // .common run loop mode: a default-mode timer stalls while a status

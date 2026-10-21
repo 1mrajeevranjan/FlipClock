@@ -180,7 +180,7 @@ Development spot check (2026-10-18, Debug build, popover closed): eleven one-sec
 xcodebuild test -project FlipClock.xcodeproj -scheme FlipClock -destination 'platform=macOS'
 ```
 
-115 tests covering time and digit maths, settings persistence and fallbacks, calendar navigation, popover appearance updates, rendered timer-lens visibility and magnification in both themes and between values, reminder notification requests, sounds and dismissal, timer and stopwatch — including hidden-tool accuracy, popover reopening, concurrent capture deduplication, image-cache reuse, local-date rendering, batched reminder updates, stress tests and performance measurements.
+130 tests covering time and digit maths, every popover and Settings control pressed through the accessibility tree (`UIControlsTests`), seconds aligned to the wall clock, undistorted timer-wheel numerals, settings persistence and fallbacks, calendar navigation, popover appearance updates, rendered timer-lens visibility and magnification in both themes and between values, reminder notification requests, sounds and dismissal, timer and stopwatch — including hidden-tool accuracy, popover reopening, concurrent capture deduplication, image-cache reuse, local-date rendering, batched reminder updates, stress tests and performance measurements.
 
 `InteractionStressTests` adds 1,000 mixed tool/control cycles, 9,600 calendar month-page moves, 300 settings/world-clock cycles, 500 reminder records, 1,000 component key events, menu-handler checks, and bundled-font/icon validation. Repeat the suite in fresh processes with `-test-iterations 3 -test-repetition-relaunch-enabled YES -parallel-testing-enabled NO`.
 

@@ -109,7 +109,7 @@ struct SettingsView: View {
                     Toggle("Desktop clock", isOn: $settings.showDesktopOverlay).fixedSize()
                 }
                 Divider()
-                SettingsRow("Launch at login", detail: "Ready whenever you start your Mac.") {
+                SettingsRow("Launch at login", detail: settings.launchAtLoginIssue ?? "Ready whenever you start your Mac.") {
                     Toggle("Launch at login", isOn: $settings.launchAtLogin).fixedSize()
                 }
             }
@@ -136,7 +136,6 @@ struct SettingsView: View {
                             Image(systemName: "speaker.wave.2.fill").frame(width: 24, height: 24)
                         }
                         .buttonStyle(.borderless)
-                        .disabled(settings.reminderSound == .systemDefault)
                         .help("Preview notification sound")
                         .accessibilityLabel("Preview notification sound")
                     }
