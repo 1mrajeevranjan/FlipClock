@@ -67,3 +67,21 @@ final class ClockTickTests: XCTestCase {
         XCTAssertEqual(tick.digits, [1, 1, 4, 2, 0, 7])
     }
 }
+
+final class TimeProviderTests: XCTestCase {
+    /// The flip clock shows seconds, so they must change when the real second does —
+    /// not at whatever sub-second offset the app happened to launch at.
+    func testSecondsTickOnTheWallClockSecondBoundary() {
+        let provider = TimeProvider()
+        for _ in 0..<2 {
+            let start = provider.tick.second
+            let deadline = Date().addingTimeInterval(1.5)
+            while provider.tick.second == start, Date() < deadline {
+                RunLoop.main.run(until: Date().addingTimeInterval(0.005))
+            }
+            let changedAt = Date().timeIntervalSinceReferenceDate
+            let lag = changedAt - changedAt.rounded(.down)
+            XCTAssertLessThan(lag, 0.1, "Seconds flipped \(Int(lag * 1000))ms after the real second changed")
+        }
+    }
+}

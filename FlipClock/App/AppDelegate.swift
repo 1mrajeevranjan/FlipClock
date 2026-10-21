@@ -18,6 +18,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Unit tests must not change the real user's pending alerts or request permission.
         if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil {
             reminderNotifications.start()
+            settings.syncLaunchAtLogin()
         }
     }
 

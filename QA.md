@@ -38,7 +38,7 @@ Evidence on the development machine:
 - The primary menu-bar item sizes itself from the newly emitted 12/24-hour format, avoiding the old value sent during `@Published`'s `willSet`.
 - Acknowledged reminders disappear from calendar badges and hover details as well as the widget and due-today banner. Acknowledgment history remains persisted.
 - Reminder emphasis refreshes after day/time-zone changes and waking, and stops when yesterday's reminder is no longer due today.
-- Tips and FAQ have native help-dialog handlers. Support & Feedback, Website, Rate App, Share App, and More Apps remain disabled with explanatory tooltips because destinations have not been configured.
+- Every More item works: Tips and FAQ open help dialogs; Support & Feedback, Website and More Apps by Me open the GitHub issues, repo and profile pages; Share App opens the share sheet with the repo link. Rate App is omitted until there's an App Store listing.
 
 ## Automated coverage
 

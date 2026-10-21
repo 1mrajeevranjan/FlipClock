@@ -15,16 +15,12 @@ struct ReminderSound: Identifiable, Hashable {
         all.first { $0.id == id } ?? .systemDefault
     }
 
-    func preview() -> NSSound? {
-        guard let url else { return nil }
-        return NSSound(contentsOf: url, byReference: true)
-    }
-
-    /// "Default" follows the user's system alert sound (System Settings › Sound).
+    /// Used for both the reminder alarm and the Settings preview. "Default" follows
+    /// the user's system alert sound (System Settings › Sound).
     func alarm() -> NSSound? {
-        preview()
-            ?? UserDefaults.standard.string(forKey: "com.apple.sound.beep.sound")
-                .flatMap { NSSound(contentsOfFile: $0, byReference: true) }
+        if let url { return NSSound(contentsOf: url, byReference: true) }
+        return UserDefaults.standard.string(forKey: "com.apple.sound.beep.sound")
+            .flatMap { NSSound(contentsOfFile: $0, byReference: true) }
             ?? NSSound(named: "Glass")
     }
 }

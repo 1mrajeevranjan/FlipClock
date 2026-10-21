@@ -78,6 +78,7 @@
 		B7296591D2A8AA2A29EBEE6A /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C82BBCF4822EE69EB39A8D8C /* AppSettings.swift */; };
 		B9D618297F7CD605E224A50D /* space age.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A91D51A54F868D836DF9EEE5 /* space age.ttf */; };
 		BEE4478FD4D402324CFDBE0B /* WhiteSquareRedYesBlackEight-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = FFD7E50CEB556B656FB461A7 /* WhiteSquareRedYesBlackEight-Regular.ttf */; };
+		C1D5501ECF0FADD021FF17B0 /* UIControlsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C15EDFF75692B2A9516AB52E /* UIControlsTests.swift */; };
 		C2E6D90C324F39DB722972EB /* CountdownTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2284429193024632E90DAB5 /* CountdownTimer.swift */; };
 		C9754D0A7822746BE4F0F162 /* FlipClockApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9382537EFD4FE15801C53C0E /* FlipClockApp.swift */; };
 		CAF59530DE90125A7F7CA6C9 /* WorldClockStatusItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56490F0614A5B13F6D33C545 /* WorldClockStatusItemController.swift */; };
@@ -195,6 +196,7 @@
 		BD8DAB5C74DA5D3A473DA9DC /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C11AF6B6BCFC09C9232CA914 /* WorldClockCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockCard.swift; sourceTree = "<group>"; };
 		C1404A3D2475EEDC6D174181 /* DueReminderBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DueReminderBanner.swift; sourceTree = "<group>"; };
+		C15EDFF75692B2A9516AB52E /* UIControlsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIControlsTests.swift; sourceTree = "<group>"; };
 		C34727CD47DA893CF590CD5E /* Bring Me A Helicopter!.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Bring Me A Helicopter!.otf"; sourceTree = "<group>"; };
 		C3EAB38CFE04422718C3047D /* Destroy All Humans!.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Destroy All Humans!.otf"; sourceTree = "<group>"; };
 		C5C08F3B963244DA9DF5CD56 /* FlipClockTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlipClockTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -426,6 +428,7 @@
 				D8610DE0C35AEF88E49095BB /* ReminderNotificationsTests.swift */,
 				21DD6E720292DB4703BB04D5 /* ReminderStoreTests.swift */,
 				441CD5D08FC3CF244C84C5EB /* StopwatchTests.swift */,
+				C15EDFF75692B2A9516AB52E /* UIControlsTests.swift */,
 				1EC93791618CC9C6D0654B62 /* WidgetLayoutTests.swift */,
 			);
 			path = FlipClockTests;
@@ -773,6 +776,7 @@
 				79E2AFAA6EC4B61DA0AC9F01 /* ReminderNotificationsTests.swift in Sources */,
 				2F4B686AABC817A2C396EF25 /* ReminderStoreTests.swift in Sources */,
 				A8332CB0B3EB8B753189388D /* StopwatchTests.swift in Sources */,
+				C1D5501ECF0FADD021FF17B0 /* UIControlsTests.swift in Sources */,
 				CD727E7689849EA775F891F4 /* WidgetLayoutTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
