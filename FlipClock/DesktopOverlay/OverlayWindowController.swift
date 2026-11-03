@@ -133,6 +133,17 @@ final class OverlayWindowController {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.applySize(anchorTopRight: false) }
             .store(in: &cancellables)
+
+        // Moving, resizing or auto-hiding the Dock, and display resolution
+        // changes, all move `visibleFrame` — the fill-screen window has to
+        // follow it or it ends up under the Dock again.
+        NotificationCenter.default.publisher(for: NSApplication.didChangeScreenParametersNotification)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                guard let self, self.settings.fillScreen else { return }
+                self.applySize(anchorTopRight: false)
+            }
+            .store(in: &cancellables)
     }
 
     private func applySize(anchorTopRight: Bool) {
@@ -145,12 +156,19 @@ final class OverlayWindowController {
             }
             window.isMovableByWindowBackground = false
             window.hasShadow = false
+            // `visibleFrame`, not `frame`: the full frame runs under the menu
+            // bar and the Dock, so the clear window swallowed clicks on the
+            // strip of wallpaper beside the Dock (e.g. the bottom-left corner)
+            // that reach the desktop when fill screen is off. The clock scales
+            // itself to whatever size this leaves (`OverlayContentView.fillScale`).
+            //
             // `setFrame(_:display:)` has proven unreliable elsewhere in this
             // window's lifecycle (see `stepFloat`'s history) — drive size
             // and position through the two calls that are proven to work
             // instead of the combined one.
-            window.setContentSize(screen.frame.size)
-            window.setFrameOrigin(screen.frame.origin)
+            let area = screen.visibleFrame
+            window.setContentSize(area.size)
+            window.setFrameOrigin(area.origin)
             maskContentView(cornerRadius: 0)
             return
         }

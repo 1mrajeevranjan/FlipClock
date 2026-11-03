@@ -254,6 +254,7 @@ final class UIControlsTests: XCTestCase {
         XCTAssertTrue(settings.fillScreen)
         XCTAssertFalse(settings.floatAcrossScreen, "Fill screen turns floating off")
         XCTAssertFalse(try ui.element("Float across screen").isEnabled)
+        XCTAssertTrue(ui.has("Fill screen sizes the clock to your screen."), "Size says why it no longer applies")
     }
 
     func testSettingsWorldClockCardControls() throws {

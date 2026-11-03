@@ -203,6 +203,38 @@ final class WidgetLayoutTests: XCTestCase {
         }
     }
 
+    /// Fill screen sizes the clock to the area between the menu bar and the
+    /// Dock: as large as fits on any resolution, and never past it.
+    @MainActor
+    func testFillScreenClockFillsButNeverOverflowsItsArea() {
+        let areas = [
+            CGSize(width: 1440, height: 838),   // 13" laptop, Dock at the bottom
+            CGSize(width: 1512, height: 870),   // 14" laptop
+            CGSize(width: 2470, height: 1415),  // 27" display, Dock on the side
+            CGSize(width: 1080, height: 1800)   // portrait display
+        ]
+        let coverage = OverlayContentView.fillScreenCoverage
+        for area in areas {
+            let limit = CGSize(width: area.width * coverage, height: area.height * coverage)
+            for showDate in [false, true] {
+                for reminderCount in [0, 3] {
+                    let scale = OverlayContentView.fillScale(for: area, showDate: showDate, showMeridiem: true, reminderCount: reminderCount)
+                    let size = OverlayContentView.windowSize(scale: scale, showDate: showDate, showMeridiem: true, reminderCount: reminderCount)
+                    let label = "\(area) date=\(showDate) reminders=\(reminderCount)"
+                    XCTAssertLessThanOrEqual(size.width, limit.width, label)
+                    XCTAssertLessThanOrEqual(size.height, limit.height, label)
+                    let larger = OverlayContentView.windowSize(scale: scale * 1.01, showDate: showDate, showMeridiem: true, reminderCount: reminderCount)
+                    XCTAssert(larger.width > limit.width || larger.height > limit.height, "clock should be as large as fits: \(label)")
+                }
+            }
+        }
+        XCTAssertGreaterThan(
+            OverlayContentView.fillScale(for: areas[2], showDate: true, showMeridiem: true),
+            OverlayContentView.fillScale(for: areas[0], showDate: true, showMeridiem: true),
+            "a bigger screen gets a bigger clock"
+        )
+    }
+
     func testDefaultSizeMarginIsConcentricAndMatchesHIG() {
         let scale = OverlaySize.full.scale
         let padding = OverlayContentView.padding(scale: scale)

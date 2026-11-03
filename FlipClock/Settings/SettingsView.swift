@@ -182,11 +182,12 @@ struct SettingsView: View {
         case .desktopClock:
             clockPreview
             settingsCard("Layout") {
-                SettingsRow("Size") {
+                SettingsRow("Size", detail: settings.fillScreen ? "Fill screen sizes the clock to your screen." : nil) {
                     Picker("Size", selection: $settings.overlaySize) {
                         ForEach(OverlaySize.allCases) { Text($0.label).tag($0) }
                     }
                     .pickerStyle(.segmented)
+                    .disabled(settings.fillScreen)
                 }
                 Divider()
                 SettingsRow("Time format") {
