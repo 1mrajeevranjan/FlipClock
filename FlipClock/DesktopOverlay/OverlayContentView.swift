@@ -93,17 +93,68 @@ struct OverlayContentView: View {
         return spokenFormatter.string(from: date)
     }
 
-    /// Full-screen mode gets a noticeably larger clock to better fill the
-    /// extra space a whole-screen layout affords.
-    private var effectiveScale: CGFloat {
-        settings.overlaySize.scale * (settings.fillScreen ? 1.6 : 1.0)
+    /// Share of the fill-screen area the clock takes, leaving an even margin
+    /// on whichever side runs out first.
+    static let fillScreenCoverage: CGFloat = 0.9
+
+    /// Largest scale at which the widget's content fits `fillScreenCoverage`
+    /// of `area`. Fill screen sizes the clock to the space between the menu
+    /// bar and the Dock rather than to `overlaySize`, so it fills a laptop
+    /// screen and a large external display alike. `windowSize` isn't linear in
+    /// scale (padding, spacing and the reminder rows clamp), so this bisects
+    /// it instead of dividing.
+    static func fillScale(for area: CGSize, showDate: Bool, showMeridiem: Bool, reminderCount: Int = 0) -> CGFloat {
+        let limit = CGSize(width: area.width * fillScreenCoverage, height: area.height * fillScreenCoverage)
+        var fits: CGFloat = 0.1
+        var tooBig: CGFloat = 20
+        for _ in 0..<20 {
+            let mid = (fits + tooBig) / 2
+            let size = windowSize(scale: mid, showDate: showDate, showMeridiem: showMeridiem, reminderCount: reminderCount)
+            if size.width <= limit.width && size.height <= limit.height {
+                fits = mid
+            } else {
+                tooBig = mid
+            }
+        }
+        return fits
+    }
+
+    private struct FillFitInput: Equatable {
+        let area: CGSize
+        let showDate: Bool
+        let showMeridiem: Bool
+        let reminderCount: Int
+    }
+
+    /// `body` re-runs every second, but the fit only changes with its inputs,
+    /// and each `windowSize` call inside `fillScale` measures AM/PM text.
+    private static var lastFillFit: (input: FillFitInput, scale: CGFloat)?
+
+    /// The window's measured size. Fill screen fits the clock to this rather
+    /// than to the screen, so it always matches the area the window
+    /// controller actually gave the window.
+    @State private var area: CGSize = .zero
+
+    private var contentScale: CGFloat {
+        guard settings.fillScreen, area.width > 0, area.height > 0 else { return settings.overlaySize.scale }
+        let input = FillFitInput(
+            area: area,
+            showDate: settings.showDateOnOverlay,
+            showMeridiem: settings.timeFormat == .twelveHour,
+            reminderCount: reminders.count
+        )
+        if let last = Self.lastFillFit, last.input == input { return last.scale }
+        let scale = Self.fillScale(for: input.area, showDate: input.showDate, showMeridiem: input.showMeridiem, reminderCount: input.reminderCount)
+        Self.lastFillFit = (input, scale)
+        return scale
     }
 
     var body: some View {
-        VStack(spacing: Self.dateSpacing(scale: settings.overlaySize.scale)) {
+        let scale = contentScale
+        VStack(spacing: Self.dateSpacing(scale: scale)) {
             SplitFlapClockFace(
                 tick: tick,
-                scale: effectiveScale,
+                scale: scale,
                 compact: false,
                 showPedestal: false,
                 meridiemStyle: settings.meridiemStyle,
@@ -114,14 +165,14 @@ struct OverlayContentView: View {
             )
 
             if settings.showDateOnOverlay {
-                DateFlapRow(date: tick.date, scale: effectiveScale, isDark: effectiveIsDark, glassCard: true, fontName: settings.widgetFont.postscriptName)
+                DateFlapRow(date: tick.date, scale: scale, isDark: effectiveIsDark, glassCard: true, fontName: settings.widgetFont.postscriptName)
                     .equatable()
             }
             if !reminders.isEmpty {
-                ReminderFooter(reminders: reminders, now: tick.date, scale: effectiveScale)
+                ReminderFooter(reminders: reminders, now: tick.date, scale: scale)
             }
         }
-        .padding(Self.padding(scale: settings.overlaySize.scale))
+        .padding(Self.padding(scale: scale))
         // Center explicitly instead of relying on the hosting window's
         // frame to match this content's natural size exactly — any drift
         // between the analytic `windowSize()` estimate and SwiftUI's real
@@ -129,6 +180,12 @@ struct OverlayContentView: View {
         // weekday) otherwise pins content to the window's top-left corner
         // instead of centering it, producing lopsided margins.
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background {
+            GeometryReader { proxy in
+                Color.clear.preference(key: OverlayAreaKey.self, value: proxy.size)
+            }
+        }
+        .onPreferenceChange(OverlayAreaKey.self) { area = $0 }
         .background(
             WidgetGlassBackground(scale: settings.overlaySize.scale, fullyClear: settings.fillScreen, backdropImage: backdropCapture.image, dimmedBackdropImage: backdropCapture.dimmedImage, tone: settings.widgetGlassTone)
                 // The fade between vivid and dimmed the system's own widgets do
@@ -145,6 +202,13 @@ struct OverlayContentView: View {
     private var accessibilityText: String {
         let time = Self.spokenTime(tick.date, showDate: settings.showDateOnOverlay)
         return ([time] + reminders.map { $0.summary(relativeTo: tick.date) }).joined(separator: ". ")
+    }
+}
+
+private struct OverlayAreaKey: PreferenceKey {
+    static let defaultValue: CGSize = .zero
+    static func reduce(value: inout CGSize, nextValue: () -> CGSize) {
+        value = nextValue()
     }
 }
 
