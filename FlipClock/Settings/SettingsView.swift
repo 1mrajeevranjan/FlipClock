@@ -208,6 +208,13 @@ struct SettingsView: View {
                     }
                     .pickerStyle(.segmented)
                 }
+                SettingsRow("Card colour", detail: settings.widgetColorStyle == .monochrome ? "Monochrome keeps cards clear, like macOS widgets." : nil) {
+                    CardTintPicker(selection: $settings.cardTint)
+                        .disabled(settings.widgetColorStyle == .monochrome)
+                }
+                SettingsRow("Frosted glass", detail: "Cards turn translucent and blur what's behind them.") {
+                    Toggle("Frosted glass", isOn: $settings.frostedCards).fixedSize()
+                }
                 if settings.systemWidgetDimming != .never {
                     Text(settings.systemWidgetDimming == .always
                          ? "Always dimmed to match macOS. Change this in System Settings › Desktop & Dock › Dim widgets on desktop."
@@ -290,6 +297,8 @@ struct SettingsView: View {
                 .tracking(1.8)
                 .foregroundStyle(.secondary)
         }
+        .environment(\.cardTint, selectedTab == .desktopClock ? settings.cardTint : .standard)
+        .environment(\.cardFrost, selectedTab == .desktopClock && settings.frostedCards ? .onPanel : .off)
         .frame(maxWidth: .infinity)
         .padding(.vertical, 14)
         .background(Color.primary.opacity(0.035), in: RoundedRectangle(cornerRadius: 12))
@@ -392,9 +401,61 @@ struct SettingsRow<Content: View>: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            content.labelsHidden().frame(width: 220, alignment: .trailing)
+            ControlColumn(width: 220) { content.labelsHidden() }
         }
         .frame(maxWidth: .infinity)
+    }
+}
+
+/// Offers controls the column's standard width, but reports the width a rigid
+/// control actually takes. A four-segment picker can't shrink to 220pt, and a
+/// plain `.frame(width:)` let it spill left over the row's label and detail text.
+private struct ControlColumn: Layout {
+    let width: CGFloat
+
+    private func fittedSize(_ subviews: Subviews, height: CGFloat?) -> CGSize {
+        guard let subview = subviews.first else { return .zero }
+        let size = subview.sizeThatFits(ProposedViewSize(width: width, height: height))
+        return CGSize(width: max(width, size.width), height: size.height)
+    }
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        fittedSize(subviews, height: proposal.height)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        guard let subview = subviews.first else { return }
+        let size = fittedSize(subviews, height: proposal.height)
+        subview.place(at: CGPoint(x: bounds.maxX, y: bounds.midY), anchor: .trailing, proposal: ProposedViewSize(size))
+    }
+}
+
+/// Swatches like System Settings' accent colour row. A menu picker can't
+/// show the colours: macOS draws menu-item images as monochrome templates.
+private struct CardTintPicker: View {
+    @Binding var selection: CardTint
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.isEnabled) private var isEnabled
+
+    var body: some View {
+        HStack(spacing: 4) {
+            ForEach(CardTint.allCases) { tint in
+                Button { selection = tint } label: {
+                    Circle()
+                        .fill(FlapColors.glassCardFill(isDark: colorScheme == .dark, tone: .vivid, tint: tint))
+                        .overlay(Circle().strokeBorder(Color.primary.opacity(0.2), lineWidth: 0.5))
+                        .frame(width: 16, height: 16)
+                        .padding(2)
+                        .overlay(Circle().strokeBorder(Color.primary.opacity(selection == tint ? 0.6 : 0), lineWidth: 1.5))
+                        .contentShape(Circle())
+                }
+                .buttonStyle(.plain)
+                .help(tint.label)
+                .accessibilityLabel("\(tint.label) cards")
+                .accessibilityAddTraits(selection == tint ? .isSelected : [])
+            }
+        }
+        .opacity(isEnabled ? 1 : 0.4)
     }
 }
 

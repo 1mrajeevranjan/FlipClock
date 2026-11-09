@@ -158,6 +158,53 @@ enum WidgetColorStyle: String, CaseIterable, Identifiable {
     }
 }
 
+/// Face colour of the desktop widgets' cards in Full Color. Monochrome and
+/// the system's dimmed look keep their translucent platter whatever this is,
+/// the same way native widgets drop their colour.
+enum CardTint: String, CaseIterable, Identifiable {
+    case standard, graphite, red, orange, yellow, green, blue, purple, pink
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .standard: return "Default"
+        case .graphite: return "Graphite"
+        case .red: return "Red"
+        case .orange: return "Orange"
+        case .yellow: return "Yellow"
+        case .green: return "Green"
+        case .blue: return "Blue"
+        case .purple: return "Purple"
+        case .pink: return "Pink"
+        }
+    }
+
+    /// `nil` keeps the theme's own face: white, or dark grey in Dark mode.
+    var fill: NSColor? {
+        switch self {
+        case .standard: return nil
+        case .graphite: return NSColor(white: 0.36, alpha: 1)
+        case .red: return .systemRed
+        case .orange: return .systemOrange
+        case .yellow: return .systemYellow
+        case .green: return .systemGreen
+        case .blue: return .systemBlue
+        case .purple: return .systemPurple
+        case .pink: return .systemPink
+        }
+    }
+
+    /// Yellow is the only face light enough to need dark glyphs.
+    var glyph: NSColor? {
+        switch self {
+        case .standard: return nil
+        case .yellow: return NSColor.black.withAlphaComponent(0.85)
+        default: return .white
+        }
+    }
+}
+
 /// macOS's System Settings > Desktop & Dock > Widgets > "Dim widgets on
 /// desktop" control, which the real desktop widgets follow. Dimmed is the
 /// washed-out, desaturated state Calendar/Weather/Battery drop into; undimmed
@@ -327,6 +374,21 @@ final class AppSettings: ObservableObject {
         didSet { defaults.set(widgetColorStyle.rawValue, forKey: Keys.widgetColorStyle) }
     }
 
+    @Published var cardTint: CardTint {
+        didSet { defaults.set(cardTint.rawValue, forKey: Keys.cardTint) }
+    }
+
+    @Published var frostedCards: Bool {
+        didSet { defaults.set(frostedCards, forKey: Keys.frostedCards) }
+    }
+
+    /// What the desktop clock's cards blur: the widget's own panel, or, with
+    /// Fill screen (no panel), the desktop directly.
+    var overlayCardFrost: CardFrost {
+        guard frostedCards else { return .off }
+        return fillScreen ? .overDesktop : .onPanel
+    }
+
     @Published var reminderSound: ReminderSound {
         didSet { defaults.set(reminderSound.id, forKey: Keys.reminderSound) }
     }
@@ -449,6 +511,8 @@ final class AppSettings: ObservableObject {
         static let fillScreen = "fillScreen"
         static let widgetFont = "widgetFont"
         static let widgetColorStyle = "widgetColorStyle"
+        static let cardTint = "cardTint"
+        static let frostedCards = "frostedCards"
         static let reminderSound = "reminderSound"
     }
 
@@ -479,6 +543,8 @@ final class AppSettings: ObservableObject {
         fillScreen = defaults.object(forKey: Keys.fillScreen) as? Bool ?? false
         widgetFont = (defaults.string(forKey: Keys.widgetFont)).map(WidgetFont.byID) ?? .system
         widgetColorStyle = (defaults.string(forKey: Keys.widgetColorStyle)).flatMap(WidgetColorStyle.init(rawValue:)) ?? .full
+        cardTint = (defaults.string(forKey: Keys.cardTint)).flatMap(CardTint.init(rawValue:)) ?? .standard
+        frostedCards = defaults.object(forKey: Keys.frostedCards) as? Bool ?? false
         reminderSound = defaults.string(forKey: Keys.reminderSound).map(ReminderSound.byID) ?? .systemDefault
         // Seed it here as well as in the watcher: the watcher only runs while
         // a widget is actually on screen, but Settings can be opened without

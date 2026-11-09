@@ -100,6 +100,8 @@ struct WorldClockOverlayContentView: View {
                 .animation(reduceMotion ? nil : GlassTone.transition, value: settings.widgetGlassTone)
         )
         .environment(\.glassTone, settings.widgetGlassTone)
+        .environment(\.cardTint, settings.cardTint)
+        .environment(\.cardFrost, settings.frostedCards ? .onPanel : .off)
         .preferredColorScheme(settings.theme.colorScheme)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(clock.displayName): \(OverlayContentView.spokenTime(tick.date, showDate: settings.showDateOnOverlay, timeZone: timeZone))")

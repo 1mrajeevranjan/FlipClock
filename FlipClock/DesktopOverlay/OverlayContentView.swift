@@ -130,15 +130,16 @@ struct OverlayContentView: View {
     /// and each `windowSize` call inside `fillScale` measures AM/PM text.
     private static var lastFillFit: (input: FillFitInput, scale: CGFloat)?
 
-    /// The window's measured size. Fill screen fits the clock to this rather
-    /// than to the screen, so it always matches the area the window
-    /// controller actually gave the window.
-    @State private var area: CGSize = .zero
+    /// The size `OverlayWindowController` gives the window in fill screen
+    /// (the screen's `visibleFrame`). Passed in rather than measured: a
+    /// `GeometryReader` preference never reached `onPreferenceChange` in this
+    /// window, so the clock silently fell back to `overlaySize`.
+    var fillArea: CGSize = .zero
 
     private var contentScale: CGFloat {
-        guard settings.fillScreen, area.width > 0, area.height > 0 else { return settings.overlaySize.scale }
+        guard settings.fillScreen, fillArea.width > 0, fillArea.height > 0 else { return settings.overlaySize.scale }
         let input = FillFitInput(
-            area: area,
+            area: fillArea,
             showDate: settings.showDateOnOverlay,
             showMeridiem: settings.timeFormat == .twelveHour,
             reminderCount: reminders.count
@@ -180,12 +181,6 @@ struct OverlayContentView: View {
         // weekday) otherwise pins content to the window's top-left corner
         // instead of centering it, producing lopsided margins.
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background {
-            GeometryReader { proxy in
-                Color.clear.preference(key: OverlayAreaKey.self, value: proxy.size)
-            }
-        }
-        .onPreferenceChange(OverlayAreaKey.self) { area = $0 }
         .background(
             WidgetGlassBackground(scale: settings.overlaySize.scale, fullyClear: settings.fillScreen, backdropImage: backdropCapture.image, dimmedBackdropImage: backdropCapture.dimmedImage, tone: settings.widgetGlassTone)
                 // The fade between vivid and dimmed the system's own widgets do
@@ -193,6 +188,8 @@ struct OverlayContentView: View {
                 .animation(reduceMotion ? nil : GlassTone.transition, value: settings.widgetGlassTone)
         )
         .environment(\.glassTone, settings.widgetGlassTone)
+        .environment(\.cardTint, settings.cardTint)
+        .environment(\.cardFrost, settings.overlayCardFrost)
         .preferredColorScheme(settings.theme.colorScheme)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilityText)
@@ -202,13 +199,6 @@ struct OverlayContentView: View {
     private var accessibilityText: String {
         let time = Self.spokenTime(tick.date, showDate: settings.showDateOnOverlay)
         return ([time] + reminders.map { $0.summary(relativeTo: tick.date) }).joined(separator: ". ")
-    }
-}
-
-private struct OverlayAreaKey: PreferenceKey {
-    static let defaultValue: CGSize = .zero
-    static func reduce(value: inout CGSize, nextValue: () -> CGSize) {
-        value = nextValue()
     }
 }
 

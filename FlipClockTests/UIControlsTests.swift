@@ -245,6 +245,14 @@ final class UIControlsTests: XCTestCase {
             try ui.press(style.label)
             XCTAssertEqual(settings.widgetColorStyle, style)
         }
+        try ui.press(WidgetColorStyle.full.label)
+        for tint in CardTint.allCases.reversed() {
+            try ui.press("\(tint.label) cards")
+            XCTAssertEqual(settings.cardTint, tint)
+        }
+        let frosted = settings.frostedCards
+        try ui.press("Frosted glass")
+        XCTAssertEqual(settings.frostedCards, !frosted)
 
         settings.fillScreen = false
         ui.settle()

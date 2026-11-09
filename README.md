@@ -51,7 +51,7 @@ The desktop clock shows reminder details below the date as “Today @ time – r
 
 **Customisation**
 
-37 bundled decorative digit fonts, light/dark/system theme, 12/24-hour time, four widget sizes, AM/PM as text or a sun/moon icon, Full Color / Monochrome widget style, and launch-at-login.
+37 bundled decorative digit fonts, light/dark/system theme, 12/24-hour time, four widget sizes, AM/PM as text or a sun/moon icon, Full Color / Monochrome widget style, a choice of card colours (solid or frosted glass) for the desktop widgets, and launch-at-login.
 
 ## Requirements
 

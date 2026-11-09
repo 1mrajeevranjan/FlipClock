@@ -274,14 +274,20 @@ struct WidgetGlassBackground: View {
 /// wallpaper hue behind it (the "colorful" glass Calendar/Weather widgets
 /// show) — `.hudWindow` reads as flat neutral gray regardless of what's
 /// behind the window, which is why the first pass looked wrong.
-private struct VisualEffectBlur: NSViewRepresentable {
+///
+/// Also the per-card blur behind frosted cards in fill screen (`CardFrost`),
+/// where the panel itself is fully clear.
+struct VisualEffectBlur: NSViewRepresentable {
     let cornerRadius: CGFloat
+    /// `nil` follows the window's appearance.
+    var appearance: NSAppearance? = nil
 
     func makeNSView(context: Context) -> NSVisualEffectView {
         let view = DraggableVisualEffectView()
         view.blendingMode = .behindWindow
         view.material = .underWindowBackground
         view.state = .active
+        view.appearance = appearance
         view.wantsLayer = true
         view.layer?.cornerRadius = cornerRadius
         view.layer?.cornerCurve = .continuous
@@ -291,6 +297,7 @@ private struct VisualEffectBlur: NSViewRepresentable {
 
     func updateNSView(_ nsView: NSVisualEffectView, context: Context) {
         nsView.layer?.cornerRadius = cornerRadius
+        nsView.appearance = appearance
     }
 }
 
