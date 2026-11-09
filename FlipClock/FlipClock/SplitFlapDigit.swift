@@ -31,7 +31,13 @@ struct SplitFlapDigit: View {
     var expectedChangeInterval: TimeInterval? = nil
 
     @Environment(\.glassTone) private var tone
+    @Environment(\.cardTint) private var tint
+    @Environment(\.cardFrost) private var cardFrost
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+
+    /// HIG: Reduce Transparency swaps translucent materials for opaque ones.
+    private var frost: CardFrost { reduceTransparency ? .off : cardFrost }
 
     init(value: String, cardSize: CGSize, isDark: Bool = true, compact: Bool = false, textColor: NSColor? = nil, fusedLeading: Bool = false, fusedTrailing: Bool = false, glassCard: Bool = false, showOwnGlassPanel: Bool = true, fontName: String? = nil, isMonospacedSystemFont: Bool = false, expectedChangeInterval: TimeInterval? = nil) {
         self.value = value
@@ -68,11 +74,12 @@ struct SplitFlapDigit: View {
     }
 
     /// Glass cards always get an explicit colour so the glyph follows the
-    /// tone; a caller's accent (Sunday's red) only survives in full colour.
+    /// tone; a caller's accent (Sunday's red) only survives on the default
+    /// full-colour face — on a tinted card it could vanish into the tint.
     private func glyphColor(for tone: GlassTone) -> NSColor? {
         guard glassCard else { return textColor }
-        if let textColor, tone == .vivid { return textColor }
-        return FlapColors.glassGlyph(isDark: isDark, tone: tone)
+        if let textColor, tone == .vivid, tint == .standard { return textColor }
+        return FlapColors.glassGlyph(isDark: isDark, tone: tone, tint: tint)
     }
 
     private func layerStyle(for tone: GlassTone) -> FlipCardLayer.Style {
@@ -98,9 +105,16 @@ struct SplitFlapDigit: View {
     var body: some View {
         ZStack {
             if glassCard {
+                if frost == .overDesktop {
+                    VisualEffectBlur(cornerRadius: cornerRadius)
+                }
                 cardShape
-                    .fill(FlapColors.glassCardFill(isDark: isDark, tone: tone))
+                    .fill(FlapColors.glassCardFill(isDark: isDark, tone: tone, tint: tint, frosted: frost != .off))
                     .animation(reduceMotion ? nil : GlassTone.transition, value: tone)
+                if frost != .off {
+                    cardShape.fill(FlapColors.frostedSheen)
+                    cardShape.strokeBorder(FlapColors.frostedRim, lineWidth: 0.5)
+                }
             }
 
             FlipCardLayer(

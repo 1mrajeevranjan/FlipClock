@@ -56,7 +56,19 @@ final class AppSettingsTests: XCTestCase {
         XCTAssertTrue(settings.worldClocks.isEmpty)
         XCTAssertEqual(settings.timeFormat, .twelveHour)
         XCTAssertEqual(settings.widgetColorStyle, .full)
+        XCTAssertEqual(settings.cardTint, .standard)
+        XCTAssertFalse(settings.frostedCards)
         XCTAssertEqual(settings.reminderSound, .systemDefault)
+    }
+
+    func testFrostedCardsBlurTheDesktopOnlyWithoutAPanel() {
+        let settings = AppSettings(defaults: defaults)
+        XCTAssertEqual(settings.overlayCardFrost, .off)
+        settings.frostedCards = true
+        settings.fillScreen = false
+        XCTAssertEqual(settings.overlayCardFrost, .onPanel)
+        settings.fillScreen = true
+        XCTAssertEqual(settings.overlayCardFrost, .overDesktop)
     }
 
     func testChangesPersistAcrossANewInstanceReadingTheSameSuite() {
@@ -69,8 +81,12 @@ final class AppSettingsTests: XCTestCase {
         first.worldClocks[0].timeFormat = .twentyFourHour
         first.timeFormat = .twentyFourHour
         first.reminderSound = .byID("Glass.aiff")
+        first.cardTint = .blue
+        first.frostedCards = true
 
         let second = AppSettings(defaults: defaults)
+        XCTAssertEqual(second.cardTint, .blue)
+        XCTAssertTrue(second.frostedCards)
         XCTAssertEqual(second.theme, .dark)
         XCTAssertEqual(second.overlaySize, .double)
         XCTAssertEqual(second.worldClocks, first.worldClocks)

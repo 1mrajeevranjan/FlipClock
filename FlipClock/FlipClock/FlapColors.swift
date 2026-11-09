@@ -24,12 +24,40 @@ private struct GlassToneKey: EnvironmentKey {
     static let defaultValue: GlassTone = .vivid
 }
 
+private struct CardTintKey: EnvironmentKey {
+    static let defaultValue: CardTint = .standard
+}
+
+/// Frosted cards let what's behind them show through, blurred. On a widget's
+/// own frosted panel that blur is already there, so the card only has to turn
+/// translucent; with Fill screen the panel is fully clear and each card has to
+/// blur the desktop itself.
+enum CardFrost {
+    case off, onPanel, overDesktop
+}
+
+private struct CardFrostKey: EnvironmentKey {
+    static let defaultValue: CardFrost = .off
+}
+
 extension EnvironmentValues {
     /// Set once at a widget's root; every glass card below reads it, so the
     /// tone doesn't have to be threaded through each flap view's initializer.
     var glassTone: GlassTone {
         get { self[GlassToneKey.self] }
         set { self[GlassToneKey.self] = newValue }
+    }
+
+    /// Set at the desktop widgets' roots alongside `glassTone`; surfaces that
+    /// don't set it (popover, menu bar) keep the default face.
+    var cardTint: CardTint {
+        get { self[CardTintKey.self] }
+        set { self[CardTintKey.self] = newValue }
+    }
+
+    var cardFrost: CardFrost {
+        get { self[CardFrostKey.self] }
+        set { self[CardFrostKey.self] = newValue }
     }
 }
 
@@ -51,19 +79,33 @@ enum FlapColors {
     /// Card face on glass cards. Full colour matches the Calendar widget's
     /// near-solid white (dark grey in Dark mode) face; Monochrome and dimmed
     /// fall back to a faint translucent platter so the whole widget recedes,
-    /// like the system's own.
-    static func glassCardFill(isDark: Bool, tone: GlassTone) -> Color {
+    /// like the system's own. A `CardTint` only colours the full-colour face;
+    /// `frosted` thins it so the blur behind shows through.
+    static func glassCardFill(isDark: Bool, tone: GlassTone, tint: CardTint = .standard, frosted: Bool = false) -> Color {
         switch tone {
-        case .vivid: return isDark ? Color(white: 0.17).opacity(0.94) : Color.white.opacity(0.94)
+        case .vivid:
+            let opacity = frosted ? 0.55 : 0.94
+            if let fill = tint.fill { return Color(nsColor: fill).opacity(opacity) }
+            return isDark ? Color(white: 0.17).opacity(opacity) : Color.white.opacity(opacity)
         case .monochrome, .dimmed: return Color.white.opacity(0.14)
         }
     }
 
-    /// Glyph colour on glass cards: theme-coloured on the solid full-colour
-    /// cards, soft white on the translucent Monochrome/dimmed ones.
-    static func glassGlyph(isDark: Bool, tone: GlassTone) -> NSColor {
+    /// Light catching the top of a frosted card, fading out by the middle.
+    static let frostedSheen = LinearGradient(
+        colors: [.white.opacity(0.22), .white.opacity(0)],
+        startPoint: .top,
+        endPoint: .center
+    )
+
+    static let frostedRim = Color.white.opacity(0.3)
+
+    /// Glyph colour on glass cards: theme-coloured (or the tint's contrast
+    /// colour) on the solid full-colour cards, soft white on the translucent
+    /// Monochrome/dimmed ones.
+    static func glassGlyph(isDark: Bool, tone: GlassTone, tint: CardTint = .standard) -> NSColor {
         switch tone {
-        case .vivid: return isDark ? .white : NSColor.black.withAlphaComponent(0.85)
+        case .vivid: return tint.glyph ?? (isDark ? .white : NSColor.black.withAlphaComponent(0.85))
         case .monochrome, .dimmed: return NSColor.white.withAlphaComponent(0.82)
         }
     }

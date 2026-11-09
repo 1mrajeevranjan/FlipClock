@@ -7,6 +7,7 @@ import Combine
 /// across the screen" mode — a slow DVD-logo-style bounce — when enabled.
 final class OverlayWindowController {
     private let window: OverlayWindow
+    private let hostingController: NSHostingController<OverlayContentView>
     private let settings: AppSettings
     private let reminderStore: ReminderStore
     private let backdropCapture = DesktopBackdropCapture()
@@ -38,12 +39,16 @@ final class OverlayWindowController {
         window = OverlayWindow()
 
         visibility = WindowVisibility(window: window, timeProvider: timeProvider)
-        let hostingController = NSHostingController(rootView: OverlayContentView(timeProvider: timeProvider, settings: settings, backdropCapture: backdropCapture, reminderStore: reminderStore, visibility: visibility))
+        hostingController = NSHostingController(rootView: OverlayContentView(timeProvider: timeProvider, settings: settings, backdropCapture: backdropCapture, reminderStore: reminderStore, visibility: visibility))
         window.contentViewController = hostingController
         window.installContextMenu(openSettings: openSettings) { [weak settings] in settings?.showDesktopOverlay = false }
 
         applySize(anchorTopRight: true)
         window.setFrameAutosaveName("DesktopOverlayFrame")
+        // The autosave name restores the last saved frame, which can be a stale
+        // fill-screen frame (e.g. from before the Dock moved), so fill screen
+        // has to re-cover the current `visibleFrame` after it.
+        if settings.fillScreen { applySize(anchorTopRight: false) }
 
         settings.$showDesktopOverlay
             .sink { [weak self] visible in
@@ -160,7 +165,7 @@ final class OverlayWindowController {
             // bar and the Dock, so the clear window swallowed clicks on the
             // strip of wallpaper beside the Dock (e.g. the bottom-left corner)
             // that reach the desktop when fill screen is off. The clock scales
-            // itself to whatever size this leaves (`OverlayContentView.fillScale`).
+            // to whatever size this leaves (`OverlayContentView.fillScale`).
             //
             // `setFrame(_:display:)` has proven unreliable elsewhere in this
             // window's lifecycle (see `stepFloat`'s history) — drive size
@@ -169,6 +174,7 @@ final class OverlayWindowController {
             let area = screen.visibleFrame
             window.setContentSize(area.size)
             window.setFrameOrigin(area.origin)
+            hostingController.rootView.fillArea = area.size
             maskContentView(cornerRadius: 0)
             return
         }

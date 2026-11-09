@@ -274,7 +274,10 @@ struct WidgetGlassBackground: View {
 /// wallpaper hue behind it (the "colorful" glass Calendar/Weather widgets
 /// show) — `.hudWindow` reads as flat neutral gray regardless of what's
 /// behind the window, which is why the first pass looked wrong.
-private struct VisualEffectBlur: NSViewRepresentable {
+///
+/// Also the per-card blur behind frosted cards in fill screen (`CardFrost`),
+/// where the panel itself is fully clear.
+struct VisualEffectBlur: NSViewRepresentable {
     let cornerRadius: CGFloat
 
     func makeNSView(context: Context) -> NSVisualEffectView {
