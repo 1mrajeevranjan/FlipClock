@@ -279,12 +279,15 @@ struct WidgetGlassBackground: View {
 /// where the panel itself is fully clear.
 struct VisualEffectBlur: NSViewRepresentable {
     let cornerRadius: CGFloat
+    /// `nil` follows the window's appearance.
+    var appearance: NSAppearance? = nil
 
     func makeNSView(context: Context) -> NSVisualEffectView {
         let view = DraggableVisualEffectView()
         view.blendingMode = .behindWindow
         view.material = .underWindowBackground
         view.state = .active
+        view.appearance = appearance
         view.wantsLayer = true
         view.layer?.cornerRadius = cornerRadius
         view.layer?.cornerCurve = .continuous
@@ -294,6 +297,7 @@ struct VisualEffectBlur: NSViewRepresentable {
 
     func updateNSView(_ nsView: NSVisualEffectView, context: Context) {
         nsView.layer?.cornerRadius = cornerRadius
+        nsView.appearance = appearance
     }
 }
 

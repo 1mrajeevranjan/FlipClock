@@ -39,6 +39,13 @@ struct SplitFlapDigit: View {
     /// HIG: Reduce Transparency swaps translucent materials for opaque ones.
     private var frost: CardFrost { reduceTransparency ? .off : cardFrost }
 
+    /// While macOS dims widgets, frosted cards take the same dimmed look as
+    /// solid ones, receding like the native widgets around them; keeping the
+    /// tint there left the clock the one bright thing on the desktop.
+    private func frost(for tone: GlassTone) -> CardFrost {
+        tone == .dimmed ? .off : frost
+    }
+
     init(value: String, cardSize: CGSize, isDark: Bool = true, compact: Bool = false, textColor: NSColor? = nil, fusedLeading: Bool = false, fusedTrailing: Bool = false, glassCard: Bool = false, showOwnGlassPanel: Bool = true, fontName: String? = nil, isMonospacedSystemFont: Bool = false, expectedChangeInterval: TimeInterval? = nil) {
         self.value = value
         self.cardSize = cardSize
@@ -79,6 +86,7 @@ struct SplitFlapDigit: View {
     private func glyphColor(for tone: GlassTone) -> NSColor? {
         guard glassCard else { return textColor }
         if let textColor, tone == .vivid, tint == .standard { return textColor }
+        if frost(for: tone) != .off { return FlapColors.frostedGlyph }
         return FlapColors.glassGlyph(isDark: isDark, tone: tone, tint: tint)
     }
 
@@ -105,16 +113,27 @@ struct SplitFlapDigit: View {
     var body: some View {
         ZStack {
             if glassCard {
-                if frost == .overDesktop {
-                    VisualEffectBlur(cornerRadius: cornerRadius)
+                let frosted = frost(for: tone) != .off
+                ZStack {
+                    // Stays mounted while dimmed and only fades, so switching
+                    // looks never rebuilds ~30 blur views.
+                    if frost == .overDesktop {
+                        // Dark material whatever the theme: the light one turned
+                        // milky and washed out the white frosted glyphs.
+                        VisualEffectBlur(cornerRadius: cornerRadius, appearance: NSAppearance(named: .darkAqua))
+                            .opacity(frosted ? 1 : 0)
+                    }
+                    cardShape
+                        .fill(FlapColors.glassCardFill(isDark: isDark, tone: tone, tint: tint, frosted: frosted))
+                    if frost != .off {
+                        ZStack {
+                            cardShape.fill(FlapColors.frostedSheen)
+                            cardShape.strokeBorder(FlapColors.frostedRim, lineWidth: 0.5)
+                        }
+                        .opacity(frosted ? 1 : 0)
+                    }
                 }
-                cardShape
-                    .fill(FlapColors.glassCardFill(isDark: isDark, tone: tone, tint: tint, frosted: frost != .off))
-                    .animation(reduceMotion ? nil : GlassTone.transition, value: tone)
-                if frost != .off {
-                    cardShape.fill(FlapColors.frostedSheen)
-                    cardShape.strokeBorder(FlapColors.frostedRim, lineWidth: 0.5)
-                }
+                .animation(reduceMotion ? nil : GlassTone.transition, value: tone)
             }
 
             FlipCardLayer(

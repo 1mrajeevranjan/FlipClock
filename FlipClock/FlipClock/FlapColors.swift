@@ -79,26 +79,36 @@ enum FlapColors {
     /// Card face on glass cards. Full colour matches the Calendar widget's
     /// near-solid white (dark grey in Dark mode) face; Monochrome and dimmed
     /// fall back to a faint translucent platter so the whole widget recedes,
-    /// like the system's own. A `CardTint` only colours the full-colour face;
-    /// `frosted` thins it so the blur behind shows through.
+    /// like the system's own. A `CardTint` only colours the full-colour face.
     static func glassCardFill(isDark: Bool, tone: GlassTone, tint: CardTint = .standard, frosted: Bool = false) -> Color {
+        if frosted { return frostedFill(tone: tone, tint: tint) }
         switch tone {
         case .vivid:
-            let opacity = frosted ? 0.55 : 0.94
-            if let fill = tint.fill { return Color(nsColor: fill).opacity(opacity) }
-            return isDark ? Color(white: 0.17).opacity(opacity) : Color.white.opacity(opacity)
+            if let fill = tint.fill { return Color(nsColor: fill).opacity(0.94) }
+            return isDark ? Color(white: 0.17).opacity(0.94) : Color.white.opacity(0.94)
         case .monochrome, .dimmed: return Color.white.opacity(0.14)
         }
     }
 
+    /// Frosted cards are dark smoked glass with white glyphs, close to the
+    /// look the dimmed widget already has, so they read on any wallpaper.
+    /// A milky light frost under white glyphs washed both out. The tint is
+    /// only a hint over that, and Monochrome stays colourless.
+    static func frostedFill(tone: GlassTone, tint: CardTint) -> Color {
+        guard tone != .monochrome, let fill = tint.fill else { return Color.black.opacity(0.22) }
+        return Color(nsColor: fill.blended(withFraction: 0.3, of: .black) ?? fill).opacity(0.45)
+    }
+
+    static let frostedGlyph = NSColor.white.withAlphaComponent(0.95)
+
     /// Light catching the top of a frosted card, fading out by the middle.
     static let frostedSheen = LinearGradient(
-        colors: [.white.opacity(0.22), .white.opacity(0)],
+        colors: [.white.opacity(0.14), .white.opacity(0)],
         startPoint: .top,
         endPoint: .center
     )
 
-    static let frostedRim = Color.white.opacity(0.3)
+    static let frostedRim = Color.white.opacity(0.25)
 
     /// Glyph colour on glass cards: theme-coloured (or the tint's contrast
     /// colour) on the solid full-colour cards, soft white on the translucent
