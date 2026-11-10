@@ -32,6 +32,11 @@ final class OverlayWindowController {
     /// the screen's top-left corner on every exit instead of returning to
     /// its box.
     private var preFillScreenTopLeft: NSPoint?
+    /// Whether `window.frame` holds a real widget position. It doesn't while
+    /// filling the screen, nor when launching straight into fill screen. Taking
+    /// the not-yet-placed window's (0, 0) as the widget's spot once put it
+    /// entirely below the screen when fill screen was turned off.
+    private var hasWidgetPosition = false
 
     init(timeProvider: TimeProvider, settings: AppSettings, reminderStore: ReminderStore, openSettings: @escaping () -> Void) {
         self.settings = settings
@@ -43,12 +48,15 @@ final class OverlayWindowController {
         window.contentViewController = hostingController
         window.installContextMenu(openSettings: openSettings) { [weak settings] in settings?.showDesktopOverlay = false }
 
-        applySize(anchorTopRight: true)
-        window.setFrameAutosaveName("DesktopOverlayFrame")
-        // The autosave name restores the last saved frame, which can be a stale
-        // fill-screen frame (e.g. from before the Dock moved), so fill screen
-        // has to re-cover the current `visibleFrame` after it.
-        if settings.fillScreen { applySize(anchorTopRight: false) }
+        // Size first: this borderless window only gets its saved *origin*
+        // back, so restoring onto the unsized window read every launch's
+        // top-left one widget-height too low. The saved frame can also be
+        // stale (a fill-screen frame from before the Dock moved, or a widget
+        // left off screen), so `applySize` re-fits it afterwards.
+        applySize()
+        hasWidgetPosition = window.setFrameUsingName(Self.frameName) && !settings.fillScreen
+        window.setFrameAutosaveName(Self.frameName)
+        applySize()
 
         settings.$showDesktopOverlay
             .sink { [weak self] visible in
@@ -73,11 +81,10 @@ final class OverlayWindowController {
             // it back down.
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
-                // A size change should keep the window pinned at its
-                // current top-left corner, not silently re-snap to the
-                // top-right default — that default only applies on first
-                // launch/before the user has ever moved it.
-                self?.applySize(anchorTopRight: false)
+                // A size change keeps the window pinned at its current
+                // top-left corner; the top-right default is only for when
+                // there's no real widget position.
+                self?.applySize()
                 self?.startBackdropCaptureIfNeeded()
             }
             .store(in: &cancellables)
@@ -85,20 +92,20 @@ final class OverlayWindowController {
         settings.$showDateOnOverlay
             .dropFirst()
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in self?.applySize(anchorTopRight: false) }
+            .sink { [weak self] _ in self?.applySize() }
             .store(in: &cancellables)
 
         settings.$timeFormat
             .dropFirst()
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in self?.applySize(anchorTopRight: false) }
+            .sink { [weak self] _ in self?.applySize() }
             .store(in: &cancellables)
 
         settings.$fillScreen
             .dropFirst()
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
-                self?.applySize(anchorTopRight: false)
+                self?.applySize()
                 self?.startBackdropCaptureIfNeeded()
                 if let self { self.setFloating(self.settings.floatAcrossScreen) }
             }
@@ -130,13 +137,13 @@ final class OverlayWindowController {
             .receive(on: DispatchQueue.main)
             .map { [weak reminderStore] _ in min(reminderStore?.widgetReminders.count ?? 0, OverlayContentView.maxVisibleReminders + 1) }
             .removeDuplicates()
-            .sink { [weak self] _ in self?.applySize(anchorTopRight: false) }
+            .sink { [weak self] _ in self?.applySize() }
             .store(in: &cancellables)
 
         NotificationCenter.default.publisher(for: .NSCalendarDayChanged)
             .merge(with: NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange))
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in self?.applySize(anchorTopRight: false) }
+            .sink { [weak self] _ in self?.applySize() }
             .store(in: &cancellables)
 
         // Moving, resizing or auto-hiding the Dock, and display resolution
@@ -146,19 +153,22 @@ final class OverlayWindowController {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 guard let self, self.settings.fillScreen else { return }
-                self.applySize(anchorTopRight: false)
+                self.applySize()
             }
             .store(in: &cancellables)
     }
 
-    private func applySize(anchorTopRight: Bool) {
+    private static let frameName = "DesktopOverlayFrame"
+
+    private func applySize() {
         if settings.fillScreen, let screen = NSScreen.main {
             // Only capture on the transition into full-screen — repeated
             // calls while already full-screen (e.g. toggling "show date"
             // mid-fill) must not overwrite this with the full-screen frame.
-            if preFillScreenTopLeft == nil {
+            if hasWidgetPosition {
                 preFillScreenTopLeft = NSPoint(x: window.frame.minX, y: window.frame.maxY)
             }
+            hasWidgetPosition = false
             window.isMovableByWindowBackground = false
             window.hasShadow = false
             // `visibleFrame`, not `frame`: the full frame runs under the menu
@@ -195,29 +205,29 @@ final class OverlayWindowController {
             showMeridiem: settings.timeFormat == .twelveHour,
             reminderCount: reminderStore.widgetReminders.count
         )
-        let previousTopLeft: NSPoint
-        if let savedTopLeft = preFillScreenTopLeft {
-            previousTopLeft = savedTopLeft
-            preFillScreenTopLeft = nil
-        } else {
-            previousTopLeft = NSPoint(x: window.frame.minX, y: window.frame.maxY)
-        }
+        let previousTopLeft = hasWidgetPosition
+            ? NSPoint(x: window.frame.minX, y: window.frame.maxY)
+            : preFillScreenTopLeft
+        preFillScreenTopLeft = nil
         window.setContentSize(contentSize)
 
-        if anchorTopRight, let screen = NSScreen.main {
+        // Resizing an NSWindow keeps its bottom-left corner fixed by
+        // default, which visually shifts the top edge down/up — pin
+        // the top-left instead so an in-place size change doesn't also
+        // relocate the window.
+        let pinned = previousTopLeft.map { NSRect(origin: NSPoint(x: $0.x, y: $0.y - contentSize.height), size: contentSize) }
+        if let pinned, NSScreen.screens.contains(where: { $0.visibleFrame.intersects(pinned) }) {
+            window.setFrameOrigin(pinned.origin)
+        } else if let screen = NSScreen.main {
+            // No real position yet (first launch, or launched into fill
+            // screen), or the saved one is off every screen.
             let margin: CGFloat = 40
-            let origin = NSPoint(
+            window.setFrameOrigin(NSPoint(
                 x: screen.visibleFrame.maxX - contentSize.width - margin,
                 y: screen.visibleFrame.maxY - contentSize.height - margin
-            )
-            window.setFrameOrigin(origin)
-        } else {
-            // Resizing an NSWindow keeps its bottom-left corner fixed by
-            // default, which visually shifts the top edge down/up — pin
-            // the top-left instead so an in-place size change doesn't also
-            // relocate the window.
-            window.setFrameOrigin(NSPoint(x: previousTopLeft.x, y: previousTopLeft.y - contentSize.height))
+            ))
         }
+        hasWidgetPosition = true
         maskContentView(cornerRadius: WidgetGlassBackground.cornerRadius(scale: settings.overlaySize.scale))
     }
 
