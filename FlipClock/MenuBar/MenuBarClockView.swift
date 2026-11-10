@@ -14,7 +14,6 @@ struct MenuBarClockView: View {
     let timeProvider: TimeProvider
     @ObservedObject var settings: AppSettings
     @Environment(\.colorScheme) private var systemColorScheme
-    var reminderPulseDimmed = false
 
     var body: some View {
         SplitFlapClockFace(
@@ -27,6 +26,5 @@ struct MenuBarClockView: View {
             // Status-item hosting doesn't reliably propagate preferredColorScheme.
             isDarkOverride: settings.theme.resolvedColorScheme(system: systemColorScheme) == .dark
         )
-        .opacity(reminderPulseDimmed ? 0.65 : 1)
     }
 }

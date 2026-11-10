@@ -109,12 +109,14 @@ final class ReminderNotificationsTests: XCTestCase {
 
         notifications.ringDueReminders(now: due.date)
         XCTAssertTrue(notifications.isRinging)
+        XCTAssertEqual(notifications.ringingIDs, [due.id], "The banner shows exactly the reminder that's ringing")
         notifications.ringDueReminders(now: due.date.addingTimeInterval(1))
         XCTAssertTrue(notifications.isRinging, "Keeps ringing until the user acts on it")
 
         notifications.handleResponse(actionIdentifier: ReminderNotifications.dismissActionIdentifier,
                                      requestIdentifier: ReminderNotifications.identifier(for: due.id))
         XCTAssertFalse(notifications.isRinging)
+        XCTAssertTrue(notifications.ringingIDs.isEmpty, "Dismissing takes the banner down")
         XCTAssertFalse(store.reminders.contains { $0.id == due.id }, "Dismiss removes the reminder")
         notifications.ringDueReminders(now: due.date.addingTimeInterval(2))
         XCTAssertFalse(notifications.isRinging)
@@ -128,15 +130,16 @@ final class ReminderNotificationsTests: XCTestCase {
         XCTAssertFalse(notifications.isRinging, "Acknowledging from the popover or menu bar also silences it")
     }
 
-    func testNewlyCreatedOverdueReminderAlertsWithoutReplayingHistoricalOnes() throws {
+    func testNativeAlertHandsOverToTheAppBannerJustBeforeItsDue() throws {
         let now = Date()
-        let reminder = Reminder(date: now.addingTimeInterval(-30), title: "Due this minute")
-        let request = try XCTUnwrap(ReminderNotifications.request(for: reminder, now: now,
-                                                                  notifyIfOverdue: true))
-        let trigger = try XCTUnwrap(request.trigger as? UNTimeIntervalNotificationTrigger)
-        XCTAssertEqual(trigger.timeInterval, 1)
-        XCTAssertFalse(trigger.repeats)
-        XCTAssertNil(ReminderNotifications.request(for: reminder, now: now))
+        let lead = ReminderNotifications.handoverLead
+        XCTAssertNil(ReminderNotifications.request(for: Reminder(date: now.addingTimeInterval(-30), title: "Due this minute"), now: now),
+                     "A newly added overdue reminder rings with FlipClock's own banner")
+        XCTAssertNil(ReminderNotifications.request(for: Reminder(date: now.addingTimeInterval(lead - 1), title: "Almost due"), now: now),
+                     "Withdrawn before it's due, so usernoted's late banner can't duplicate FlipClock's")
+        let later = try XCTUnwrap(ReminderNotifications.request(for: Reminder(date: now.addingTimeInterval(lead + 60), title: "Later"),
+                                                                now: now))
+        XCTAssertTrue(later.trigger is UNCalendarNotificationTrigger, "Still scheduled natively for when FlipClock isn't running")
     }
 
     func testNativeSoundsAreBundledAndStoredSelectionIsValidated() {

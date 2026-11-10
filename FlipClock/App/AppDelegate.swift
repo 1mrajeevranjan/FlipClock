@@ -11,6 +11,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItemController: StatusItemController?
     private var overlayWindowController: OverlayWindowController?
     private var worldClocksCoordinator: WorldClocksCoordinator?
+    private var reminderBanner: ReminderBannerController?
     lazy var reminderNotifications = ReminderNotifications(store: reminderStore, settings: settings)
     private lazy var settingsWindowController = SettingsWindowController(settings: settings, reminderNotifications: reminderNotifications)
 
@@ -33,5 +34,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         worldClocksCoordinator = WorldClocksCoordinator(timeProvider: timeProvider, settings: settings) { [weak self] in
             self?.settingsWindowController.show()
         }
+        reminderBanner = ReminderBannerController(notifications: reminderNotifications, store: reminderStore)
     }
 }

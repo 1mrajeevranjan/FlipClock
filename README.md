@@ -41,11 +41,11 @@ Falls back gracefully: live vibrancy before the first capture lands or if Screen
 
 **Reminders**
 
-Select a calendar date and choose Add Reminder, or double-click the date, to add a reminder with a precise time. The day gets a pulsing badge (orange = within 24h, red = due today), the popover shows a "Due Today" banner, and the menu bar clock subtly pulses in opacity every 5 seconds until acknowledged, keeping the selected theme.
+Select a calendar date and choose Add Reminder, or double-click the date, to add a reminder with a precise time. The day gets a pulsing badge (orange = within 24h, red = due today), and the popover shows a "Due Today" banner until acknowledged.
 
 Timed reminders post a native macOS notification and FlipClock plays the chosen sound on a loop until you act on it (the notification itself is silent, so the sound only plays while FlipClock is running). In Settings › General › Reminders, enable notifications and choose Default (your system alert sound) or a built-in macOS alert sound; the speaker button previews the selected sound. Set **Alert Style** to **Persistent** in System Settings › Notifications › FlipClock (Settings › Reminders › Open Settings… jumps there) so the reminder stays on screen until dismissed. Run FlipClock from a stable location such as `~/Applications` — macOS won't register notifications for an app launched from a temporary build folder. Acknowledging or removing a reminder cancels its pending alert and stops the sound. Newly added overdue reminders alert immediately; historical overdue reminders aren't replayed on launch.
 
-Choose Dismiss on a notification, or close it, to stop the sound and delete the reminder. Clicking the notification body only silences it. Reminders that came due while the Mac slept ring on wake.
+While FlipClock is running, the reminder appears in FlipClock's own notification-style banner (top-right) the second it's due. macOS can hold its own notifications back by several seconds, so FlipClock withdraws the native one just beforehand and you don't see it twice; the native notification still fires if FlipClock isn't running. Choose Dismiss, on the banner or on a native notification, to stop the sound and delete the reminder. Clicking the body only silences it. Reminders that came due while the Mac slept ring on wake.
 
 The desktop clock shows reminder details below the date as “Today @ time – reminder”, with up to two rows and a count of additional reminders in the calendar.
 
@@ -158,7 +158,7 @@ FlipClockTests/     Unit, stress, and performance tests
 - **`DigitFaceRenderer`** rasterizes each glyph to a bitmap card — this is what makes the physical flip animation possible, and it's the app's core identity rather than an implementation detail to simplify away.
 - **`OverlayWindowController`** owns the widget `NSPanel`: window level, size, position, and drift animation.
 - **`WidgetGlassBackground` + `DesktopBackdropCapture`** produce the widget's glass.
-- **`StatusItemController`** owns the menu bar clock, popover, context menu, and reminder pulse.
+- **`StatusItemController`** owns the menu bar clock, popover, and context menu.
 - **`AppSettings`** persists preferences to `UserDefaults` and publishes via Combine. **`ReminderStore`** does the same for reminders (JSON), shared by reference across surfaces.
 
 Both stores take an injectable `UserDefaults` so tests never touch real preferences.
@@ -180,7 +180,7 @@ Development spot check (2026-10-18, Debug build, popover closed): eleven one-sec
 xcodebuild test -project FlipClock.xcodeproj -scheme FlipClock -destination 'platform=macOS'
 ```
 
-130 tests covering time and digit maths, every popover and Settings control pressed through the accessibility tree (`UIControlsTests`), seconds aligned to the wall clock, undistorted timer-wheel numerals, settings persistence and fallbacks, calendar navigation, popover appearance updates, rendered timer-lens visibility and magnification in both themes and between values, reminder notification requests, sounds and dismissal, timer and stopwatch — including hidden-tool accuracy, popover reopening, concurrent capture deduplication, image-cache reuse, local-date rendering, batched reminder updates, stress tests and performance measurements.
+133 tests covering time and digit maths, every popover and Settings control pressed through the accessibility tree (`UIControlsTests`), seconds aligned to the wall clock, undistorted timer-wheel numerals, settings persistence and fallbacks, calendar navigation, popover appearance updates, rendered timer-lens visibility and magnification in both themes and between values, reminder notification requests, sounds and dismissal, timer and stopwatch — including hidden-tool accuracy, popover reopening, concurrent capture deduplication, image-cache reuse, local-date rendering, batched reminder updates, stress tests and performance measurements.
 
 `InteractionStressTests` adds 1,000 mixed tool/control cycles, 9,600 calendar month-page moves, 300 settings/world-clock cycles, 500 reminder records, 1,000 component key events, menu-handler checks, and bundled-font/icon validation. Repeat the suite in fresh processes with `-test-iterations 3 -test-repetition-relaunch-enabled YES -parallel-testing-enabled NO`.
 

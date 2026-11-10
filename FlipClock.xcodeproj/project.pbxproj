@@ -19,6 +19,7 @@
 		19A441A793D1B4A1194D4918 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02DDB38188F3CABDE8AF990C /* AppDelegate.swift */; };
 		1ABB169CB78335BA956DE48B /* Game Of Squids.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 84EEFA884CE122921803C149 /* Game Of Squids.ttf */; };
 		1DDF18C7AC5EA749D6EC8F6B /* WidgetGlassBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7433122D748E80051A23B7BD /* WidgetGlassBackground.swift */; };
+		1FD1EFB752EE8BF3748B0D3B /* ReminderBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE24264092031DEECACD19D4 /* ReminderBanner.swift */; };
 		21EC63A2D527DFC31C79A103 /* WorldClock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C90E746B854DBB9B2334C23 /* WorldClock.swift */; };
 		220F76AD0CE46D72FEDEE229 /* Sportfield Varsity.otf in Resources */ = {isa = PBXBuildFile; fileRef = 76AE834CBCB2C51C0DE02C22 /* Sportfield Varsity.otf */; };
 		2582E8755006A0B3FA2F3063 /* Sportfield Varsity-Outline2.otf in Resources */ = {isa = PBXBuildFile; fileRef = 001227C8E08C263951B67D42 /* Sportfield Varsity-Outline2.otf */; };
@@ -194,6 +195,7 @@
 		BA976B0F756D51EC33095C39 /* AppSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettingsTests.swift; sourceTree = "<group>"; };
 		BC155D6D5B8537159E016AEC /* GFSCUS1D.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = GFSCUS1D.ttf; sourceTree = "<group>"; };
 		BD8DAB5C74DA5D3A473DA9DC /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		BE24264092031DEECACD19D4 /* ReminderBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderBanner.swift; sourceTree = "<group>"; };
 		C11AF6B6BCFC09C9232CA914 /* WorldClockCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockCard.swift; sourceTree = "<group>"; };
 		C1404A3D2475EEDC6D174181 /* DueReminderBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DueReminderBanner.swift; sourceTree = "<group>"; };
 		C15EDFF75692B2A9516AB52E /* UIControlsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIControlsTests.swift; sourceTree = "<group>"; };
@@ -235,6 +237,7 @@
 				C1404A3D2475EEDC6D174181 /* DueReminderBanner.swift */,
 				135E56F9C9038BA61C90310C /* Reminder.swift */,
 				D5896ECD25212EC9A5CB044A /* ReminderBadge.swift */,
+				BE24264092031DEECACD19D4 /* ReminderBanner.swift */,
 				64C3B273A7587862ADD3AB51 /* ReminderNotifications.swift */,
 				94AAA0D043E814FF0C330B83 /* ReminderSound.swift */,
 				99B38BBE6721287DFCDD38D1 /* ReminderStore.swift */,
@@ -736,6 +739,7 @@
 				5EACEC3FC36487CFA104204E /* PopoverClockView.swift in Sources */,
 				8B2973DC33ED8E39177D0930 /* Reminder.swift in Sources */,
 				D0F8A5633C87FBE5502EB6D7 /* ReminderBadge.swift in Sources */,
+				1FD1EFB752EE8BF3748B0D3B /* ReminderBanner.swift in Sources */,
 				D7037D6A1B5E9A526DC69371 /* ReminderNotifications.swift in Sources */,
 				83E6CA45702705B8BA51902F /* ReminderSound.swift in Sources */,
 				DB13156575EEFA035F2AB15B /* ReminderStore.swift in Sources */,

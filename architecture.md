@@ -35,7 +35,7 @@ Reusable split-flap primitives used identically by MenuBar, Popover, DesktopOver
 | `FlapColors.swift` | Centralized color tokens. `leafHinge(isDark:)` is solid/opaque, matching the card *background* tone (black on dark theme, white on light) rather than the digit color — a crease blends into its own card instead of competing with the digits for contrast. Was a translucent black tint at both themes before that (read as a faint smudge), then briefly digit-colored (read as too strong/contrasty) before landing here |
 | `WidgetFont.swift` | Bundled decorative-font catalog (37 fonts under `Fonts/`), PostScript-name-based registration via `CTFontManagerRegisterFontsForURL` |
 
-`isDarkOverride` on `SplitFlapClockFace` exists specifically for the menu bar reminder pulse — see Known Gotchas in `CLAUDE.md` for why `.preferredColorScheme()` alone isn't enough there.
+`isDarkOverride` on `SplitFlapClockFace` exists because the menu bar's status-item hosting doesn't follow the theme on its own — see Known Gotchas in `CLAUDE.md` for why `.preferredColorScheme()` alone isn't enough there.
 
 ## Settings/
 Preferences store + SwiftUI settings UI.
@@ -57,7 +57,9 @@ Shared reminder data + UI fragments, consumed by Popover, DesktopOverlay, and Me
 | `ReminderStore.swift` | `ObservableObject`, UserDefaults-JSON persisted. `dueTodayUnacknowledged`, `upcomingWithin24Hours`, `reminders(on:)`, `add/remove/acknowledge` |
 | `AddReminderView.swift` | Popover form (title + "@ time" picker) triggered by double-clicking a calendar day |
 | `ReminderBadge.swift` | Small pulsing dot (red = due today, orange = upcoming within 24h) — reused by the calendar day mark and the desktop widget's corner badge |
-| `DueReminderBanner.swift` | "Due Today" list shown in the popover with a per-reminder acknowledge checkmark — this is what stops the menu bar pulse |
+| `DueReminderBanner.swift` | "Due Today" list shown in the popover with a per-reminder acknowledge checkmark |
+| `ReminderNotifications.swift` | Looping alarm (`ringDueReminders`, publishes `ringingIDs`) plus native `UNUserNotificationCenter` alerts. While the app runs, a reminder's native alert is withdrawn `handoverLead` (5s) before it's due, so it only fires when FlipClock isn't running |
+| `ReminderBanner.swift` | `ReminderBannerController`: a non-activating, notification-style panel (top-right, `.statusBar` level) that shows every ringing reminder the instant the alarm starts. Dismiss deletes the reminder; clicking the body only silences the alarm |
 
 One `ReminderStore` instance is created in `AppDelegate` and passed by reference everywhere; all three surfaces always agree on what's due/upcoming/acknowledged.
 
@@ -77,7 +79,7 @@ One `CountdownTimer` and one `Stopwatch` instance are created in `AppDelegate` a
 | File | Responsibility |
 |---|---|
 | `StatusItemController.swift` | Owns `NSStatusItem`, opens popover/menu, owns the 5s reminder-pulse `Timer` |
-| `MenuBarClockView.swift` | Compact face; feeds `pulseColorScheme` into `SplitFlapClockFace.isDarkOverride` |
+| `MenuBarClockView.swift` | Compact face; feeds the resolved theme into `SplitFlapClockFace.isDarkOverride` |
 | `WorldClockStatusItemController.swift` / `WorldClockMenuBarView.swift` | One status item per world clock shown in the menu bar: name tag + HH:MM (no seconds — identical in every zone, and menu-bar room is scarce on notched Macs). Created/removed by `WorldClocksCoordinator` (`App/`) |
 
 ## Popover/

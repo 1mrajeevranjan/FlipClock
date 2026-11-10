@@ -1,9 +1,7 @@
 import SwiftUI
 
-/// Lists today's unacknowledged reminders inside the popover — this is
-/// where the menu bar's subtle pulse points the user to. Checking a
-/// reminder off here (or via `ReminderStore.acknowledgeAllDueToday()` from
-/// the menu bar itself) is what stops the pulse.
+/// Lists today's unacknowledged reminders inside the popover; checking one
+/// off here acknowledges it.
 struct DueReminderBanner: View {
     let reminders: [Reminder]
     let onAcknowledge: (Reminder) -> Void
