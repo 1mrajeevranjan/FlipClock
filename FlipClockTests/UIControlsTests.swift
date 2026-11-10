@@ -198,6 +198,20 @@ final class UIControlsTests: XCTestCase {
         XCTAssertFalse(ui.has("Due Today"))
     }
 
+    func testReminderBannerDismissesAndSilences() throws {
+        let reminder = Reminder(date: Date(), title: "Stand up")
+        var dismissed: [UUID] = []
+        var silenced = 0
+        let ui = HostedView(ReminderBannerStack(reminders: [reminder],
+                                                onDismiss: { dismissed.append($0.id) },
+                                                onSilence: { silenced += 1 }))
+        try ui.press("Dismiss Stand up")
+        XCTAssertEqual(dismissed, [reminder.id])
+        XCTAssertEqual(silenced, 0, "Dismiss mustn't also count as a click on the body")
+        try ui.press("Stand up, reminder")
+        XCTAssertEqual(silenced, 1)
+    }
+
     // MARK: Settings
 
     private func settingsUI() -> HostedView<some View> {

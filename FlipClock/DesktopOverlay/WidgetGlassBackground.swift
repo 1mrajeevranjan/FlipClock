@@ -281,11 +281,12 @@ struct VisualEffectBlur: NSViewRepresentable {
     let cornerRadius: CGFloat
     /// `nil` follows the window's appearance.
     var appearance: NSAppearance? = nil
+    var material: NSVisualEffectView.Material = .underWindowBackground
 
     func makeNSView(context: Context) -> NSVisualEffectView {
         let view = DraggableVisualEffectView()
         view.blendingMode = .behindWindow
-        view.material = .underWindowBackground
+        view.material = material
         view.state = .active
         view.appearance = appearance
         view.wantsLayer = true
@@ -298,6 +299,7 @@ struct VisualEffectBlur: NSViewRepresentable {
     func updateNSView(_ nsView: NSVisualEffectView, context: Context) {
         nsView.layer?.cornerRadius = cornerRadius
         nsView.appearance = appearance
+        nsView.material = material
     }
 }
 

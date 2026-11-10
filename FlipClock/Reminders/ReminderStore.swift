@@ -47,9 +47,7 @@ final class ReminderStore: ObservableObject {
         save()
     }
 
-    /// Acknowledges every reminder due today at once — used when the user
-    /// dismisses the menu bar's pulse without opening the popover to
-    /// individually check each one off.
+    /// Acknowledges every reminder due today at once.
     func acknowledgeAllDueToday() {
         var updated = reminders
         var changed = false
@@ -64,8 +62,7 @@ final class ReminderStore: ObservableObject {
     }
 
     /// Reminders due today that haven't been acknowledged yet — what
-    /// drives the menu bar's subtle pulse and the widget's stronger
-    /// flash.
+    /// drives the popover's Due Today banner and the widget's flash.
     var dueTodayUnacknowledged: [Reminder] {
         reminders.filter { calendar.isDateInToday($0.date) && !$0.isAcknowledged }
     }

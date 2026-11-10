@@ -21,9 +21,15 @@ final class ReminderNotifications: NSObject, ObservableObject, UNUserNotificatio
     private var previewSound: NSSound?
     private var alarm: NSSound?
     private var alarmTimer: Timer?
-    private var ringingIDs = Set<UUID>()
+    /// What `ReminderBannerController` shows on screen while the alarm plays.
+    @Published private(set) var ringingIDs = Set<UUID>()
     /// Reminders that already rang (or were already overdue at launch), so a relaunch never replays old alarms.
     private var rungIDs: Set<UUID>
+    /// While FlipClock runs it shows a due reminder itself (`ReminderBannerController`) the
+    /// moment it's due, so the native alert is withdrawn this long beforehand. usernoted held
+    /// every banner on this Mac back ~10s in its Apple Intelligence step, and that late native
+    /// copy would arrive as a duplicate. If FlipClock isn't running, the native alert still fires.
+    nonisolated static let handoverLead: TimeInterval = 5
     nonisolated private static let prefix = "FlipClock-reminder-"
     nonisolated static let dismissActionIdentifier = "FlipClock-dismiss-reminder"
 
@@ -101,8 +107,13 @@ final class ReminderNotifications: NSObject, ObservableObject, UNUserNotificatio
             alarm?.play()
         }
         guard let next = pending.filter({ $0.date > now }).map(\.date).min() else { return }
-        let timer = Timer(fire: next, interval: 0, repeats: false) { [weak self] _ in
-            MainActor.assumeIsolated { self?.ringDueReminders() }
+        // Wakes once just before `next` to withdraw its native alert, then again on time.
+        let handover = next.addingTimeInterval(-Self.handoverLead)
+        let timer = Timer(fire: handover > now ? handover : next, interval: 0, repeats: false) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.refresh()
+                self?.ringDueReminders()
+            }
         }
         RunLoop.main.add(timer, forMode: .common)
         alarmTimer = timer
@@ -193,15 +204,15 @@ final class ReminderNotifications: NSObject, ObservableObject, UNUserNotificatio
 
         let now = Date()
         let requests = reminders.compactMap { reminder -> (Reminder, UNNotificationRequest)? in
-            guard let request = Self.request(for: reminder, now: now,
-                                             notifyIfOverdue: newReminderIDs.contains(reminder.id)) else { return nil }
+            guard let request = Self.request(for: reminder, now: now) else { return nil }
             return (reminder, request)
         }
+        let scheduledIDs = Set(requests.map(\.1.identifier))
         let activeIDs = Set(reminders.filter { !$0.isAcknowledged }.map { Self.identifier(for: $0.id) })
         let pending = await center.pendingNotificationRequests()
         guard !Task.isCancelled else { return }
         center.removePendingNotificationRequests(withIdentifiers: pending
-            .filter { $0.identifier.hasPrefix(Self.prefix) && !activeIDs.contains($0.identifier) }
+            .filter { $0.identifier.hasPrefix(Self.prefix) && !scheduledIDs.contains($0.identifier) }
             .map(\.identifier))
         let delivered = await center.deliveredNotifications()
         guard !Task.isCancelled else { return }
@@ -224,9 +235,10 @@ final class ReminderNotifications: NSObject, ObservableObject, UNUserNotificatio
         "\(prefix)\(id.uuidString)"
     }
 
-    nonisolated static func request(for reminder: Reminder, now: Date = Date(),
-                                   notifyIfOverdue: Bool = false) -> UNNotificationRequest? {
-        guard !reminder.isAcknowledged, reminder.date > now || notifyIfOverdue else { return nil }
+    /// Only for reminders due after the hand-over window; anything sooner, including a newly
+    /// added overdue reminder, is FlipClock's own banner to show.
+    nonisolated static func request(for reminder: Reminder, now: Date = Date()) -> UNNotificationRequest? {
+        guard !reminder.isAcknowledged, reminder.date > now.addingTimeInterval(handoverLead) else { return nil }
         let content = UNMutableNotificationContent()
         content.title = "Reminder"
         content.subtitle = reminder.date.formatted(date: .abbreviated, time: .shortened)
@@ -239,9 +251,7 @@ final class ReminderNotifications: NSObject, ObservableObject, UNUserNotificatio
         var components = calendar.dateComponents([.year, .month, .day, .hour, .minute, .second], from: reminder.date)
         components.calendar = calendar
         components.timeZone = calendar.timeZone
-        let trigger: UNNotificationTrigger = reminder.date > now
-            ? UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
-            : UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+        let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
         return UNNotificationRequest(identifier: identifier(for: reminder.id), content: content, trigger: trigger)
     }
 
