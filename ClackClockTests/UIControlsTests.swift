@@ -48,17 +48,17 @@ final class UIControlsTests: XCTestCase {
         let ui = HostedView(CountdownTimerView(timerModel: timer, settings: settings))
         XCTAssertFalse(try ui.element("Start Timer").isEnabled)
 
-        try ui.element("sec").increment()
+        try ui.element("Seconds").increment()
         ui.settle()
         XCTAssertEqual(timer.inputSeconds, 1)
         XCTAssertTrue(try ui.element("Start Timer").isEnabled)
 
-        try ui.element("hours").decrement()
+        try ui.element("Hours").decrement()
         ui.settle()
         XCTAssertEqual(timer.inputHours, 0, "Clamped at the bottom of the reel")
         timer.inputMinutes = 59
         ui.settle()
-        try ui.element("min").increment()
+        try ui.element("Minutes").increment()
         ui.settle()
         XCTAssertEqual(timer.inputMinutes, 59, "Clamped at the top of the reel")
     }

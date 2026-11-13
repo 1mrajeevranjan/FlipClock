@@ -19,14 +19,14 @@ struct TimeWheelPicker: View {
     var body: some View {
         ZStack {
             HStack(spacing: 0) {
-                WheelColumn(value: $hours, focusedUnit: $focusedUnit, range: 0...23, unitLabel: "hours", becomesInitialResponder: false)
-                WheelColumn(value: $minutes, focusedUnit: $focusedUnit, range: 0...59, unitLabel: "min", becomesInitialResponder: true)
-                WheelColumn(value: $seconds, focusedUnit: $focusedUnit, range: 0...59, unitLabel: "sec", becomesInitialResponder: false)
+                WheelColumn(value: $hours, focusedUnit: $focusedUnit, range: 0...23, unitLabel: "hr", name: "Hours", becomesInitialResponder: false)
+                WheelColumn(value: $minutes, focusedUnit: $focusedUnit, range: 0...59, unitLabel: "min", name: "Minutes", becomesInitialResponder: true)
+                WheelColumn(value: $seconds, focusedUnit: $focusedUnit, range: 0...59, unitLabel: "sec", name: "Seconds", becomesInitialResponder: false)
             }
 
             // Glass must own its foreground labels, or the container can blur them as backdrop content.
             HStack(spacing: 0) {
-                selectedReel(value: hours, range: 0...23, unit: "hours")
+                selectedReel(value: hours, range: 0...23, unit: "hr")
                 selectedReel(value: minutes, range: 0...59, unit: "min")
                 selectedReel(value: seconds, range: 0...59, unit: "sec")
             }
@@ -70,6 +70,7 @@ private struct WheelColumn: View {
     @Binding var focusedUnit: String?
     let range: ClosedRange<Int>
     let unitLabel: String
+    let name: String
     /// Only one reel should grab first-responder on first appearance
     /// (there's no visible focus ring to show which one is "active", so
     /// defaulting to minutes — the most commonly adjusted field — avoids
@@ -90,10 +91,13 @@ private struct WheelColumn: View {
                           viewportHeight: TimeWheelReel.height)
             .animation(reduceMotion ? nil : .smooth(duration: 0.18), value: value)
             .mask {
+                // Rows dissolve toward the rim instead of being sliced by the clip.
                 VStack(spacing: 0) {
-                    Rectangle()
+                    LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .black, location: 0.6)],
+                                   startPoint: .top, endPoint: .bottom)
                     Color.clear.frame(height: TimeWheelReel.selectionHeight)
-                    Rectangle()
+                    LinearGradient(stops: [.init(color: .black, location: 0.4), .init(color: .clear, location: 1)],
+                                   startPoint: .top, endPoint: .bottom)
                 }
             }
             .allowsHitTesting(false)
@@ -111,7 +115,7 @@ private struct WheelColumn: View {
         }
         .frame(height: TimeWheelReel.height)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(unitLabel)
+        .accessibilityLabel(name)
         .accessibilityValue("\(value)")
         .accessibilityAdjustableAction { direction in
             switch direction {
@@ -120,7 +124,7 @@ private struct WheelColumn: View {
             @unknown default: break
             }
         }
-        .help("Scroll to adjust \(unitLabel), or click and use ↑ / ↓")
+        .help("Scroll to adjust \(name.lowercased()), or click and use ↑ / ↓")
     }
 
     /// Accumulates small scroll deltas until they cross a full row height,
@@ -151,10 +155,18 @@ private struct WheelColumn: View {
 }
 
 struct TimeWheelReel: View, Animatable {
-    nonisolated static let rowHeight: CGFloat = 32
+    nonisolated static let rowHeight: CGFloat = 34
     nonisolated static let selectionHeight: CGFloat = 44
-    nonisolated static let maximumMagnification: CGFloat = 2.55
-    nonisolated static let numeralWidth: CGFloat = 54
+    nonisolated static let baseFontSize: CGFloat = 17
+    nonisolated static let selectedFontSize: CGFloat = 30
+    nonisolated static let maximumMagnification = selectedFontSize / baseFontSize
+    /// Two tabular digits at the selected size, with a little air.
+    nonisolated static let numeralWidth: CGFloat = 44
+    /// Gap plus the widest unit ("min"), so every column's numerals line up.
+    nonisolated static let unitColumnWidth: CGFloat = 32
+    nonisolated static let unitGap: CGFloat = 6
+    /// Arc between neighbouring rows on the drum: outer rows bunch up and foreshorten like a real picker wheel.
+    nonisolated static let rowAngle: CGFloat = 0.36
     nonisolated static let height = rowHeight * 5
 
     var position: CGFloat
@@ -175,49 +187,69 @@ struct TimeWheelReel: View, Animatable {
         return 1 + (maximumMagnification - 1) * max(0, 1 - normalized * normalized)
     }
 
+    nonisolated static func wheelOffset(atRowDistance distance: CGFloat) -> CGFloat {
+        rowHeight * sin(distance * rowAngle) / sin(rowAngle)
+    }
+
+    nonisolated static func numeralFont(size: CGFloat, selected: Bool) -> Font {
+        .system(size: size, weight: selected ? .medium : .regular).monospacedDigit()
+    }
+
     var body: some View {
-        HStack(spacing: 4) {
-            TimeWheelNumerals(position: position, range: range, magnified: showsUnit)
-            .frame(width: Self.numeralWidth, height: viewportHeight)
+        TimeWheelNumerals(position: position, range: range, unitLabel: showsUnit ? unitLabel : nil,
+                          isFocused: isFocused, magnified: showsUnit)
+            .frame(width: Self.numeralWidth + Self.unitColumnWidth, height: viewportHeight)
             .clipped()
-            Text(unitLabel)
-                .font(.caption.weight(isFocused ? .semibold : .regular))
-                .foregroundStyle(isFocused ? Color.primary : Color.secondary)
-                .opacity(showsUnit ? 1 : 0)
-                .accessibilityHidden(true)
-        }
-        .frame(maxWidth: .infinity)
-        // Position already interpolates the reel; its individual row offsets must not animate a second time.
-        .transaction { $0.animation = nil }
+            .frame(maxWidth: .infinity)
+            // Position already interpolates the reel; its individual row offsets must not animate a second time.
+            .transaction { $0.animation = nil }
     }
 }
 
 private struct TimeWheelNumerals: View {
     let position: CGFloat
     let range: ClosedRange<Int>
+    let unitLabel: String?
+    let isFocused: Bool
     let magnified: Bool
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         let position = position
         let range = range
+        let unitLabel = unitLabel
+        let isFocused = isFocused
         let magnified = magnified
         let ink: Color = colorScheme == .dark ? .white : .black
-        let rowHeight = TimeWheelReel.rowHeight
         return Canvas { context, size in
-            let center = CGPoint(x: size.width / 2, y: size.height / 2)
+            let center = CGPoint(x: TimeWheelReel.numeralWidth / 2, y: size.height / 2)
+            if let unitLabel {
+                // The unit sits on the selected numeral's baseline, like "07 min" set as one line of type.
+                let numeral = context.resolve(Text("00").font(TimeWheelReel.numeralFont(size: TimeWheelReel.selectedFontSize, selected: true)))
+                let baseline = center.y - numeral.measure(in: size).height / 2 + numeral.firstBaseline(in: size)
+                let label = context.resolve(Text(unitLabel)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(isFocused ? Color.orange : ink.opacity(0.5)))
+                context.draw(label, at: CGPoint(x: TimeWheelReel.numeralWidth + TimeWheelReel.unitGap,
+                                                y: baseline - label.firstBaseline(in: size)), anchor: .topLeading)
+            }
             let values = max(range.lowerBound, Int(position.rounded(.down)) - 3)...min(range.upperBound, Int(position.rounded(.up)) + 3)
             for number in values {
                 let distance = CGFloat(number) - position
+                let angle = distance * TimeWheelReel.rowAngle
+                guard abs(angle) < .pi / 2 else { continue }
                 // Magnified rows are laid out as real text at the larger point size, never by
                 // scaling small glyphs — stretching them warped and pixelated the selected value.
                 let scale = magnified ? TimeWheelReel.magnification(atRowDistance: distance) : 1
-                let text = context.resolve(Text("\(number)")
-                    .font(.system(size: 16 * scale, weight: scale > 1.12 ? .semibold : .regular, design: .rounded))
-                    .monospacedDigit()
+                let text = context.resolve(Text(String(format: "%02d", number))
+                    .font(TimeWheelReel.numeralFont(size: TimeWheelReel.baseFontSize * scale, selected: magnified))
                     .foregroundStyle(ink))
-                context.opacity = max(0.28, 1 - abs(distance) * 0.45)
-                context.draw(text, at: CGPoint(x: center.x, y: center.y + distance * rowHeight), anchor: .center)
+                var row = context
+                row.translateBy(x: center.x, y: center.y + TimeWheelReel.wheelOffset(atRowDistance: distance))
+                // Foreshortening only: it is exactly 1 at the selected row, so the selected value stays undistorted.
+                row.scaleBy(x: 1, y: cos(angle))
+                row.opacity = magnified ? 1 : 0.75 * cos(angle) * cos(angle)
+                row.draw(text, at: .zero, anchor: .center)
             }
         }
     }

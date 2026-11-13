@@ -40,10 +40,11 @@ final class WidgetLayoutTests: XCTestCase {
 
     @MainActor
     func testTimerLensMagnifiesOnlyNumbersInsideItsBand() {
-        XCTAssertEqual(TimeWheelReel.magnification(atRowDistance: 0), 2.55, accuracy: 0.001)
+        XCTAssertEqual(TimeWheelReel.magnification(atRowDistance: 0) * TimeWheelReel.baseFontSize,
+                       TimeWheelReel.selectedFontSize, accuracy: 0.001)
         let edge = TimeWheelReel.selectionHeight / (2 * TimeWheelReel.rowHeight)
         let halfway = TimeWheelReel.magnification(atRowDistance: edge / 2)
-        XCTAssertEqual(halfway, 2.1625, accuracy: 0.001)
+        XCTAssertEqual(halfway, 1 + (TimeWheelReel.maximumMagnification - 1) * 0.75, accuracy: 0.001)
         XCTAssertEqual(TimeWheelReel.magnification(atRowDistance: -edge / 2), halfway)
         for distance: CGFloat in [edge, 1, -1, 2, -2] {
             XCTAssertEqual(TimeWheelReel.magnification(atRowDistance: distance), 1)
@@ -76,14 +77,11 @@ final class WidgetLayoutTests: XCTestCase {
             }
             return (ink, bitmap.pixelsWide)
         }
-        let size = 16 * TimeWheelReel.maximumMagnification
+        let size = TimeWheelReel.selectedFontSize
         let reel = try inkMask(TimeWheelReel(position: 11, range: 0...59, unitLabel: "", showsUnit: true,
                                                   isFocused: false, viewportHeight: TimeWheelReel.selectionHeight))
-        let reference = try inkMask(HStack(spacing: 4) {
-            Text("11").font(.system(size: size, weight: .semibold, design: .rounded)).monospacedDigit()
-                .frame(width: TimeWheelReel.numeralWidth, height: TimeWheelReel.selectionHeight)
-            Text("")
-        }.frame(maxWidth: .infinity))
+        let reference = try inkMask(Text("11").font(.system(size: size, weight: .medium)).monospacedDigit()
+            .frame(width: TimeWheelReel.numeralWidth, height: TimeWheelReel.selectionHeight))
         XCTAssertFalse(reference.0.isEmpty)
         // Compared by shape: align both on their ink bounds so a one-pixel layout rounding
         // difference doesn't read as distortion.
@@ -124,7 +122,7 @@ final class WidgetLayoutTests: XCTestCase {
             add(attachment)
             let bitmap = NSBitmapImageRep(cgImage: cgImage)
             var left = bitmap.pixelsWide, right = -1, top = bitmap.pixelsHigh, bottom = -1
-            let centerX = (160.0 - 4) / 2 * renderer.scale
+            let centerX = (160.0 - TimeWheelReel.unitColumnWidth) / 2 * renderer.scale
             let halfWidth = TimeWheelReel.numeralWidth / 2 * renderer.scale
             // Moving digits enter at the lens edges; exclude only the one-point glass rim.
             for y in 2..<(bitmap.pixelsHigh - 2) {
@@ -146,7 +144,7 @@ final class WidgetLayoutTests: XCTestCase {
             let lens = try inkBounds(magnified: true, scheme: scheme)
             XCTAssertGreaterThan(lens.height, normal.height * 1.2, "The lens must visibly magnify the numeral")
             let twoDigits = try inkBounds(magnified: true, scheme: scheme, position: 59)
-            XCTAssertGreaterThan(twoDigits.width, lens.width * 1.5)
+            XCTAssertEqual(twoDigits.width, lens.width, accuracy: lens.width * 0.15, "Values are zero-padded, so 06 and 59 read as the same width")
             XCTAssertLessThan(twoDigits.width, TimeWheelReel.numeralWidth * 2 - 2, "Magnified two-digit values must fit inside the numeric viewport")
             for position: CGFloat in [6.25, 6.5, 6.75] {
                 let moving = try inkBounds(magnified: true, scheme: scheme, position: position)
