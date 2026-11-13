@@ -24,24 +24,29 @@ final class PopoverPresentation: ObservableObject {
     private var frozenTick: ClockTick
     private let timerModel: CountdownTimer
     private let stopwatch: Stopwatch
+    /// The view refreshes on appear without a date, so tests pin "now" here or the calendar jumps to the real day.
+    private let now: () -> Date
 
-    init(timeProvider: TimeProvider, timerModel: CountdownTimer, stopwatch: Stopwatch, date: Date = Date()) {
+    init(timeProvider: TimeProvider, timerModel: CountdownTimer, stopwatch: Stopwatch, date: Date = Date(),
+         now: @escaping () -> Date = Date.init) {
         frozenTick = timeProvider.tick
         calendarNavigation = CalendarNavigation(date: date)
         today = Calendar.current.startOfDay(for: date)
         self.timerModel = timerModel
         self.stopwatch = stopwatch
+        self.now = now
         updateDisplayActivity()
     }
 
-    func setPresented(_ presented: Bool, timeProvider: TimeProvider, date: Date = Date()) {
+    func setPresented(_ presented: Bool, timeProvider: TimeProvider, date: Date? = nil) {
         if presented { refreshCalendar(date: date, resetSelection: true) }
         if !presented { frozenTick = timeProvider.tick }
         isPresented = presented
         updateDisplayActivity()
     }
 
-    func refreshCalendar(date: Date = Date(), resetSelection: Bool = false) {
+    func refreshCalendar(date: Date? = nil, resetSelection: Bool = false) {
+        let date = date ?? now()
         let calendar = Calendar.current
         let day = calendar.startOfDay(for: date)
         if resetSelection || day != today || calendar != calendarNavigation.calendar {

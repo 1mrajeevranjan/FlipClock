@@ -115,7 +115,8 @@ final class UIControlsTests: XCTestCase {
         let timeProvider = TimeProvider()
         let timer = CountdownTimer(playCompletionSound: {})
         let stopwatch = Stopwatch()
-        let presentation = PopoverPresentation(timeProvider: timeProvider, timerModel: timer, stopwatch: stopwatch, date: date)
+        let presentation = PopoverPresentation(timeProvider: timeProvider, timerModel: timer, stopwatch: stopwatch, date: date,
+                                               now: { date })
         presentation.setPresented(true, timeProvider: timeProvider, date: date)
         let view = PopoverClockView(timeProvider: timeProvider, settings: settings, reminderStore: store,
                                     timerModel: timer, stopwatch: stopwatch, presentation: presentation)
