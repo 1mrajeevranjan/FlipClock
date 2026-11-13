@@ -1,5 +1,5 @@
 import XCTest
-@testable import FlipClock
+@testable import ClackClock
 
 /// Every test gets its own throwaway `UserDefaults` suite — `AppSettings`
 /// never touches the real user's `.standard` defaults here, so these tests

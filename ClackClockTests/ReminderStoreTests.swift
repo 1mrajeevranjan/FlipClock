@@ -1,6 +1,6 @@
 import XCTest
 import Combine
-@testable import FlipClock
+@testable import ClackClock
 
 final class ReminderStoreTests: XCTestCase {
     private var suiteName: String!

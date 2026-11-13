@@ -1,5 +1,5 @@
 import XCTest
-@testable import FlipClock
+@testable import ClackClock
 
 final class ClockTickTests: XCTestCase {
     private let utc = TimeZone(identifier: "UTC")!

@@ -9,7 +9,7 @@
 - Foreground notification presentation requires a matching, unacknowledged reminder whose scheduled second has arrived. Unknown, deleted, acknowledged, and future reminders cannot request sound.
 - Countdown tests now inject silent audio callbacks. Idle, paused, and reset countdowns emit no sound callback; an actual completion emits exactly one. Earlier regression runs used real macOS chimes. This confirms a test-audio source, but does not establish the sole cause of the reported live sound.
 
-Evidence: `/tmp/flipclock-popup-bugs-regression.log` and `/var/folders/2c/ds4y85f53p7cps19pr2s87gc0000gn/T/FlipClock-DerivedData/Logs/Test/Test-FlipClock-2026.10.19_12-10-33-+0530.xcresult`.
+Evidence: `/tmp/clackclock-popup-bugs-regression.log` and `/var/folders/2c/ds4y85f53p7cps19pr2s87gc0000gn/T/ClackClock-DerivedData/Logs/Test/Test-ClackClock-2026.10.19_12-10-33-+0530.xcresult`.
 
 Live popover interaction and speaker output remain unverified under the Computer Use restriction described below.
 
@@ -18,7 +18,7 @@ Live popover interaction and speaker output remain unverified under the Computer
 110 tests passed in each of three fresh-process runs: 330 test executions, zero failures. Debug configuration, native macOS destination, Xcode 27.
 
 ```sh
-xcodebuild -project FlipClock.xcodeproj -scheme FlipClock \
+xcodebuild -project ClackClock.xcodeproj -scheme ClackClock \
   -configuration Debug -destination 'platform=macOS' \
   -parallel-testing-enabled NO -test-iterations 3 \
   -test-repetition-relaunch-enabled YES test
@@ -28,8 +28,8 @@ The original 100-test suite passed before additional regression cases were added
 
 Evidence on the development machine:
 
-- Log: `/tmp/flipclock-regression-stress-3x.log`
-- Result bundle: `/var/folders/2c/ds4y85f53p7cps19pr2s87gc0000gn/T/FlipClock-DerivedData/Logs/Test/Test-FlipClock-2026.10.18_23-22-10-+0530.xcresult`
+- Log: `/tmp/clackclock-regression-stress-3x.log`
+- Result bundle: `/var/folders/2c/ds4y85f53p7cps19pr2s87gc0000gn/T/ClackClock-DerivedData/Logs/Test/Test-ClackClock-2026.10.18_23-22-10-+0530.xcresult`
 
 ## Fixes
 
@@ -56,7 +56,7 @@ The compiled icon catalog contains renditions from 16×16 through 1024×1024. La
 
 ## Live checks still required
 
-Computer Use returned **“Computer Use was not approved to use FlipClock.”** No live click-through was performed or substituted through another automation tool. Passing model/component tests does not establish that every visible button was clicked successfully.
+Computer Use returned **“Computer Use was not approved to use ClackClock.”** No live click-through was performed or substituted through another automation tool. Passing model/component tests does not establish that every visible button was clicked successfully.
 
 - Open/close the popover and Settings; switch all tabs and verify pointer targets, focus, keyboard shortcuts, alignment and animation.
 - Exercise calendar heading/arrows/back gestures; submit and cancel reminders, including blank titles; choose and cancel time-zone changes.

@@ -157,8 +157,8 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
     }
 
     enum Links {
-        static let website = URL(string: "https://github.com/1mrajeevranjan/FlipClock")!
-        static let support = URL(string: "https://github.com/1mrajeevranjan/FlipClock/issues")!
+        static let website = URL(string: "https://github.com/1mrajeevranjan/ClackClock")!
+        static let support = URL(string: "https://github.com/1mrajeevranjan/ClackClock/issues")!
         static let moreApps = URL(string: "https://github.com/1mrajeevranjan")!
     }
 
@@ -226,7 +226,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
     }
 
     @objc private func showTips() {
-        showHelp(title: "FlipClock Tips", text: """
+        showHelp(title: "ClackClock Tips", text: """
         Click the menu bar clock to open Calendar, Timer, and Stopwatch. Right-click it for Settings and Quit.
 
         In the calendar, click the month and year to browse months, then years. Click empty space to go back one level. Double-click a day, or select it and press ⌘N, to add a reminder.
@@ -238,14 +238,14 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
     }
 
     @objc private func showFAQ() {
-        showHelp(title: "FlipClock FAQ", text: """
+        showHelp(title: "ClackClock FAQ", text: """
         Where are Settings? Right-click the menu bar clock and choose Settings…
 
         Why is a widget hidden? Desktop widgets sit beneath other app windows. Show the desktop to reveal them.
 
         Why is the glass softer? Stronger wallpaper diffusion needs Screen Recording permission. The clock still works with system vibrancy when permission is unavailable.
 
-        How do reminder sounds work? At a reminder's time FlipClock plays the sound chosen in General settings on a loop. Click Dismiss on the notification to stop it and delete the reminder; clicking the notification itself only silences it. To keep reminders on screen until dismissed, set FlipClock's Alert Style to Persistent in System Settings › Notifications.
+        How do reminder sounds work? At a reminder's time ClackClock plays the sound chosen in General settings on a loop. Click Dismiss on the notification to stop it and delete the reminder; clicking the notification itself only silences it. To keep reminders on screen until dismissed, set ClackClock's Alert Style to Persistent in System Settings › Notifications.
 
         Do timers continue when the popover closes? Yes. Reopening immediately shows the current time without keeping hidden display animations running.
         """)

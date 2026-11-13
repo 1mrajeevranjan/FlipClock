@@ -2,7 +2,7 @@ import AppKit
 import Combine
 import SwiftUI
 
-/// FlipClock's own alert for a ringing reminder, styled after a macOS
+/// ClackClock's own alert for a ringing reminder, styled after a macOS
 /// notification banner and on screen the instant the alarm starts. The
 /// native notification can't promise that: usernoted held every banner on
 /// this Mac back ~10s in its Apple Intelligence step (see CLAUDE.md), so the

@@ -15,10 +15,10 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "3486491F75606E2E23752AE7"
-               BuildableName = "FlipClock.app"
-               BlueprintName = "FlipClock"
-               ReferencedContainer = "container:FlipClock.xcodeproj">
+               BlueprintIdentifier = "6DDF32C47F1403FD28421DEA"
+               BuildableName = "ClackClock.app"
+               BlueprintName = "ClackClock"
+               ReferencedContainer = "container:ClackClock.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
          <BuildActionEntry
@@ -29,10 +29,10 @@
             buildForAnalyzing = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "78DA7C30478052BF0F406397"
-               BuildableName = "FlipClockTests.xctest"
-               BlueprintName = "FlipClockTests"
-               ReferencedContainer = "container:FlipClock.xcodeproj">
+               BlueprintIdentifier = "76D67A42AABBAA2E4B56697B"
+               BuildableName = "ClackClockTests.xctest"
+               BlueprintName = "ClackClockTests"
+               ReferencedContainer = "container:ClackClock.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -46,10 +46,10 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "3486491F75606E2E23752AE7"
-            BuildableName = "FlipClock.app"
-            BlueprintName = "FlipClock"
-            ReferencedContainer = "container:FlipClock.xcodeproj">
+            BlueprintIdentifier = "6DDF32C47F1403FD28421DEA"
+            BuildableName = "ClackClock.app"
+            BlueprintName = "ClackClock"
+            ReferencedContainer = "container:ClackClock.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <Testables>
@@ -58,10 +58,10 @@
             parallelizable = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "78DA7C30478052BF0F406397"
-               BuildableName = "FlipClockTests.xctest"
-               BlueprintName = "FlipClockTests"
-               ReferencedContainer = "container:FlipClock.xcodeproj">
+               BlueprintIdentifier = "76D67A42AABBAA2E4B56697B"
+               BuildableName = "ClackClockTests.xctest"
+               BlueprintName = "ClackClockTests"
+               ReferencedContainer = "container:ClackClock.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -82,10 +82,10 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "3486491F75606E2E23752AE7"
-            BuildableName = "FlipClock.app"
-            BlueprintName = "FlipClock"
-            ReferencedContainer = "container:FlipClock.xcodeproj">
+            BlueprintIdentifier = "6DDF32C47F1403FD28421DEA"
+            BuildableName = "ClackClock.app"
+            BlueprintName = "ClackClock"
+            ReferencedContainer = "container:ClackClock.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -99,10 +99,10 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "3486491F75606E2E23752AE7"
-            BuildableName = "FlipClock.app"
-            BlueprintName = "FlipClock"
-            ReferencedContainer = "container:FlipClock.xcodeproj">
+            BlueprintIdentifier = "6DDF32C47F1403FD28421DEA"
+            BuildableName = "ClackClock.app"
+            BlueprintName = "ClackClock"
+            ReferencedContainer = "container:ClackClock.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

@@ -1,6 +1,6 @@
 import XCTest
 import UserNotifications
-@testable import FlipClock
+@testable import ClackClock
 
 final class ReminderNotificationsTests: XCTestCase {
     @MainActor
@@ -71,7 +71,7 @@ final class ReminderNotificationsTests: XCTestCase {
             (UNNotificationDefaultActionIdentifier, requestID),
             ("unknown-action", requestID),
             (ReminderNotifications.dismissActionIdentifier, first.id.uuidString),
-            (ReminderNotifications.dismissActionIdentifier, "FlipClock-reminder-invalid")
+            (ReminderNotifications.dismissActionIdentifier, "ClackClock-reminder-invalid")
         ] {
             notifications.handleResponse(actionIdentifier: action, requestIdentifier: identifier)
         }
@@ -134,12 +134,12 @@ final class ReminderNotificationsTests: XCTestCase {
         let now = Date()
         let lead = ReminderNotifications.handoverLead
         XCTAssertNil(ReminderNotifications.request(for: Reminder(date: now.addingTimeInterval(-30), title: "Due this minute"), now: now),
-                     "A newly added overdue reminder rings with FlipClock's own banner")
+                     "A newly added overdue reminder rings with ClackClock's own banner")
         XCTAssertNil(ReminderNotifications.request(for: Reminder(date: now.addingTimeInterval(lead - 1), title: "Almost due"), now: now),
-                     "Withdrawn before it's due, so usernoted's late banner can't duplicate FlipClock's")
+                     "Withdrawn before it's due, so usernoted's late banner can't duplicate ClackClock's")
         let later = try XCTUnwrap(ReminderNotifications.request(for: Reminder(date: now.addingTimeInterval(lead + 60), title: "Later"),
                                                                 now: now))
-        XCTAssertTrue(later.trigger is UNCalendarNotificationTrigger, "Still scheduled natively for when FlipClock isn't running")
+        XCTAssertTrue(later.trigger is UNCalendarNotificationTrigger, "Still scheduled natively for when ClackClock isn't running")
     }
 
     func testNativeSoundsAreBundledAndStoredSelectionIsValidated() {

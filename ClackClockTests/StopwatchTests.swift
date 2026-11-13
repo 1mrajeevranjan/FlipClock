@@ -1,6 +1,6 @@
 import XCTest
 import Combine
-@testable import FlipClock
+@testable import ClackClock
 
 final class StopwatchTests: XCTestCase {
     @MainActor

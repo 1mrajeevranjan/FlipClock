@@ -12,7 +12,7 @@ Two concrete, measurable deviations remain, both in `DesktopOverlay/WidgetGlassB
 1. **Corner radius** is a flat `34pt` constant (`WidgetGlassBackground.cornerRadius`), forced to `0` only in `fillScreen` mode. HIG expects radius to scale with the container rather than stay fixed.
 2. **Padding** is a flat `22pt` constant (`OverlayContentView.padding`, plus `dateSpacing = 10`), identical at every `OverlaySize`. HIG's standard margin is `16pt`, with an `11pt` floor for tight groupings — the current value doesn't shrink at the `0.325x` "half" size.
 
-One deviation is **not fixed by design**: HIG prefers live `Text` with the system font, ≥11pt, never rasterized. Every glyph in FlipClock (digits, weekday, AM/PM) is a rasterized bitmap card via `DigitFaceRenderer` — this is the split-flap mechanism itself, the product's core identity. Out of scope; noted here so it isn't mistaken for an oversight.
+One deviation is **not fixed by design**: HIG prefers live `Text` with the system font, ≥11pt, never rasterized. Every glyph in ClackClock (digits, weekday, AM/PM) is a rasterized bitmap card via `DigitFaceRenderer` — this is the split-flap mechanism itself, the product's core identity. Out of scope; noted here so it isn't mistaken for an oversight.
 
 Additionally, in-scope: current elevation is binary (`NSWindow.hasShadow` on/off, in `OverlayWindowController.swift`), not size-proportional like a real system widget's soft elevation.
 

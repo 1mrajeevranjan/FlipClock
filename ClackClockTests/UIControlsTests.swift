@@ -1,6 +1,6 @@
 import XCTest
 import SwiftUI
-@testable import FlipClock
+@testable import ClackClock
 
 /// Presses real SwiftUI controls through the in-process accessibility tree —
 /// the same elements VoiceOver drives — so buttons are exercised end to end

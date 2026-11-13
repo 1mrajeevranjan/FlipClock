@@ -16,15 +16,15 @@
 - Shadow: `.shadow(color: .black.opacity(0.18), radius: (12 * scale).clamped(to: 6...20), x: 0, y: (4 * scale).clamped(to: 2...8))`, layered under the existing `NSWindow.hasShadow` (unchanged), suppressed when `fullyClear`/`fillScreen`.
 - `scale` in every formula above is `settings.overlaySize.scale` (0.325/0.65/1.3/1.95) — never `effectiveScale` (which adds the `fillScreen` 1.6x multiplier); `fillScreen` already bypasses `WidgetGlassBackground`'s rounded/shadowed path entirely via `fullyClear`.
 - No new files, no new `AppSettings` properties, no new abstractions beyond a single `Comparable.clamped(to:)` helper.
-- Verification is build + visual, not unit tests (no test target exists): `xcodebuild -project FlipClock.xcodeproj -scheme FlipClock -configuration Debug build` must report `** BUILD SUCCEEDED **`, then launch and screenshot the overlay.
+- Verification is build + visual, not unit tests (no test target exists): `xcodebuild -project ClackClock.xcodeproj -scheme ClackClock -configuration Debug build` must report `** BUILD SUCCEEDED **`, then launch and screenshot the overlay.
 
 ---
 
 ### Task 1: Scale-aware corner radius + shadow in `WidgetGlassBackground`
 
 **Files:**
-- Modify: `FlipClock/DesktopOverlay/WidgetGlassBackground.swift` (whole file — see below)
-- Modify: `FlipClock/DesktopOverlay/OverlayContentView.swift:63` (call site)
+- Modify: `ClackClock/DesktopOverlay/WidgetGlassBackground.swift` (whole file — see below)
+- Modify: `ClackClock/DesktopOverlay/OverlayContentView.swift:63` (call site)
 
 **Interfaces:**
 - Produces: `WidgetGlassBackground(scale: CGFloat = 1, fullyClear: Bool = false)` (replaces old `WidgetGlassBackground(cornerRadius: CGFloat, fullyClear: Bool)` init signature), `WidgetGlassBackground.cornerRadius(scale: CGFloat) -> CGFloat` (static), and a file-visible `extension Comparable { func clamped(to range: ClosedRange<Self>) -> Self }` that Task 2 also relies on.
@@ -141,7 +141,7 @@ to:
 Run from the repo root (`/Users/rajeevranjan/ClaudeCode/Clock`):
 
 ```bash
-xcodebuild -project FlipClock.xcodeproj -scheme FlipClock -configuration Debug build
+xcodebuild -project ClackClock.xcodeproj -scheme ClackClock -configuration Debug build
 ```
 
 Expected: last line of output is `** BUILD SUCCEEDED **`. If it fails, read the actual `xcodebuild` error (not editor/SourceKit diagnostics — this codebase has shown stale ones before, per `CLAUDE.md`) and fix before continuing.
@@ -149,7 +149,7 @@ Expected: last line of output is `** BUILD SUCCEEDED **`. If it fails, read the 
 - [ ] **Step 4: Launch and visually verify**
 
 ```bash
-open -n /Users/rajeevranjan/Library/Developer/Xcode/DerivedData/FlipClock-*/Build/Products/Debug/FlipClock.app
+open -n /Users/rajeevranjan/Library/Developer/Xcode/DerivedData/ClackClock-*/Build/Products/Debug/ClackClock.app
 ```
 
 Open Settings → Desktop Clock tab, enable "Show on Desktop", and cycle through each `OverlaySize` (half/full/double/triple) plus toggling "Fill Screen" on and off. For each, take a screenshot (`screencapture -x <path>`) and confirm:
@@ -160,7 +160,7 @@ Open Settings → Desktop Clock tab, enable "Show on Desktop", and cycle through
 - [ ] **Step 5: Commit**
 
 ```bash
-git add FlipClock/DesktopOverlay/WidgetGlassBackground.swift FlipClock/DesktopOverlay/OverlayContentView.swift
+git add ClackClock/DesktopOverlay/WidgetGlassBackground.swift ClackClock/DesktopOverlay/OverlayContentView.swift
 git commit -m "feat: scale DesktopOverlay corner radius and add proportional shadow"
 ```
 
@@ -169,10 +169,10 @@ git commit -m "feat: scale DesktopOverlay corner radius and add proportional sha
 ### Task 2: Scale-aware padding and date spacing in `OverlayContentView`
 
 **Files:**
-- Modify: `FlipClock/DesktopOverlay/OverlayContentView.swift:9-10` (constants), `:21-27` (`windowSize`), `:40` (`VStack` spacing), `:55` (`.padding`)
+- Modify: `ClackClock/DesktopOverlay/OverlayContentView.swift:9-10` (constants), `:21-27` (`windowSize`), `:40` (`VStack` spacing), `:55` (`.padding`)
 
 **Interfaces:**
-- Consumes: `Comparable.clamped(to:)` from Task 1 (`FlipClock/DesktopOverlay/WidgetGlassBackground.swift`).
+- Consumes: `Comparable.clamped(to:)` from Task 1 (`ClackClock/DesktopOverlay/WidgetGlassBackground.swift`).
 - Produces: `OverlayContentView.padding(scale: CGFloat) -> CGFloat` (static), `OverlayContentView.dateSpacing(scale: CGFloat) -> CGFloat` (static) — replace the old `static let padding`/`static let dateSpacing`. No other file references these constants (confirmed: only `WidgetGlassBackground.swift`'s old `cornerRadius` and these two were the flat constants in DesktopOverlay).
 
 - [ ] **Step 1: Replace the constants (lines 9-10)**
@@ -255,7 +255,7 @@ to:
 - [ ] **Step 4: Build**
 
 ```bash
-xcodebuild -project FlipClock.xcodeproj -scheme FlipClock -configuration Debug build
+xcodebuild -project ClackClock.xcodeproj -scheme ClackClock -configuration Debug build
 ```
 
 Expected: `** BUILD SUCCEEDED **`.
@@ -263,7 +263,7 @@ Expected: `** BUILD SUCCEEDED **`.
 - [ ] **Step 5: Launch and visually verify**
 
 ```bash
-open -n /Users/rajeevranjan/Library/Developer/Xcode/DerivedData/FlipClock-*/Build/Products/Debug/FlipClock.app
+open -n /Users/rajeevranjan/Library/Developer/Xcode/DerivedData/ClackClock-*/Build/Products/Debug/ClackClock.app
 ```
 
 Cycle through each `OverlaySize` again with "Show Date" toggled on. Confirm:
@@ -274,7 +274,7 @@ Cycle through each `OverlaySize` again with "Show Date" toggled on. Confirm:
 - [ ] **Step 6: Commit**
 
 ```bash
-git add FlipClock/DesktopOverlay/OverlayContentView.swift
+git add ClackClock/DesktopOverlay/OverlayContentView.swift
 git commit -m "feat: scale DesktopOverlay padding and date spacing to HIG margin standard"
 ```
 

@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="icon.png" alt="FlipClock app icon" width="128" height="128">
+<img src="icon.png" alt="ClackClock app icon" width="128" height="128">
 
-# FlipClock
+# ClackClock
 
 **A native split-flap clock for macOS: in the menu bar, in a popover, and on your desktop.**
 
@@ -15,7 +15,7 @@
 
 </div>
 
-FlipClock is a native macOS app that renders an animated split-flap clock in three places:
+ClackClock is a native macOS app that renders an animated split-flap clock in three places:
 
 - a compact menu bar clock;
 - a popover with a calendar, a timer and a stopwatch;
@@ -52,7 +52,7 @@ Every character (digits, weekday, date, AM/PM) is a real rasterised flip card wi
 - **Widget glass that matches the native widgets.**
   - It blurs a capture of your wallpaper instead of relying on `NSVisualEffectView` alone.
   - It follows macOS's *Dim widgets on desktop* setting, in step with the widgets beside it.
-- **Reminders that ring on time.** FlipClock shows its own notification-style banner the second a reminder is due, and loops your chosen alert sound until you act on it.
+- **Reminders that ring on time.** ClackClock shows its own notification-style banner the second a reminder is due, and loops your chosen alert sound until you act on it.
 - **World clocks.** Up to five other time zones, each as a menu bar item, a desktop widget, or both.
 - **Built for macOS.** Agent app (no Dock icon), Liquid Glass controls on macOS 26, full Reduce Motion, Reduce Transparency and VoiceOver support.
 
@@ -96,14 +96,14 @@ Every character (digits, weekday, date, AM/PM) is a real rasterised flip card wi
 - **Add:** select a calendar day and choose **Add Reminder** (⌘N), or double-click the day. Each reminder has an exact time.
 - **Badges:** days are marked orange when a reminder is within 24 hours and red when it's due today.
 - **When a reminder is due:**
-  - FlipClock shows its own banner at the top right instantly, and loops your chosen sound.
+  - ClackClock shows its own banner at the top right instantly, and loops your chosen sound.
   - **Dismiss** stops the sound and deletes the reminder.
   - Clicking the banner body only silences the sound.
-- **If FlipClock isn't running,** the native macOS notification still fires.
+- **If ClackClock isn't running,** the native macOS notification still fires.
 - **After sleep,** reminders that came due while the Mac slept ring on wake. Reminders that were already overdue at launch are never replayed.
 
 > [!NOTE]
-> macOS can hold its own notifications back by several seconds while it runs Apple Intelligence processing on them. That's why FlipClock shows its own banner instead, and withdraws the native notification 5 seconds before the reminder is due so you never see it twice.
+> macOS can hold its own notifications back by several seconds while it runs Apple Intelligence processing on them. That's why ClackClock shows its own banner instead, and withdraws the native notification 5 seconds before the reminder is due so you never see it twice.
 
 ### Customisation
 
@@ -132,13 +132,13 @@ There are no package dependencies.
 
 ## Installation
 
-FlipClock is distributed as source. Build it with Xcode.
+ClackClock is distributed as source. Build it with Xcode.
 
 ### 1. Clone
 
 ```bash
-git clone https://github.com/1mrajeevranjan/FlipClock.git
-cd FlipClock
+git clone https://github.com/1mrajeevranjan/ClackClock.git
+cd ClackClock
 ```
 
 ### 2. Set your signing team
@@ -162,23 +162,23 @@ xcodegen generate
 
 ### 3. Build and install
 
-You can build in Xcode (open `FlipClock.xcodeproj` and run the `FlipClock` scheme with ⌘R) or from the command line:
+You can build in Xcode (open `ClackClock.xcodeproj` and run the `ClackClock` scheme with ⌘R) or from the command line:
 
 ```bash
-xcodebuild -project FlipClock.xcodeproj -scheme FlipClock -configuration Release build
+xcodebuild -project ClackClock.xcodeproj -scheme ClackClock -configuration Release build
 ```
 
 Copy the built app into `~/Applications` (or `/Applications`) and open it from there:
 
 ```bash
-cp -R ~/Library/Developer/Xcode/DerivedData/FlipClock-*/Build/Products/Release/FlipClock.app ~/Applications/
-open ~/Applications/FlipClock.app
+cp -R ~/Library/Developer/Xcode/DerivedData/ClackClock-*/Build/Products/Release/ClackClock.app ~/Applications/
+open ~/Applications/ClackClock.app
 ```
 
 > [!TIP]
-> Run FlipClock from a stable location. macOS won't register notifications for an app launched from a temporary build folder.
+> Run ClackClock from a stable location. macOS won't register notifications for an app launched from a temporary build folder.
 
-FlipClock is an agent app: it has no Dock icon and no main window. Look for the clock in the menu bar.
+ClackClock is an agent app: it has no Dock icon and no main window. Look for the clock in the menu bar.
 
 ## Usage
 
@@ -222,17 +222,17 @@ Open Settings by right-clicking the menu bar clock, or from the widget's context
 
 | Permission | Used for | If declined |
 |---|---|---|
-| **Notifications** | Native reminder alerts when FlipClock isn't running | FlipClock's own banner and sound still work while it runs |
+| **Notifications** | Native reminder alerts when ClackClock isn't running | ClackClock's own banner and sound still work while it runs |
 | **Screen Recording** | Sampling the wallpaper behind the desktop widget to blur it | The widget falls back to the system's softer vibrancy |
 
-- **Notifications:** enable them in Settings › General, or accept the prompt when you add your first reminder. Set **Alert Style** to **Persistent** in System Settings › Notifications › FlipClock so native reminders stay on screen until dismissed. **Open Settings…** in FlipClock jumps there.
-- **Privacy:** FlipClock makes no network requests and collects no data.
+- **Notifications:** enable them in Settings › General, or accept the prompt when you add your first reminder. Set **Alert Style** to **Persistent** in System Settings › Notifications › ClackClock so native reminders stay on screen until dismissed. **Open Settings…** in ClackClock jumps there.
+- **Privacy:** ClackClock makes no network requests and collects no data.
   - The captured wallpaper frame is blurred in memory and never written to disk or sent anywhere.
   - Preferences and reminders are stored locally in `UserDefaults`.
 
 ## Configuration
 
-All state lives in the `com.rajeevranjan.flipclock` defaults domain.
+All state lives in the `com.rajeevranjan.clackclock` defaults domain.
 
 | Key | Contents |
 |---|---|
@@ -240,14 +240,14 @@ All state lives in the `com.rajeevranjan.flipclock` defaults domain.
 | `NSWindow Frame DesktopOverlayFrame` | Saved desktop widget position |
 | Other keys | One per setting (theme, size, font, card colour and so on) |
 
-Useful resets (quit FlipClock first):
+Useful resets (quit ClackClock first):
 
 ```bash
 # Move the desktop widget back to its default top-right position
-defaults delete com.rajeevranjan.flipclock "NSWindow Frame DesktopOverlayFrame"
+defaults delete com.rajeevranjan.clackclock "NSWindow Frame DesktopOverlayFrame"
 
 # Reset every setting and delete all reminders
-defaults delete com.rajeevranjan.flipclock
+defaults delete com.rajeevranjan.clackclock
 ```
 
 > [!WARNING]
@@ -255,7 +255,7 @@ defaults delete com.rajeevranjan.flipclock
 
 ## Architecture
 
-FlipClock pairs SwiftUI content views with AppKit for everything that needs window-level control: status items, window levels, collection behaviour and login items.
+ClackClock pairs SwiftUI content views with AppKit for everything that needs window-level control: status items, window levels, collection behaviour and login items.
 
 ```mermaid
 flowchart LR
@@ -285,17 +285,17 @@ flowchart LR
 ### Project structure
 
 ```text
-FlipClock/
-├── App/             Entry point and AppKit bridge (AppDelegate, FlipClockApp, world clocks)
+ClackClock/
+├── App/             Entry point and AppKit bridge (AppDelegate, ClackClockApp, world clocks)
 ├── CountdownTimer/  Timer, stopwatch, wheel picker, flip time display
 ├── DesktopOverlay/  Widget windows, glass background, wallpaper capture, focus/dim tracking
-├── FlipClock/       Split-flap rendering: clock face, digits, flip layer, colours, fonts
+├── ClackClock/       Split-flap rendering: clock face, digits, flip layer, colours, fonts
 ├── MenuBar/         Menu bar clock views and status item controllers
 ├── Popover/         Popover, calendar, vibrant hosting controller
 ├── Reminders/       Model, store, add form, badges, Due Today list, alarm, banner
 ├── Settings/        AppSettings, settings window and views, world clock model
 └── TimeEngine/      Tick generation and time/digit maths
-FlipClockTests/      Unit, UI-control, stress and performance tests
+ClackClockTests/      Unit, UI-control, stress and performance tests
 Fonts/               Bundled digit fonts (each with its own licence)
 project.yml          XcodeGen project definition (the source of truth for the Xcode project)
 script/              Build-and-run helper
@@ -308,7 +308,7 @@ See [`architecture.md`](architecture.md) for the module-by-module map.
 ### Command-line build
 
 ```bash
-xcodebuild -project FlipClock.xcodeproj -scheme FlipClock -configuration Debug build
+xcodebuild -project ClackClock.xcodeproj -scheme ClackClock -configuration Debug build
 ```
 
 Trust `xcodebuild`'s `BUILD SUCCEEDED` / `BUILD FAILED` result over editor diagnostics. SourceKit in this project often shows stale errors that don't reflect the real build.
@@ -316,7 +316,7 @@ Trust `xcodebuild`'s `BUILD SUCCEEDED` / `BUILD FAILED` result over editor diagn
 ### Build-and-run helper
 
 ```bash
-./script/build_and_run.sh              # build, then relaunch FlipClock
+./script/build_and_run.sh              # build, then relaunch ClackClock
 ./script/build_and_run.sh --verify     # build, launch, and check the process is running
 ./script/build_and_run.sh --logs       # build, launch, and stream the app's logs
 ./script/build_and_run.sh --telemetry  # build, launch, and stream the app's subsystem logs
@@ -325,7 +325,7 @@ Trust `xcodebuild`'s `BUILD SUCCEEDED` / `BUILD FAILED` result over editor diagn
 
 ### Adding, removing or renaming files
 
-`project.yml` defines the sources; the generated `FlipClock.xcodeproj` is committed. Regenerate it rather than editing `project.pbxproj` by hand:
+`project.yml` defines the sources; the generated `ClackClock.xcodeproj` is committed. Regenerate it rather than editing `project.pbxproj` by hand:
 
 ```bash
 xcodegen generate
@@ -336,7 +336,7 @@ xcodegen generate
 `print()` from a GUI app launched with `open` isn't captured. Use `NSLog()` and read it with the full path to `log`, because `log` on its own is a zsh builtin:
 
 ```bash
-/usr/bin/log show --last 5m --predicate 'process == "FlipClock"' --style compact
+/usr/bin/log show --last 5m --predicate 'process == "ClackClock"' --style compact
 ```
 
 ### Conventions
@@ -349,7 +349,7 @@ xcodegen generate
 ## Testing
 
 ```bash
-xcodebuild test -project FlipClock.xcodeproj -scheme FlipClock -destination 'platform=macOS'
+xcodebuild test -project ClackClock.xcodeproj -scheme ClackClock -destination 'platform=macOS'
 ```
 
 The suite has 133 XCTest cases:
@@ -368,7 +368,7 @@ The suite has 133 XCTest cases:
 To run the suite repeatedly, each time in a fresh process:
 
 ```bash
-xcodebuild test -project FlipClock.xcodeproj -scheme FlipClock -destination 'platform=macOS' \
+xcodebuild test -project ClackClock.xcodeproj -scheme ClackClock -destination 'platform=macOS' \
   -test-iterations 3 -test-repetition-relaunch-enabled YES -parallel-testing-enabled NO
 ```
 
@@ -381,7 +381,7 @@ Some things still need checking by hand: live click-through, native permission d
 
 ## Performance
 
-FlipClock is meant to stay running all day, so idle cost matters.
+ClackClock is meant to stay running all day, so idle cost matters.
 
 - **Hidden widgets don't render.** A widget fully covered by app windows freezes its clock until it's uncovered.
 - **Timers only run when visible.**
@@ -400,16 +400,16 @@ Development spot check (Debug build, popover closed): about 0.4% CPU on average.
 
 - The widget sits below normal app windows by design, like the native widgets. Show the desktop to see it.
 - Check that **Desktop clock** is on in Settings › General.
-- If it ended up off screen, quit FlipClock and reset its position:
-  `defaults delete com.rajeevranjan.flipclock "NSWindow Frame DesktopOverlayFrame"`.
+- If it ended up off screen, quit ClackClock and reset its position:
+  `defaults delete com.rajeevranjan.clackclock "NSWindow Frame DesktopOverlayFrame"`.
 </details>
 
 <details>
 <summary><b>Reminder notifications arrive late or not at all</b></summary>
 
-- While FlipClock runs, reminders use its own banner, which isn't affected by delays in macOS.
-- Native notifications only fire when FlipClock isn't running. If they arrive late, look in Console for `IntelligenceActor ... exceeded 10.0 seconds` from `usernoted`. That's a macOS-side stall; a restart usually clears it.
-- Run FlipClock from `~/Applications`, not a build folder, or macOS won't register its notifications.
+- While ClackClock runs, reminders use its own banner, which isn't affected by delays in macOS.
+- Native notifications only fire when ClackClock isn't running. If they arrive late, look in Console for `IntelligenceActor ... exceeded 10.0 seconds` from `usernoted`. That's a macOS-side stall; a restart usually clears it.
+- Run ClackClock from `~/Applications`, not a build folder, or macOS won't register its notifications.
 </details>
 
 <details>
@@ -447,7 +447,7 @@ Read `design.md`, `memory.md` and the *Known Gotchas* in `CLAUDE.md` before chan
 
 ## Contributing
 
-Issues and pull requests are welcome: [open an issue](https://github.com/1mrajeevranjan/FlipClock/issues).
+Issues and pull requests are welcome: [open an issue](https://github.com/1mrajeevranjan/ClackClock/issues).
 
 1. Fork the repository and create a branch from `main`.
 2. Make your change. Add new files through `project.yml` and run `xcodegen generate`.
@@ -468,6 +468,6 @@ No license has been chosen yet. Until a `LICENSE` file is added, all rights are 
 The decorative digit fonts in [`Fonts/`](Fonts) are third-party works and keep their own licences. Each font's folder includes its licence or readme where the author provided one.
 
 > [!CAUTION]
-> These fonts are free for **personal or non-commercial use only**: Abduction 2002, Bring Me a Helicopter, KG Primary Italics, Linear Beam, Space Age and Sportfield Varsity. Several other fonts ship without any licence file, so their terms are unknown. Check every font's licence before distributing FlipClock commercially, and remove any whose terms don't allow it.
+> These fonts are free for **personal or non-commercial use only**: Abduction 2002, Bring Me a Helicopter, KG Primary Italics, Linear Beam, Space Age and Sportfield Varsity. Several other fonts ship without any licence file, so their terms are unknown. Check every font's licence before distributing ClackClock commercially, and remove any whose terms don't allow it.
 
 The menu bar, popover and widget fall back to the system font when no decorative font is selected.

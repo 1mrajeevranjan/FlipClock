@@ -1,4 +1,4 @@
-# FlipClock Architecture
+# ClackClock Architecture
 
 Menu bar macOS app rendering a split-flap clock across three surfaces (menu bar status item, popover with calendar, floating desktop overlay), all driven by one shared `TimeProvider`, one shared rendering engine (`SplitFlapClockFace` and friends), and one shared `ReminderStore`.
 
@@ -9,7 +9,7 @@ Composition root only.
 
 | File | Responsibility |
 |---|---|
-| `App/FlipClockApp.swift` | `@main` entry; `Settings` scene wrapping `SettingsView` |
+| `App/ClackClockApp.swift` | `@main` entry; `Settings` scene wrapping `SettingsView` |
 | `Assets.xcassets/AppIcon.appiconset` | App icon (16–512pt, 1x/2x), generated from the repo-root `icon.png`; wired via `ASSETCATALOG_COMPILER_APPICON_NAME` in `project.yml` |
 | `App/AppDelegate.swift` | Owns shared `TimeProvider`/`AppSettings`/`ReminderStore`/`CountdownTimer`, constructs all surface controllers |
 
@@ -22,7 +22,7 @@ Pure model layer, no views. Leaf module — everything else depends on it.
 | `ClockTick.swift` | Hour/min/sec/AMPM snapshot; derives other-timezone ticks from same `Date` |
 | `DigitDelta.swift` | Diffs two ticks so unrelated digits don't animate |
 
-## FlipClock/ (shared rendering engine)
+## ClackClock/ (shared rendering engine)
 Reusable split-flap primitives used identically by MenuBar, Popover, DesktopOverlay.
 
 | File | Responsibility |
@@ -58,7 +58,7 @@ Shared reminder data + UI fragments, consumed by Popover, DesktopOverlay, and Me
 | `AddReminderView.swift` | Popover form (title + "@ time" picker) triggered by double-clicking a calendar day |
 | `ReminderBadge.swift` | Small pulsing dot (red = due today, orange = upcoming within 24h) — reused by the calendar day mark and the desktop widget's corner badge |
 | `DueReminderBanner.swift` | "Due Today" list shown in the popover with a per-reminder acknowledge checkmark |
-| `ReminderNotifications.swift` | Looping alarm (`ringDueReminders`, publishes `ringingIDs`) plus native `UNUserNotificationCenter` alerts. While the app runs, a reminder's native alert is withdrawn `handoverLead` (5s) before it's due, so it only fires when FlipClock isn't running |
+| `ReminderNotifications.swift` | Looping alarm (`ringDueReminders`, publishes `ringingIDs`) plus native `UNUserNotificationCenter` alerts. While the app runs, a reminder's native alert is withdrawn `handoverLead` (5s) before it's due, so it only fires when ClackClock isn't running |
 | `ReminderBanner.swift` | `ReminderBannerController`: a non-activating, notification-style panel (top-right, `.statusBar` level) that shows every ringing reminder the instant the alarm starts. Dismiss deletes the reminder; clicking the body only silences the alarm |
 
 One `ReminderStore` instance is created in `AppDelegate` and passed by reference everywhere; all three surfaces always agree on what's due/upcoming/acknowledged.
@@ -123,4 +123,4 @@ OverlayWindow (NSPanel subclass)
 - **Capture cadence:** 60s + Space/display-change events (was 1s, then 5s — see `memory.md` for the resource-cost history).
 - **Typography:** every character is rasterized into a bitmap card via `DigitFaceRenderer`, never live `Text`.
 
-**Cross-module dependencies:** TimeEngine, Settings, Reminders, shared FlipClock/ rendering. No dependency on MenuBar/Popover in either direction.
+**Cross-module dependencies:** TimeEngine, Settings, Reminders, shared ClackClock/ rendering. No dependency on MenuBar/Popover in either direction.

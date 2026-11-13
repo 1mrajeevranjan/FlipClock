@@ -575,12 +575,12 @@ final class AppSettings: ObservableObject {
             updateLaunchAtLoginIssue(service.status)
         } catch {
             launchAtLoginIssue = "Couldn’t update the login item: \(error.localizedDescription)"
-            NSLog("FlipClock: launch-at-login %@ failed: %@", launchAtLogin ? "register" : "unregister", "\(error)")
+            NSLog("ClackClock: launch-at-login %@ failed: %@", launchAtLogin ? "register" : "unregister", "\(error)")
         }
     }
 
     private func updateLaunchAtLoginIssue(_ status: SMAppService.Status) {
         launchAtLoginIssue = launchAtLogin && status == .requiresApproval
-            ? "Allow FlipClock in System Settings › General › Login Items." : nil
+            ? "Allow ClackClock in System Settings › General › Login Items." : nil
     }
 }

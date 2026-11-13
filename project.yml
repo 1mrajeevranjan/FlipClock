@@ -1,4 +1,4 @@
-name: FlipClock
+name: ClackClock
 options:
   bundleIdPrefix: com.rajeevranjan
   deploymentTarget:
@@ -8,11 +8,11 @@ settings:
     SWIFT_VERSION: "5.0"
     MACOSX_DEPLOYMENT_TARGET: "14.0"
 targets:
-  FlipClock:
+  ClackClock:
     type: application
     platform: macOS
     sources:
-      - path: FlipClock
+      - path: ClackClock
       - path: Fonts
         buildPhase: resources
         # Xcode's resource copy phase flattens this folder's subdirectories
@@ -41,7 +41,7 @@ targets:
           cp /System/Library/Sounds/*.aiff "$destination/"
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.rajeevranjan.flipclock
+        PRODUCT_BUNDLE_IDENTIFIER: com.rajeevranjan.clackclock
         ENABLE_HARDENED_RUNTIME: YES
         # A real signing identity (not ad-hoc "Sign to Run Locally") is
         # required for TCC grants (Screen Recording, etc.) to survive a
@@ -57,7 +57,7 @@ targets:
         CODE_SIGNING_ALLOWED: YES
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     info:
-      path: FlipClock/Info.plist
+      path: ClackClock/Info.plist
       properties:
         LSUIElement: true
         # Default to persistent "Alerts" (not auto-hiding banners) so the Dismiss button stays until the
@@ -66,14 +66,14 @@ targets:
         CFBundleShortVersionString: "1.0"
         CFBundleVersion: "1"
         NSHumanReadableCopyright: ""
-  FlipClockTests:
+  ClackClockTests:
     type: bundle.unit-test
     platform: macOS
     sources:
-      - path: FlipClockTests
+      - path: ClackClockTests
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.rajeevranjan.flipclock.tests
+        PRODUCT_BUNDLE_IDENTIFIER: com.rajeevranjan.clackclock.tests
         GENERATE_INFOPLIST_FILE: YES
         # Must match the host app's signing exactly — the test bundle is
         # dlopen'd into the app process, and macOS refuses to map a bundle
@@ -83,13 +83,13 @@ targets:
         CODE_SIGN_IDENTITY: "Apple Development"
         DEVELOPMENT_TEAM: SG8NYPLMNY
     dependencies:
-      - target: FlipClock
+      - target: ClackClock
 schemes:
-  FlipClock:
+  ClackClock:
     build:
       targets:
-        FlipClock: all
-        FlipClockTests: [test]
+        ClackClock: all
+        ClackClockTests: [test]
     test:
       targets:
-        - FlipClockTests
+        - ClackClockTests

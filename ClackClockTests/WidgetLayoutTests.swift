@@ -1,7 +1,7 @@
 import XCTest
 import SwiftUI
 import AppKit
-@testable import FlipClock
+@testable import ClackClock
 
 final class WidgetLayoutTests: XCTestCase {
     @MainActor

@@ -25,16 +25,16 @@ final class ReminderNotifications: NSObject, ObservableObject, UNUserNotificatio
     @Published private(set) var ringingIDs = Set<UUID>()
     /// Reminders that already rang (or were already overdue at launch), so a relaunch never replays old alarms.
     private var rungIDs: Set<UUID>
-    /// While FlipClock runs it shows a due reminder itself (`ReminderBannerController`) the
+    /// While ClackClock runs it shows a due reminder itself (`ReminderBannerController`) the
     /// moment it's due, so the native alert is withdrawn this long beforehand. usernoted held
     /// every banner on this Mac back ~10s in its Apple Intelligence step, and that late native
-    /// copy would arrive as a duplicate. If FlipClock isn't running, the native alert still fires.
+    /// copy would arrive as a duplicate. If ClackClock isn't running, the native alert still fires.
     nonisolated static let handoverLead: TimeInterval = 5
-    nonisolated private static let prefix = "FlipClock-reminder-"
-    nonisolated static let dismissActionIdentifier = "FlipClock-dismiss-reminder"
+    nonisolated private static let prefix = "ClackClock-reminder-"
+    nonisolated static let dismissActionIdentifier = "ClackClock-dismiss-reminder"
 
     nonisolated static var category: UNNotificationCategory {
-        UNNotificationCategory(identifier: "FlipClock-reminder", actions: [
+        UNNotificationCategory(identifier: "ClackClock-reminder", actions: [
             UNNotificationAction(identifier: dismissActionIdentifier, title: "Dismiss", options: [])
         ], intentIdentifiers: [], options: [.customDismissAction])
     }
@@ -190,7 +190,7 @@ final class ReminderNotifications: NSObject, ObservableObject, UNUserNotificatio
         if authorizationStatus == .notDetermined {
             statusMessage = "Enable alerts and sounds for timed reminders."
         } else if authorizationStatus == .denied {
-            statusMessage = "Allow FlipClock in System Settings › Notifications."
+            statusMessage = "Allow ClackClock in System Settings › Notifications."
         } else if permission.alertSetting != .enabled {
             statusMessage = "Alerts are off in System Settings › Notifications."
         } else if permission.alertStyle != .alert {
@@ -236,7 +236,7 @@ final class ReminderNotifications: NSObject, ObservableObject, UNUserNotificatio
     }
 
     /// Only for reminders due after the hand-over window; anything sooner, including a newly
-    /// added overdue reminder, is FlipClock's own banner to show.
+    /// added overdue reminder, is ClackClock's own banner to show.
     nonisolated static func request(for reminder: Reminder, now: Date = Date()) -> UNNotificationRequest? {
         guard !reminder.isAcknowledged, reminder.date > now.addingTimeInterval(handoverLead) else { return nil }
         let content = UNMutableNotificationContent()
@@ -244,7 +244,7 @@ final class ReminderNotifications: NSObject, ObservableObject, UNUserNotificatio
         content.subtitle = reminder.date.formatted(date: .abbreviated, time: .shortened)
         content.body = reminder.title
         // Silent on purpose: the app plays a looping alarm (`ringDueReminders`) until the user dismisses it.
-        content.threadIdentifier = "FlipClock-reminders"
+        content.threadIdentifier = "ClackClock-reminders"
         content.categoryIdentifier = category.identifier
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(secondsFromGMT: 0)!

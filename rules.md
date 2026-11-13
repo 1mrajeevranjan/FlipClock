@@ -1,10 +1,10 @@
-# FlipClock Development Rules
+# ClackClock Development Rules
 
 Enforceable conventions for this repo. `CLAUDE.md` is the entry-point summary for AI agents; this file is the fuller checklist. `memory.md` and `design.md` explain the *why* behind several of these.
 
 ## Build & verify
 
-1. Always verify changes with a real build: `xcodebuild -project FlipClock.xcodeproj -scheme FlipClock -configuration Debug build`. Trust `BUILD SUCCEEDED`/`FAILED` only — this codebase has repeatedly shown stale SourceKit/editor diagnostics that don't reflect real build state.
+1. Always verify changes with a real build: `xcodebuild -project ClackClock.xcodeproj -scheme ClackClock -configuration Debug build`. Trust `BUILD SUCCEEDED`/`FAILED` only — this codebase has repeatedly shown stale SourceKit/editor diagnostics that don't reflect real build state.
 2. After adding, removing, or renaming any source file, run `xcodegen generate` before building. Hand-editing `project.pbxproj` requires four matching entries (`PBXBuildFile`, `PBXFileReference`, group-children, `Sources` build-phase) — miss one and the file silently fails to compile with a misleading "cannot find type/symbol" error.
 3. Prefer visual confirmation over claims. Screenshot the actual running app (menu bar, popover, desktop widget) after UI changes — don't declare a visual fix "done" from code review alone, and don't trust a single screenshot if the state could be stale (relaunch the app after every rebuild that touches rendering code).
 4. `strings <binary>` is not a valid way to confirm Swift code compiled — don't use it as a verification step (see `memory.md`).
@@ -48,4 +48,4 @@ Enforceable conventions for this repo. `CLAUDE.md` is the entry-point summary fo
 ## Git / commits
 
 26. Only commit when explicitly asked. Keep commit messages focused on *why*, not a restated diff.
-27. Regenerate `FlipClock.xcodeproj` via `xcodegen generate` and include the resulting `project.pbxproj` diff in the same commit as any source-file addition/removal/rename.
+27. Regenerate `ClackClock.xcodeproj` via `xcodegen generate` and include the resulting `project.pbxproj` diff in the same commit as any source-file addition/removal/rename.

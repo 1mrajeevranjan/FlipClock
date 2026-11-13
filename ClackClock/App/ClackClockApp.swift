@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct FlipClockApp: App {
+struct ClackClockApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {

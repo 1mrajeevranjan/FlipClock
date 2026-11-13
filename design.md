@@ -1,6 +1,6 @@
-# FlipClock Design System
+# ClackClock Design System
 
-Visual design decisions and the reasoning behind them. Implementation lives in `FlipClock/FlipClock/FlapColors.swift`, `DigitFaceRenderer.swift`, and `DesktopOverlay/WidgetGlassBackground.swift`.
+Visual design decisions and the reasoning behind them. Implementation lives in `ClackClock/ClackClock/FlapColors.swift`, `DigitFaceRenderer.swift`, and `DesktopOverlay/WidgetGlassBackground.swift`.
 
 ## Product identity: the split-flap mechanism
 

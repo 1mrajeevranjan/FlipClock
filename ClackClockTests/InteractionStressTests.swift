@@ -1,7 +1,7 @@
 import XCTest
 import AppKit
 import Combine
-@testable import FlipClock
+@testable import ClackClock
 
 final class InteractionStressTests: XCTestCase {
     @MainActor

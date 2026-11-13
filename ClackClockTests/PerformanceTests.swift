@@ -1,6 +1,6 @@
 import XCTest
 import AppKit
-@testable import FlipClock
+@testable import ClackClock
 
 /// Covers the hot paths that run continuously while the app is alive
 /// (once/second time-engine math, per-render digit diffing) and the pure

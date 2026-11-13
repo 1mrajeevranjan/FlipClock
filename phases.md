@@ -1,4 +1,4 @@
-# FlipClock Development Phases
+# ClackClock Development Phases
 
 Chronological log of major milestones, newest first. See `git log` for the exact commit-level history — this is the "why phases happened" summary, not a changelog duplicate.
 
@@ -12,7 +12,7 @@ Chronological log of major milestones, newest first. See `git log` for the exact
 
 ## Phase 9 — Test infrastructure
 
-- Added `FlipClockTests`, the project's first test target — 51 XCTest cases covering `ClockTick`/`DigitDelta` (pure time/digit math), `AppSettings` and `ReminderStore` (persistence round-trips, edge cases, corrupted-data fallbacks), and `CountdownTimer`/`Stopwatch` (real-timer behavior plus rapid start/stop/reset stress cycling).
+- Added `ClackClockTests`, the project's first test target — 51 XCTest cases covering `ClockTick`/`DigitDelta` (pure time/digit math), `AppSettings` and `ReminderStore` (persistence round-trips, edge cases, corrupted-data fallbacks), and `CountdownTimer`/`Stopwatch` (real-timer behavior plus rapid start/stop/reset stress cycling).
 - `AppSettings` and `ReminderStore` both switched from hardcoded `UserDefaults.standard` to an injectable `UserDefaults` parameter (defaulting to `.standard`) — required so tests can use an isolated suite instead of risking the real user's persisted preferences.
 - A handful of initial test failures were the tests' own bugs, not app bugs: `CountdownTimer.inputMinutes` defaults to 5, so setting only `inputSeconds` in a couple of tests silently produced a 303-second countdown instead of 3; a midnight-rollover digit-delta test asserted "every position changes," but the hour-tens digit genuinely doesn't (11 -> 12 keeps the same tens digit in 12-hour format) — both fixed by correcting the test, not the app.
 
@@ -69,6 +69,6 @@ Chronological log of major milestones, newest first. See `git log` for the exact
 
 ## Open / not yet done
 
-- No UI/XCUITest coverage — only `FlipClockTests` (unit/integration/stress, logic + persistence layers). See `CLAUDE.md`.
+- No UI/XCUITest coverage — only `ClackClockTests` (unit/integration/stress, logic + persistence layers). See `CLAUDE.md`.
 - Screen Recording permission re-prompts on every dev rebuild (ad-hoc signing identity changes per build) — expected in local dev, won't happen in a real signed release, but worth knowing before assuming a permission bug.
 - Hover-preview card on the calendar hasn't been visually confirmed working end-to-end with a real (non-synthetic) mouse hover — the inline-overlay fix is a strong theoretical fix for the popover-in-popover failure mode, but live verification was interrupted (see `memory.md`).

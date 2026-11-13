@@ -1,0 +1,1033 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0436BBE35335C97F2D8CB168 /* WorldClockOverlayContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C084E62C9CF33B7E6A9FA9D /* WorldClockOverlayContentView.swift */; };
+		046A9DF9E6337DF9789FC7A3 /* KGPrimaryItalics.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A6CAEEF8656F9FC76016D43D /* KGPrimaryItalics.ttf */; };
+		0885B7064FA00A60B83963A9 /* ReminderStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A32E66DBAF09EAA89223A792 /* ReminderStoreTests.swift */; };
+		0916D1AF0A733EC548252A82 /* PopoverClockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59B6DCDDF6293EC3E696DC70 /* PopoverClockView.swift */; };
+		09BE4023BF81CD060D086424 /* WidgetGlassBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D37855703096EC3FAEF2A67 /* WidgetGlassBackground.swift */; };
+		0BBAC9E5ADC4082388C5ADFE /* ClockTickTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67CD8C48463F59DB911814E1 /* ClockTickTests.swift */; };
+		0C5CCED7CC442A053695F385 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5E8E4841DCFFA2FFB4D259B /* SettingsView.swift */; };
+		0CFEB923B680C3A34FC6337B /* Game Of Squids.otf in Resources */ = {isa = PBXBuildFile; fileRef = 15D373B0E975AB8413738D0F /* Game Of Squids.otf */; };
+		0EE2807C3AD5C2B1E21FB347 /* Sportfield Varsity-Grunge.otf in Resources */ = {isa = PBXBuildFile; fileRef = 6D1EC68FB8A0378C6BA3B917 /* Sportfield Varsity-Grunge.otf */; };
+		0EF7F060F0621C857F499A40 /* Dynamix.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 29E26A3AEE7920E0E3D2B7A8 /* Dynamix.ttf */; };
+		131F5CC14CB8F945CFD721AB /* WorldClockOverlayWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E301335F1936F41E722E9EB /* WorldClockOverlayWindowController.swift */; };
+		179D75977903593A1F53EA1E /* ClackClockApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FDE66E13101E216B95F4973 /* ClackClockApp.swift */; };
+		189287AE1EE8456EB3216277 /* DigitDeltaTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17AB64C40126160D6BCD1ABB /* DigitDeltaTests.swift */; };
+		194E1EF94173475B61746ED7 /* WidgetLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1597F2A0F654D8E8B254A2B1 /* WidgetLayoutTests.swift */; };
+		19BDB1762F956D722D0D472C /* OverlayWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA5A14EA02F75D00A699F448 /* OverlayWindow.swift */; };
+		1C642DDC265049B90DBCCCD9 /* GFSCUS1D.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1F3496B13337EDAA8F712BC7 /* GFSCUS1D.ttf */; };
+		201835F8CDC5CD7D14936212 /* SplitFlapPairView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F50A262403C9BAFD21E3A08 /* SplitFlapPairView.swift */; };
+		267BCF2ECA3D8203D9AE88D4 /* PerformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB89CF59B1F36281ED73B170 /* PerformanceTests.swift */; };
+		26B68FA0B55B952535BB000C /* DigitFaceRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A07B9964DD3E501E3F1CA54 /* DigitFaceRenderer.swift */; };
+		282DBF1F56FA8B751ACF5F62 /* TRON.TTF in Resources */ = {isa = PBXBuildFile; fileRef = CD05E6928C72B7067B5F50C6 /* TRON.TTF */; };
+		354602225076DA47E7F2C35E /* SplitFlapDigit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 232C4A8B6FA64DC172228F98 /* SplitFlapDigit.swift */; };
+		355FE401C15AFC4B537896CE /* ARCADE_R.TTF in Resources */ = {isa = PBXBuildFile; fileRef = D3F29E9CA66537219B69D2BE /* ARCADE_R.TTF */; };
+		3809EDDE5FFA735DA2C00DB9 /* StopwatchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C379C726B35E237B714820E2 /* StopwatchView.swift */; };
+		395930A9324A6899C726FD1E /* DigitDelta.swift in Sources */ = {isa = PBXBuildFile; fileRef = C30E99A660838F24945EC2D7 /* DigitDelta.swift */; };
+		3DE80FB47C3CC4CBED7AAE55 /* sun.png in Resources */ = {isa = PBXBuildFile; fileRef = 7AA6C5B4C552DFD9E739BE31 /* sun.png */; };
+		403C36B635BA0EA34D047210 /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4136E0697AE1920BBA44A3E2 /* SettingsWindowController.swift */; };
+		430EB7606971E55D11623241 /* Linebeam.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4BFD0F4A952E5B63314A1AE6 /* Linebeam.ttf */; };
+		44586EE2FD39BC97BE0270C0 /* WhiteSquareRedYesBlackEightWarsaw-Warsaw.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 52C08D13425898BEB01BA584 /* WhiteSquareRedYesBlackEightWarsaw-Warsaw.ttf */; };
+		46D58EE324E33B8985EEDFEA /* Pullstar-Holinight.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 5939B181AF8C890E3864B472 /* Pullstar-Holinight.ttf */; };
+		4771D49061887879460ACED6 /* space age.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 330A14F157186EBD9CB182D6 /* space age.ttf */; };
+		4A6CE919C184F84CA1EE7BD1 /* Vlump.ttf in Resources */ = {isa = PBXBuildFile; fileRef = EAF588F54C5C715271E62DD6 /* Vlump.ttf */; };
+		545266C7FB1AE58A1355BBD5 /* YrBkMess.TTF in Resources */ = {isa = PBXBuildFile; fileRef = B3878A6C35B561BEB7038580 /* YrBkMess.TTF */; };
+		54BC1699F23C11D0EA443ACE /* ReminderBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E19C0BEE08437852DF2A261 /* ReminderBadge.swift */; };
+		55F731ED8263A38407C60E69 /* DesktopFocus.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA80E6F63B3A8C183F8CBA60 /* DesktopFocus.swift */; };
+		56635E46357AAFC749E4AA6C /* WorldClock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DA34DA01723AF0C6E20230B /* WorldClock.swift */; };
+		57FD4BDBD03CB76B1DC332A6 /* Destroy All Humans!.otf in Resources */ = {isa = PBXBuildFile; fileRef = BE8F7DCE2631DB135DDAFF2A /* Destroy All Humans!.otf */; };
+		594BA994258053169CA4B976 /* ReminderNotificationsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77333CC2BFC01D20203980E0 /* ReminderNotificationsTests.swift */; };
+		595A8E02D3C3AA3D19471502 /* WhiteSquareRedYesBlackEightZero-Zero.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 58FE84BAEB2987F7E050DC1E /* WhiteSquareRedYesBlackEightZero-Zero.ttf */; };
+		5B66AFAB30382A2E64FB7404 /* OverlayWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2511FCB15B85A9B47F453CC /* OverlayWindowController.swift */; };
+		5FADC48A6BD1814972C1F742 /* UIControlsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9D85404060D834607F5D691 /* UIControlsTests.swift */; };
+		63640486FC5790AB066D65E1 /* PopoverAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 094E163BB7CB567BC1B3A465 /* PopoverAppearance.swift */; };
+		6B38F38CE33705FD81A5A697 /* TimeProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5E2238224F02BB4E1D37444 /* TimeProvider.swift */; };
+		6B941B1AA53DAE7EECF739EF /* ReminderStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EFBA91D24EDADDEFD04C749 /* ReminderStore.swift */; };
+		6C0C15420464EBDFBBBC35A0 /* WhiteSquareRedYesBlackEight-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = E89A343E9E0564AEBC9122E3 /* WhiteSquareRedYesBlackEight-Regular.ttf */; };
+		6C9B58FFBBEE82AB1E76C352 /* Sportfield Varsity.otf in Resources */ = {isa = PBXBuildFile; fileRef = E0BC1989D48F1AD80457551C /* Sportfield Varsity.otf */; };
+		6DC173EA089025324B88A15A /* WorldClocksCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E8DE93AB8E6ACA2F2BEE474 /* WorldClocksCoordinator.swift */; };
+		72ADE6C078D19D6E2B3BDDED /* DesktopBackdropCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83D0F36DB3EAD3DBE4875919 /* DesktopBackdropCapture.swift */; };
+		78D70A8275E99516AC1E9B7C /* chintzys.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A91CF3BC0D2C2A15C2F54E7D /* chintzys.ttf */; };
+		78F614E5DE7B2A22EBF2D683 /* WorldClockStatusItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A61456B348349B94206A2485 /* WorldClockStatusItemController.swift */; };
+		7D314406E85EA5E2624CD340 /* RockFont.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A393A988FB9A8FB972F914AE /* RockFont.ttf */; };
+		7F4D4049C875FC4360D44566 /* ReminderSound.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07EA691B7DD7EE00BDDF446F /* ReminderSound.swift */; };
+		827F13319AEA902E1AF09215 /* StopwatchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7321DB970826946EAF162BDB /* StopwatchTests.swift */; };
+		89365C504E7F7D7AA8695F11 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1066265487AB6476BB9516D4 /* AppSettings.swift */; };
+		8C33ED77E25D4D4B9F505D4F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9B3D1D5294AB573D5BD2B919 /* Assets.xcassets */; };
+		8C9CCC8E4D87555C80754DB6 /* ReminderBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59591ECBC79318C58860D0F9 /* ReminderBanner.swift */; };
+		8E737533951D41EB2120E0B4 /* InteractionStressTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74CE57AE5AF75BD57D9E9EAA /* InteractionStressTests.swift */; };
+		8F39820124F3AEECCA3CA97B /* Sportfield Varsity-Italic.otf in Resources */ = {isa = PBXBuildFile; fileRef = C88F2E69960F857AB0E9EAC9 /* Sportfield Varsity-Italic.otf */; };
+		92D2EACB8C8EA4A98DBC7BF0 /* FlipTimeDisplay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 481A3F34EE9CD31F5A82E5D9 /* FlipTimeDisplay.swift */; };
+		939DB3E8FE78AFA6A037DD77 /* CalendarNavigationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A54FB3348784A6D78973BAF /* CalendarNavigationTests.swift */; };
+		94D20C4F14244DE6429383B9 /* AppSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01DCD3254766B4EB12170AC2 /* AppSettingsTests.swift */; };
+		98156113B37A8391AAE91F2C /* WorldClockMenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B46513EE3EB1B1CBEA663612 /* WorldClockMenuBarView.swift */; };
+		9ECF276F3948A52DBB6E56AE /* CountdownTimerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C609C7530BEED3610B9674B /* CountdownTimerTests.swift */; };
+		A01FE402D24EE2B6E5B9BD0D /* CountdownTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64EC8912F4837465FCA09D73 /* CountdownTimer.swift */; };
+		A1D789C74335593C30EF6862 /* WhiteSquareRedYesBlackEightPingpong-Pingpong.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 9CA88A78A659959F6E2D632E /* WhiteSquareRedYesBlackEightPingpong-Pingpong.ttf */; };
+		A4643350656C43CD95D13686 /* FlapColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06D32948EEA12FFE30CD4BAD /* FlapColors.swift */; };
+		A5FB990FDC945BC5EC29003A /* WidgetFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCEEA19EE16DB81E4193FBD7 /* WidgetFont.swift */; };
+		A6FC347D7F9FF55FB0439FE2 /* moon.png in Resources */ = {isa = PBXBuildFile; fileRef = 5DE5C0D7C142D5B47F5588B2 /* moon.png */; };
+		AA49FFBD8EC5066D539B6DD2 /* Reminder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 009B7F69308DFC350F63CB18 /* Reminder.swift */; };
+		B1096F8BF63C3A24F965FE8B /* OverlayContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC233EB51EB23A2F247F60F0 /* OverlayContentView.swift */; };
+		B10B823E1929C7949DE3D690 /* ClockTick.swift in Sources */ = {isa = PBXBuildFile; fileRef = D342C436BFA37683F7CA1024 /* ClockTick.swift */; };
+		B314C7D917179AAC0767B5A8 /* StatusItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 728D9D185A09578FB6A1CCD5 /* StatusItemController.swift */; };
+		B49170AE425D8D77AF101748 /* MenuBarClockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B40396936BF0774DE36C9739 /* MenuBarClockView.swift */; };
+		B911BFFC4134D29193CEDEB3 /* abduction2002.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 49782EC191E164E27DC68054 /* abduction2002.ttf */; };
+		BCCBC8D7817DCAF6A971750F /* ARCADE_N.TTF in Resources */ = {isa = PBXBuildFile; fileRef = DFAB7FA6697DF5387CE04A2F /* ARCADE_N.TTF */; };
+		C0A9BCE44997B8BA33BE0B4E /* FlipCardLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEF8C56472241B5F4DA5E657 /* FlipCardLayer.swift */; };
+		C0D4F1045344BF55953346AA /* Sportfield Varsity-Outline1.otf in Resources */ = {isa = PBXBuildFile; fileRef = 4E61DD75469DA7ED73419D44 /* Sportfield Varsity-Outline1.otf */; };
+		C1A76CA33D0502FA1BC22EE2 /* Stopwatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE609AE7BE655EB95F682B15 /* Stopwatch.swift */; };
+		C27989E4D56F3C1F895933C2 /* ARCADE_I.TTF in Resources */ = {isa = PBXBuildFile; fileRef = 3FB503F2C00447998CE9B964 /* ARCADE_I.TTF */; };
+		C5083C7E656D3C9560648E8C /* BLADRMF_.TTF in Resources */ = {isa = PBXBuildFile; fileRef = 0E117D2F03E67315469660FF /* BLADRMF_.TTF */; };
+		CABFF6F53519D5F657ADBE43 /* DateHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0574994F678BEFDF1D086A96 /* DateHeaderView.swift */; };
+		CCE56B0BC0384C059FDB4D3B /* Tennessee College.ttf in Resources */ = {isa = PBXBuildFile; fileRef = EF72BB2D2A1F5A6F97539D01 /* Tennessee College.ttf */; };
+		CF7459E72984A81ED721FC66 /* Game Of Squids.ttf in Resources */ = {isa = PBXBuildFile; fileRef = F336C53DAD07CBE3DFEBC5BB /* Game Of Squids.ttf */; };
+		D01F63A2084AFC06A8CF2DB9 /* AddReminderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57207B8DF89348C3403EE1B2 /* AddReminderView.swift */; };
+		D2F531EC8AF5BE62C766C86C /* WorldClockCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89F1E3F62A8502AC630B22D8 /* WorldClockCard.swift */; };
+		D3B547EC08AD2A681ED6D2FB /* VibrantHostingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8120A372AECC369C299E66B9 /* VibrantHostingController.swift */; };
+		D923E70AD075DD2D3274F376 /* angrybirds-regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 02E1211796210A630A98B72A /* angrybirds-regular.ttf */; };
+		DA1829BD7466153F2253090B /* CountdownTimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC4366C5623EFBDB225AB664 /* CountdownTimerView.swift */; };
+		DA6F9C11D28C72DF3E645F13 /* Sportfield Varsity-Scrible.otf in Resources */ = {isa = PBXBuildFile; fileRef = D97F7CA44F2C1ACF69198C66 /* Sportfield Varsity-Scrible.otf */; };
+		DC99DFC4C0264158D964E9F0 /* CalendarMonthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FE3509EC50AACFFBD26E887 /* CalendarMonthView.swift */; };
+		DE2DAC92B15B134FCDC8F1CA /* SplitFlapClockFace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D0C978DDA231D8191F4DA0B /* SplitFlapClockFace.swift */; };
+		E0828FDD412DE4BB523D2D5F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE35B6BFD8156D82DA3BD715 /* AppDelegate.swift */; };
+		E2B79627204753E8E53E346E /* Sportfield Varsity-Shadow.otf in Resources */ = {isa = PBXBuildFile; fileRef = DBF5A7E8C02124BA63448F52 /* Sportfield Varsity-Shadow.otf */; };
+		E4C9E600EC75F6B0E14A8FB8 /* Sportfield Varsity-Outline2.otf in Resources */ = {isa = PBXBuildFile; fileRef = 339893276120FE2F80A74FFA /* Sportfield Varsity-Outline2.otf */; };
+		E4FAA73D05EF32033775772E /* Bing Bam Boum.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 9A3C7E9F996E6ABBCB9A6C9A /* Bing Bam Boum.ttf */; };
+		E784B67BAF68622B919639DB /* Bring Me A Helicopter!.otf in Resources */ = {isa = PBXBuildFile; fileRef = 140DCAEBD812A2DC8EE34ED6 /* Bring Me A Helicopter!.otf */; };
+		EBE9BF1EBF0B11DD570393C9 /* chintzy.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 09424F55FD6FF4719A39C9A8 /* chintzy.ttf */; };
+		F1E41DDBEE054091AAAAD07B /* Vlump Black.ttf in Resources */ = {isa = PBXBuildFile; fileRef = BDF655AAC23963B85EA4B91D /* Vlump Black.ttf */; };
+		F24560A69E1361476EE21628 /* Sportfield Varsity-Outline3.otf in Resources */ = {isa = PBXBuildFile; fileRef = F426AEB94E7108A958CAD76E /* Sportfield Varsity-Outline3.otf */; };
+		F5E5D7DF8BA23FDB785188DE /* DueReminderBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CF928686A01BA1ED090DC05 /* DueReminderBanner.swift */; };
+		FDFA22BE32DA42BB4FBAFF5C /* ReminderNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DA291A43C5FB16867D79665 /* ReminderNotifications.swift */; };
+		FEC72E206AECEBC2AB0FFC89 /* KGPrimaryItalicsLined.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 9F28116BF61F561F552488B7 /* KGPrimaryItalicsLined.ttf */; };
+		FF36D61FEF94A306A36D3FBB /* TimeWheelPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90ADC3BAFCE63EB420730D8F /* TimeWheelPicker.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		4AFF59E5C07075E084487609 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 55EB6867151D263EC22190EE /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6DDF32C47F1403FD28421DEA;
+			remoteInfo = ClackClock;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		009B7F69308DFC350F63CB18 /* Reminder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reminder.swift; sourceTree = "<group>"; };
+		01DCD3254766B4EB12170AC2 /* AppSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettingsTests.swift; sourceTree = "<group>"; };
+		02E1211796210A630A98B72A /* angrybirds-regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "angrybirds-regular.ttf"; sourceTree = "<group>"; };
+		0574994F678BEFDF1D086A96 /* DateHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateHeaderView.swift; sourceTree = "<group>"; };
+		06D32948EEA12FFE30CD4BAD /* FlapColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlapColors.swift; sourceTree = "<group>"; };
+		07EA691B7DD7EE00BDDF446F /* ReminderSound.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderSound.swift; sourceTree = "<group>"; };
+		09424F55FD6FF4719A39C9A8 /* chintzy.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = chintzy.ttf; sourceTree = "<group>"; };
+		094E163BB7CB567BC1B3A465 /* PopoverAppearance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverAppearance.swift; sourceTree = "<group>"; };
+		0CF928686A01BA1ED090DC05 /* DueReminderBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DueReminderBanner.swift; sourceTree = "<group>"; };
+		0D0C978DDA231D8191F4DA0B /* SplitFlapClockFace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitFlapClockFace.swift; sourceTree = "<group>"; };
+		0DA34DA01723AF0C6E20230B /* WorldClock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClock.swift; sourceTree = "<group>"; };
+		0E117D2F03E67315469660FF /* BLADRMF_.TTF */ = {isa = PBXFileReference; path = BLADRMF_.TTF; sourceTree = "<group>"; };
+		1066265487AB6476BB9516D4 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
+		12EC1BCFDC1430085D7C6E70 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		140DCAEBD812A2DC8EE34ED6 /* Bring Me A Helicopter!.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Bring Me A Helicopter!.otf"; sourceTree = "<group>"; };
+		1597F2A0F654D8E8B254A2B1 /* WidgetLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetLayoutTests.swift; sourceTree = "<group>"; };
+		15D373B0E975AB8413738D0F /* Game Of Squids.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Game Of Squids.otf"; sourceTree = "<group>"; };
+		17AB64C40126160D6BCD1ABB /* DigitDeltaTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigitDeltaTests.swift; sourceTree = "<group>"; };
+		1F3496B13337EDAA8F712BC7 /* GFSCUS1D.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = GFSCUS1D.ttf; sourceTree = "<group>"; };
+		232C4A8B6FA64DC172228F98 /* SplitFlapDigit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitFlapDigit.swift; sourceTree = "<group>"; };
+		29E26A3AEE7920E0E3D2B7A8 /* Dynamix.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Dynamix.ttf; sourceTree = "<group>"; };
+		2DA291A43C5FB16867D79665 /* ReminderNotifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderNotifications.swift; sourceTree = "<group>"; };
+		2FE3509EC50AACFFBD26E887 /* CalendarMonthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarMonthView.swift; sourceTree = "<group>"; };
+		330A14F157186EBD9CB182D6 /* space age.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "space age.ttf"; sourceTree = "<group>"; };
+		339893276120FE2F80A74FFA /* Sportfield Varsity-Outline2.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Sportfield Varsity-Outline2.otf"; sourceTree = "<group>"; };
+		3A54FB3348784A6D78973BAF /* CalendarNavigationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarNavigationTests.swift; sourceTree = "<group>"; };
+		3D37855703096EC3FAEF2A67 /* WidgetGlassBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetGlassBackground.swift; sourceTree = "<group>"; };
+		3EFBA91D24EDADDEFD04C749 /* ReminderStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderStore.swift; sourceTree = "<group>"; };
+		3FB503F2C00447998CE9B964 /* ARCADE_I.TTF */ = {isa = PBXFileReference; path = ARCADE_I.TTF; sourceTree = "<group>"; };
+		4136E0697AE1920BBA44A3E2 /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
+		481A3F34EE9CD31F5A82E5D9 /* FlipTimeDisplay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlipTimeDisplay.swift; sourceTree = "<group>"; };
+		49782EC191E164E27DC68054 /* abduction2002.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = abduction2002.ttf; sourceTree = "<group>"; };
+		4BFD0F4A952E5B63314A1AE6 /* Linebeam.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Linebeam.ttf; sourceTree = "<group>"; };
+		4E19C0BEE08437852DF2A261 /* ReminderBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderBadge.swift; sourceTree = "<group>"; };
+		4E301335F1936F41E722E9EB /* WorldClockOverlayWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockOverlayWindowController.swift; sourceTree = "<group>"; };
+		4E61DD75469DA7ED73419D44 /* Sportfield Varsity-Outline1.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Sportfield Varsity-Outline1.otf"; sourceTree = "<group>"; };
+		4E8DE93AB8E6ACA2F2BEE474 /* WorldClocksCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClocksCoordinator.swift; sourceTree = "<group>"; };
+		52C08D13425898BEB01BA584 /* WhiteSquareRedYesBlackEightWarsaw-Warsaw.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "WhiteSquareRedYesBlackEightWarsaw-Warsaw.ttf"; sourceTree = "<group>"; };
+		57207B8DF89348C3403EE1B2 /* AddReminderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddReminderView.swift; sourceTree = "<group>"; };
+		58FE84BAEB2987F7E050DC1E /* WhiteSquareRedYesBlackEightZero-Zero.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "WhiteSquareRedYesBlackEightZero-Zero.ttf"; sourceTree = "<group>"; };
+		5939B181AF8C890E3864B472 /* Pullstar-Holinight.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Pullstar-Holinight.ttf"; sourceTree = "<group>"; };
+		59591ECBC79318C58860D0F9 /* ReminderBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderBanner.swift; sourceTree = "<group>"; };
+		59B6DCDDF6293EC3E696DC70 /* PopoverClockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverClockView.swift; sourceTree = "<group>"; };
+		5DE5C0D7C142D5B47F5588B2 /* moon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = moon.png; sourceTree = "<group>"; };
+		64EC8912F4837465FCA09D73 /* CountdownTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownTimer.swift; sourceTree = "<group>"; };
+		67CD8C48463F59DB911814E1 /* ClockTickTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClockTickTests.swift; sourceTree = "<group>"; };
+		69C901947417AB82BE8D1DFF /* ClackClock.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ClackClock.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		6C084E62C9CF33B7E6A9FA9D /* WorldClockOverlayContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockOverlayContentView.swift; sourceTree = "<group>"; };
+		6D1EC68FB8A0378C6BA3B917 /* Sportfield Varsity-Grunge.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Sportfield Varsity-Grunge.otf"; sourceTree = "<group>"; };
+		6FDE66E13101E216B95F4973 /* ClackClockApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClackClockApp.swift; sourceTree = "<group>"; };
+		728D9D185A09578FB6A1CCD5 /* StatusItemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusItemController.swift; sourceTree = "<group>"; };
+		7321DB970826946EAF162BDB /* StopwatchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StopwatchTests.swift; sourceTree = "<group>"; };
+		74CE57AE5AF75BD57D9E9EAA /* InteractionStressTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InteractionStressTests.swift; sourceTree = "<group>"; };
+		755C70B3F7636325DD44992A /* ClackClockTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ClackClockTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		77333CC2BFC01D20203980E0 /* ReminderNotificationsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderNotificationsTests.swift; sourceTree = "<group>"; };
+		7A07B9964DD3E501E3F1CA54 /* DigitFaceRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigitFaceRenderer.swift; sourceTree = "<group>"; };
+		7AA6C5B4C552DFD9E739BE31 /* sun.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = sun.png; sourceTree = "<group>"; };
+		8120A372AECC369C299E66B9 /* VibrantHostingController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VibrantHostingController.swift; sourceTree = "<group>"; };
+		83D0F36DB3EAD3DBE4875919 /* DesktopBackdropCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopBackdropCapture.swift; sourceTree = "<group>"; };
+		89F1E3F62A8502AC630B22D8 /* WorldClockCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockCard.swift; sourceTree = "<group>"; };
+		90ADC3BAFCE63EB420730D8F /* TimeWheelPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeWheelPicker.swift; sourceTree = "<group>"; };
+		9A3C7E9F996E6ABBCB9A6C9A /* Bing Bam Boum.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Bing Bam Boum.ttf"; sourceTree = "<group>"; };
+		9B3D1D5294AB573D5BD2B919 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		9C609C7530BEED3610B9674B /* CountdownTimerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownTimerTests.swift; sourceTree = "<group>"; };
+		9CA88A78A659959F6E2D632E /* WhiteSquareRedYesBlackEightPingpong-Pingpong.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "WhiteSquareRedYesBlackEightPingpong-Pingpong.ttf"; sourceTree = "<group>"; };
+		9F28116BF61F561F552488B7 /* KGPrimaryItalicsLined.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = KGPrimaryItalicsLined.ttf; sourceTree = "<group>"; };
+		9F50A262403C9BAFD21E3A08 /* SplitFlapPairView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitFlapPairView.swift; sourceTree = "<group>"; };
+		A32E66DBAF09EAA89223A792 /* ReminderStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderStoreTests.swift; sourceTree = "<group>"; };
+		A393A988FB9A8FB972F914AE /* RockFont.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = RockFont.ttf; sourceTree = "<group>"; };
+		A61456B348349B94206A2485 /* WorldClockStatusItemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockStatusItemController.swift; sourceTree = "<group>"; };
+		A6CAEEF8656F9FC76016D43D /* KGPrimaryItalics.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = KGPrimaryItalics.ttf; sourceTree = "<group>"; };
+		A91CF3BC0D2C2A15C2F54E7D /* chintzys.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = chintzys.ttf; sourceTree = "<group>"; };
+		AE609AE7BE655EB95F682B15 /* Stopwatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stopwatch.swift; sourceTree = "<group>"; };
+		AEF8C56472241B5F4DA5E657 /* FlipCardLayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlipCardLayer.swift; sourceTree = "<group>"; };
+		B3878A6C35B561BEB7038580 /* YrBkMess.TTF */ = {isa = PBXFileReference; path = YrBkMess.TTF; sourceTree = "<group>"; };
+		B40396936BF0774DE36C9739 /* MenuBarClockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarClockView.swift; sourceTree = "<group>"; };
+		B46513EE3EB1B1CBEA663612 /* WorldClockMenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockMenuBarView.swift; sourceTree = "<group>"; };
+		BC4366C5623EFBDB225AB664 /* CountdownTimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownTimerView.swift; sourceTree = "<group>"; };
+		BDF655AAC23963B85EA4B91D /* Vlump Black.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Vlump Black.ttf"; sourceTree = "<group>"; };
+		BE8F7DCE2631DB135DDAFF2A /* Destroy All Humans!.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Destroy All Humans!.otf"; sourceTree = "<group>"; };
+		C30E99A660838F24945EC2D7 /* DigitDelta.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigitDelta.swift; sourceTree = "<group>"; };
+		C379C726B35E237B714820E2 /* StopwatchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StopwatchView.swift; sourceTree = "<group>"; };
+		C88F2E69960F857AB0E9EAC9 /* Sportfield Varsity-Italic.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Sportfield Varsity-Italic.otf"; sourceTree = "<group>"; };
+		CA80E6F63B3A8C183F8CBA60 /* DesktopFocus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopFocus.swift; sourceTree = "<group>"; };
+		CC233EB51EB23A2F247F60F0 /* OverlayContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayContentView.swift; sourceTree = "<group>"; };
+		CD05E6928C72B7067B5F50C6 /* TRON.TTF */ = {isa = PBXFileReference; path = TRON.TTF; sourceTree = "<group>"; };
+		D342C436BFA37683F7CA1024 /* ClockTick.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClockTick.swift; sourceTree = "<group>"; };
+		D3F29E9CA66537219B69D2BE /* ARCADE_R.TTF */ = {isa = PBXFileReference; path = ARCADE_R.TTF; sourceTree = "<group>"; };
+		D5E2238224F02BB4E1D37444 /* TimeProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeProvider.swift; sourceTree = "<group>"; };
+		D97F7CA44F2C1ACF69198C66 /* Sportfield Varsity-Scrible.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Sportfield Varsity-Scrible.otf"; sourceTree = "<group>"; };
+		D9D85404060D834607F5D691 /* UIControlsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIControlsTests.swift; sourceTree = "<group>"; };
+		DA5A14EA02F75D00A699F448 /* OverlayWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayWindow.swift; sourceTree = "<group>"; };
+		DBF5A7E8C02124BA63448F52 /* Sportfield Varsity-Shadow.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Sportfield Varsity-Shadow.otf"; sourceTree = "<group>"; };
+		DCEEA19EE16DB81E4193FBD7 /* WidgetFont.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetFont.swift; sourceTree = "<group>"; };
+		DE35B6BFD8156D82DA3BD715 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		DFAB7FA6697DF5387CE04A2F /* ARCADE_N.TTF */ = {isa = PBXFileReference; path = ARCADE_N.TTF; sourceTree = "<group>"; };
+		E0BC1989D48F1AD80457551C /* Sportfield Varsity.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Sportfield Varsity.otf"; sourceTree = "<group>"; };
+		E5E8E4841DCFFA2FFB4D259B /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		E89A343E9E0564AEBC9122E3 /* WhiteSquareRedYesBlackEight-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "WhiteSquareRedYesBlackEight-Regular.ttf"; sourceTree = "<group>"; };
+		EAF588F54C5C715271E62DD6 /* Vlump.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Vlump.ttf; sourceTree = "<group>"; };
+		EF72BB2D2A1F5A6F97539D01 /* Tennessee College.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Tennessee College.ttf"; sourceTree = "<group>"; };
+		F2511FCB15B85A9B47F453CC /* OverlayWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayWindowController.swift; sourceTree = "<group>"; };
+		F336C53DAD07CBE3DFEBC5BB /* Game Of Squids.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Game Of Squids.ttf"; sourceTree = "<group>"; };
+		F426AEB94E7108A958CAD76E /* Sportfield Varsity-Outline3.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Sportfield Varsity-Outline3.otf"; sourceTree = "<group>"; };
+		FB89CF59B1F36281ED73B170 /* PerformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformanceTests.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		017208240A43A266912FD0B5 /* abduction_2002 */ = {
+			isa = PBXGroup;
+			children = (
+				49782EC191E164E27DC68054 /* abduction2002.ttf */,
+			);
+			path = abduction_2002;
+			sourceTree = "<group>";
+		};
+		099AEA375652664E7AA12C3F /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				02E1211796210A630A98B72A /* angrybirds-regular.ttf */,
+				9A3C7E9F996E6ABBCB9A6C9A /* Bing Bam Boum.ttf */,
+				BE8F7DCE2631DB135DDAFF2A /* Destroy All Humans!.otf */,
+				29E26A3AEE7920E0E3D2B7A8 /* Dynamix.ttf */,
+				1F3496B13337EDAA8F712BC7 /* GFSCUS1D.ttf */,
+				5939B181AF8C890E3864B472 /* Pullstar-Holinight.ttf */,
+				A393A988FB9A8FB972F914AE /* RockFont.ttf */,
+				EF72BB2D2A1F5A6F97539D01 /* Tennessee College.ttf */,
+				017208240A43A266912FD0B5 /* abduction_2002 */,
+				7F94ECBEF1D5E8FAA9007FDD /* arcade_ya */,
+				1C4FDFAA693DD8848DC3599E /* blade_runner_movie_font */,
+				3ED18B153BA278B542FB3DC0 /* bring_me_a_helicopter */,
+				37B58DA8160809A23FF5C124 /* chintzy_cpu_brk */,
+				994ABD168731C65E0CC0497B /* game_of_squids */,
+				505F7C21DC829CFF15FA99FB /* kg_primary_italics */,
+				879517598DFADBF600468506 /* linear_beam */,
+				D7C4BC7F3230A967467720D1 /* space_age */,
+				12CA4BD6831BA1CE8A160710 /* sportfield_varsity */,
+				3FE4F09821F17C7A700B7512 /* tron */,
+				6A10D6A278AFBB84D85F2EA9 /* vlump */,
+				1AFCBD28F3FA063BA9C4100F /* white_square_red_yes_black_eight */,
+				D92DF0C83E08D55AE0571975 /* year_book_mess */,
+			);
+			path = Fonts;
+			sourceTree = "<group>";
+		};
+		0F137E64C339EBD42540EE40 /* FlipClock */ = {
+			isa = PBXGroup;
+			children = (
+				7A07B9964DD3E501E3F1CA54 /* DigitFaceRenderer.swift */,
+				06D32948EEA12FFE30CD4BAD /* FlapColors.swift */,
+				AEF8C56472241B5F4DA5E657 /* FlipCardLayer.swift */,
+				0D0C978DDA231D8191F4DA0B /* SplitFlapClockFace.swift */,
+				232C4A8B6FA64DC172228F98 /* SplitFlapDigit.swift */,
+				9F50A262403C9BAFD21E3A08 /* SplitFlapPairView.swift */,
+				DCEEA19EE16DB81E4193FBD7 /* WidgetFont.swift */,
+			);
+			path = FlipClock;
+			sourceTree = "<group>";
+		};
+		12CA4BD6831BA1CE8A160710 /* sportfield_varsity */ = {
+			isa = PBXGroup;
+			children = (
+				6D1EC68FB8A0378C6BA3B917 /* Sportfield Varsity-Grunge.otf */,
+				C88F2E69960F857AB0E9EAC9 /* Sportfield Varsity-Italic.otf */,
+				4E61DD75469DA7ED73419D44 /* Sportfield Varsity-Outline1.otf */,
+				339893276120FE2F80A74FFA /* Sportfield Varsity-Outline2.otf */,
+				F426AEB94E7108A958CAD76E /* Sportfield Varsity-Outline3.otf */,
+				D97F7CA44F2C1ACF69198C66 /* Sportfield Varsity-Scrible.otf */,
+				DBF5A7E8C02124BA63448F52 /* Sportfield Varsity-Shadow.otf */,
+				E0BC1989D48F1AD80457551C /* Sportfield Varsity.otf */,
+			);
+			path = sportfield_varsity;
+			sourceTree = "<group>";
+		};
+		1AFCBD28F3FA063BA9C4100F /* white_square_red_yes_black_eight */ = {
+			isa = PBXGroup;
+			children = (
+				E89A343E9E0564AEBC9122E3 /* WhiteSquareRedYesBlackEight-Regular.ttf */,
+				9CA88A78A659959F6E2D632E /* WhiteSquareRedYesBlackEightPingpong-Pingpong.ttf */,
+				52C08D13425898BEB01BA584 /* WhiteSquareRedYesBlackEightWarsaw-Warsaw.ttf */,
+				58FE84BAEB2987F7E050DC1E /* WhiteSquareRedYesBlackEightZero-Zero.ttf */,
+			);
+			path = white_square_red_yes_black_eight;
+			sourceTree = "<group>";
+		};
+		1C4FDFAA693DD8848DC3599E /* blade_runner_movie_font */ = {
+			isa = PBXGroup;
+			children = (
+				0E117D2F03E67315469660FF /* BLADRMF_.TTF */,
+			);
+			path = blade_runner_movie_font;
+			sourceTree = "<group>";
+		};
+		227BE445A3B8C0111C9890EA /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				1066265487AB6476BB9516D4 /* AppSettings.swift */,
+				E5E8E4841DCFFA2FFB4D259B /* SettingsView.swift */,
+				4136E0697AE1920BBA44A3E2 /* SettingsWindowController.swift */,
+				0DA34DA01723AF0C6E20230B /* WorldClock.swift */,
+				89F1E3F62A8502AC630B22D8 /* WorldClockCard.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		37B58DA8160809A23FF5C124 /* chintzy_cpu_brk */ = {
+			isa = PBXGroup;
+			children = (
+				09424F55FD6FF4719A39C9A8 /* chintzy.ttf */,
+				A91CF3BC0D2C2A15C2F54E7D /* chintzys.ttf */,
+			);
+			path = chintzy_cpu_brk;
+			sourceTree = "<group>";
+		};
+		3ED18B153BA278B542FB3DC0 /* bring_me_a_helicopter */ = {
+			isa = PBXGroup;
+			children = (
+				140DCAEBD812A2DC8EE34ED6 /* Bring Me A Helicopter!.otf */,
+			);
+			path = bring_me_a_helicopter;
+			sourceTree = "<group>";
+		};
+		3FE4F09821F17C7A700B7512 /* tron */ = {
+			isa = PBXGroup;
+			children = (
+				CD05E6928C72B7067B5F50C6 /* TRON.TTF */,
+			);
+			path = tron;
+			sourceTree = "<group>";
+		};
+		505F7C21DC829CFF15FA99FB /* kg_primary_italics */ = {
+			isa = PBXGroup;
+			children = (
+				A6CAEEF8656F9FC76016D43D /* KGPrimaryItalics.ttf */,
+				9F28116BF61F561F552488B7 /* KGPrimaryItalicsLined.ttf */,
+			);
+			path = kg_primary_italics;
+			sourceTree = "<group>";
+		};
+		5682DFE2C77BD216E35E681D /* Reminders */ = {
+			isa = PBXGroup;
+			children = (
+				57207B8DF89348C3403EE1B2 /* AddReminderView.swift */,
+				0CF928686A01BA1ED090DC05 /* DueReminderBanner.swift */,
+				009B7F69308DFC350F63CB18 /* Reminder.swift */,
+				4E19C0BEE08437852DF2A261 /* ReminderBadge.swift */,
+				59591ECBC79318C58860D0F9 /* ReminderBanner.swift */,
+				2DA291A43C5FB16867D79665 /* ReminderNotifications.swift */,
+				07EA691B7DD7EE00BDDF446F /* ReminderSound.swift */,
+				3EFBA91D24EDADDEFD04C749 /* ReminderStore.swift */,
+			);
+			path = Reminders;
+			sourceTree = "<group>";
+		};
+		5849C1C4EFA530B43D588623 /* ClackClock */ = {
+			isa = PBXGroup;
+			children = (
+				9B3D1D5294AB573D5BD2B919 /* Assets.xcassets */,
+				12EC1BCFDC1430085D7C6E70 /* Info.plist */,
+				838798FCC47B4D0F927A5EB2 /* App */,
+				C3D5C7F6B85D8399763FE48D /* CountdownTimer */,
+				E5D0C2C27270E004F1A588FE /* DesktopOverlay */,
+				0F137E64C339EBD42540EE40 /* FlipClock */,
+				A779F89EDD23745F0B0E87C3 /* MenuBar */,
+				E2C9A26A4C7D4B80AD5BFEA0 /* Popover */,
+				5682DFE2C77BD216E35E681D /* Reminders */,
+				227BE445A3B8C0111C9890EA /* Settings */,
+				647DAA7D0495660F336D47DE /* TimeEngine */,
+			);
+			path = ClackClock;
+			sourceTree = "<group>";
+		};
+		647DAA7D0495660F336D47DE /* TimeEngine */ = {
+			isa = PBXGroup;
+			children = (
+				D342C436BFA37683F7CA1024 /* ClockTick.swift */,
+				C30E99A660838F24945EC2D7 /* DigitDelta.swift */,
+				D5E2238224F02BB4E1D37444 /* TimeProvider.swift */,
+			);
+			path = TimeEngine;
+			sourceTree = "<group>";
+		};
+		69F0EEDE6366FD7642D0261D /* ClackClockTests */ = {
+			isa = PBXGroup;
+			children = (
+				01DCD3254766B4EB12170AC2 /* AppSettingsTests.swift */,
+				3A54FB3348784A6D78973BAF /* CalendarNavigationTests.swift */,
+				67CD8C48463F59DB911814E1 /* ClockTickTests.swift */,
+				9C609C7530BEED3610B9674B /* CountdownTimerTests.swift */,
+				17AB64C40126160D6BCD1ABB /* DigitDeltaTests.swift */,
+				74CE57AE5AF75BD57D9E9EAA /* InteractionStressTests.swift */,
+				FB89CF59B1F36281ED73B170 /* PerformanceTests.swift */,
+				77333CC2BFC01D20203980E0 /* ReminderNotificationsTests.swift */,
+				A32E66DBAF09EAA89223A792 /* ReminderStoreTests.swift */,
+				7321DB970826946EAF162BDB /* StopwatchTests.swift */,
+				D9D85404060D834607F5D691 /* UIControlsTests.swift */,
+				1597F2A0F654D8E8B254A2B1 /* WidgetLayoutTests.swift */,
+			);
+			path = ClackClockTests;
+			sourceTree = "<group>";
+		};
+		6A10D6A278AFBB84D85F2EA9 /* vlump */ = {
+			isa = PBXGroup;
+			children = (
+				BDF655AAC23963B85EA4B91D /* Vlump Black.ttf */,
+				EAF588F54C5C715271E62DD6 /* Vlump.ttf */,
+			);
+			path = vlump;
+			sourceTree = "<group>";
+		};
+		7F94ECBEF1D5E8FAA9007FDD /* arcade_ya */ = {
+			isa = PBXGroup;
+			children = (
+				3FB503F2C00447998CE9B964 /* ARCADE_I.TTF */,
+				DFAB7FA6697DF5387CE04A2F /* ARCADE_N.TTF */,
+				D3F29E9CA66537219B69D2BE /* ARCADE_R.TTF */,
+			);
+			path = arcade_ya;
+			sourceTree = "<group>";
+		};
+		838798FCC47B4D0F927A5EB2 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				DE35B6BFD8156D82DA3BD715 /* AppDelegate.swift */,
+				6FDE66E13101E216B95F4973 /* ClackClockApp.swift */,
+				4E8DE93AB8E6ACA2F2BEE474 /* WorldClocksCoordinator.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		879517598DFADBF600468506 /* linear_beam */ = {
+			isa = PBXGroup;
+			children = (
+				4BFD0F4A952E5B63314A1AE6 /* Linebeam.ttf */,
+			);
+			path = linear_beam;
+			sourceTree = "<group>";
+		};
+		9281C457105C10E53E11AF8E /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				69C901947417AB82BE8D1DFF /* ClackClock.app */,
+				755C70B3F7636325DD44992A /* ClackClockTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		994ABD168731C65E0CC0497B /* game_of_squids */ = {
+			isa = PBXGroup;
+			children = (
+				15D373B0E975AB8413738D0F /* Game Of Squids.otf */,
+				F336C53DAD07CBE3DFEBC5BB /* Game Of Squids.ttf */,
+			);
+			path = game_of_squids;
+			sourceTree = "<group>";
+		};
+		A779F89EDD23745F0B0E87C3 /* MenuBar */ = {
+			isa = PBXGroup;
+			children = (
+				B40396936BF0774DE36C9739 /* MenuBarClockView.swift */,
+				728D9D185A09578FB6A1CCD5 /* StatusItemController.swift */,
+				B46513EE3EB1B1CBEA663612 /* WorldClockMenuBarView.swift */,
+				A61456B348349B94206A2485 /* WorldClockStatusItemController.swift */,
+			);
+			path = MenuBar;
+			sourceTree = "<group>";
+		};
+		C3D5C7F6B85D8399763FE48D /* CountdownTimer */ = {
+			isa = PBXGroup;
+			children = (
+				64EC8912F4837465FCA09D73 /* CountdownTimer.swift */,
+				BC4366C5623EFBDB225AB664 /* CountdownTimerView.swift */,
+				481A3F34EE9CD31F5A82E5D9 /* FlipTimeDisplay.swift */,
+				AE609AE7BE655EB95F682B15 /* Stopwatch.swift */,
+				C379C726B35E237B714820E2 /* StopwatchView.swift */,
+				90ADC3BAFCE63EB420730D8F /* TimeWheelPicker.swift */,
+			);
+			path = CountdownTimer;
+			sourceTree = "<group>";
+		};
+		D7C4BC7F3230A967467720D1 /* space_age */ = {
+			isa = PBXGroup;
+			children = (
+				330A14F157186EBD9CB182D6 /* space age.ttf */,
+			);
+			path = space_age;
+			sourceTree = "<group>";
+		};
+		D92DF0C83E08D55AE0571975 /* year_book_mess */ = {
+			isa = PBXGroup;
+			children = (
+				B3878A6C35B561BEB7038580 /* YrBkMess.TTF */,
+			);
+			path = year_book_mess;
+			sourceTree = "<group>";
+		};
+		DFD5BAC240253CA10E148A25 = {
+			isa = PBXGroup;
+			children = (
+				5DE5C0D7C142D5B47F5588B2 /* moon.png */,
+				7AA6C5B4C552DFD9E739BE31 /* sun.png */,
+				5849C1C4EFA530B43D588623 /* ClackClock */,
+				69F0EEDE6366FD7642D0261D /* ClackClockTests */,
+				099AEA375652664E7AA12C3F /* Fonts */,
+				9281C457105C10E53E11AF8E /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		E2C9A26A4C7D4B80AD5BFEA0 /* Popover */ = {
+			isa = PBXGroup;
+			children = (
+				2FE3509EC50AACFFBD26E887 /* CalendarMonthView.swift */,
+				0574994F678BEFDF1D086A96 /* DateHeaderView.swift */,
+				094E163BB7CB567BC1B3A465 /* PopoverAppearance.swift */,
+				59B6DCDDF6293EC3E696DC70 /* PopoverClockView.swift */,
+				8120A372AECC369C299E66B9 /* VibrantHostingController.swift */,
+			);
+			path = Popover;
+			sourceTree = "<group>";
+		};
+		E5D0C2C27270E004F1A588FE /* DesktopOverlay */ = {
+			isa = PBXGroup;
+			children = (
+				83D0F36DB3EAD3DBE4875919 /* DesktopBackdropCapture.swift */,
+				CA80E6F63B3A8C183F8CBA60 /* DesktopFocus.swift */,
+				CC233EB51EB23A2F247F60F0 /* OverlayContentView.swift */,
+				DA5A14EA02F75D00A699F448 /* OverlayWindow.swift */,
+				F2511FCB15B85A9B47F453CC /* OverlayWindowController.swift */,
+				3D37855703096EC3FAEF2A67 /* WidgetGlassBackground.swift */,
+				6C084E62C9CF33B7E6A9FA9D /* WorldClockOverlayContentView.swift */,
+				4E301335F1936F41E722E9EB /* WorldClockOverlayWindowController.swift */,
+			);
+			path = DesktopOverlay;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		6DDF32C47F1403FD28421DEA /* ClackClock */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8C42E378BC350614C151E922 /* Build configuration list for PBXNativeTarget "ClackClock" */;
+			buildPhases = (
+				EC2EF60E399B3B64636E24FF /* Sources */,
+				A51BBC1D3CEE2936DA193623 /* Resources */,
+				4AC7D9E0AA555A4C5C6363D2 /* Copy native reminder sounds */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ClackClock;
+			packageProductDependencies = (
+			);
+			productName = ClackClock;
+			productReference = 69C901947417AB82BE8D1DFF /* ClackClock.app */;
+			productType = "com.apple.product-type.application";
+		};
+		76D67A42AABBAA2E4B56697B /* ClackClockTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7C5D89ED64CB4A944E223181 /* Build configuration list for PBXNativeTarget "ClackClockTests" */;
+			buildPhases = (
+				0A9B5B55481EC96E22C80E14 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				3FE0CED7A2BD8B8075CD0468 /* PBXTargetDependency */,
+			);
+			name = ClackClockTests;
+			packageProductDependencies = (
+			);
+			productName = ClackClockTests;
+			productReference = 755C70B3F7636325DD44992A /* ClackClockTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		55EB6867151D263EC22190EE /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					6DDF32C47F1403FD28421DEA = {
+						DevelopmentTeam = SG8NYPLMNY;
+						ProvisioningStyle = Manual;
+					};
+					76D67A42AABBAA2E4B56697B = {
+						DevelopmentTeam = SG8NYPLMNY;
+						ProvisioningStyle = Manual;
+					};
+				};
+			};
+			buildConfigurationList = 831CDB7CCB9705070CDFA581 /* Build configuration list for PBXProject "ClackClock" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = DFD5BAC240253CA10E148A25;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 9281C457105C10E53E11AF8E /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				6DDF32C47F1403FD28421DEA /* ClackClock */,
+				76D67A42AABBAA2E4B56697B /* ClackClockTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A51BBC1D3CEE2936DA193623 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C27989E4D56F3C1F895933C2 /* ARCADE_I.TTF in Resources */,
+				BCCBC8D7817DCAF6A971750F /* ARCADE_N.TTF in Resources */,
+				355FE401C15AFC4B537896CE /* ARCADE_R.TTF in Resources */,
+				8C33ED77E25D4D4B9F505D4F /* Assets.xcassets in Resources */,
+				C5083C7E656D3C9560648E8C /* BLADRMF_.TTF in Resources */,
+				E4FAA73D05EF32033775772E /* Bing Bam Boum.ttf in Resources */,
+				E784B67BAF68622B919639DB /* Bring Me A Helicopter!.otf in Resources */,
+				57FD4BDBD03CB76B1DC332A6 /* Destroy All Humans!.otf in Resources */,
+				0EF7F060F0621C857F499A40 /* Dynamix.ttf in Resources */,
+				1C642DDC265049B90DBCCCD9 /* GFSCUS1D.ttf in Resources */,
+				0CFEB923B680C3A34FC6337B /* Game Of Squids.otf in Resources */,
+				CF7459E72984A81ED721FC66 /* Game Of Squids.ttf in Resources */,
+				046A9DF9E6337DF9789FC7A3 /* KGPrimaryItalics.ttf in Resources */,
+				FEC72E206AECEBC2AB0FFC89 /* KGPrimaryItalicsLined.ttf in Resources */,
+				430EB7606971E55D11623241 /* Linebeam.ttf in Resources */,
+				46D58EE324E33B8985EEDFEA /* Pullstar-Holinight.ttf in Resources */,
+				7D314406E85EA5E2624CD340 /* RockFont.ttf in Resources */,
+				0EE2807C3AD5C2B1E21FB347 /* Sportfield Varsity-Grunge.otf in Resources */,
+				8F39820124F3AEECCA3CA97B /* Sportfield Varsity-Italic.otf in Resources */,
+				C0D4F1045344BF55953346AA /* Sportfield Varsity-Outline1.otf in Resources */,
+				E4C9E600EC75F6B0E14A8FB8 /* Sportfield Varsity-Outline2.otf in Resources */,
+				F24560A69E1361476EE21628 /* Sportfield Varsity-Outline3.otf in Resources */,
+				DA6F9C11D28C72DF3E645F13 /* Sportfield Varsity-Scrible.otf in Resources */,
+				E2B79627204753E8E53E346E /* Sportfield Varsity-Shadow.otf in Resources */,
+				6C9B58FFBBEE82AB1E76C352 /* Sportfield Varsity.otf in Resources */,
+				282DBF1F56FA8B751ACF5F62 /* TRON.TTF in Resources */,
+				CCE56B0BC0384C059FDB4D3B /* Tennessee College.ttf in Resources */,
+				F1E41DDBEE054091AAAAD07B /* Vlump Black.ttf in Resources */,
+				4A6CE919C184F84CA1EE7BD1 /* Vlump.ttf in Resources */,
+				6C0C15420464EBDFBBBC35A0 /* WhiteSquareRedYesBlackEight-Regular.ttf in Resources */,
+				A1D789C74335593C30EF6862 /* WhiteSquareRedYesBlackEightPingpong-Pingpong.ttf in Resources */,
+				44586EE2FD39BC97BE0270C0 /* WhiteSquareRedYesBlackEightWarsaw-Warsaw.ttf in Resources */,
+				595A8E02D3C3AA3D19471502 /* WhiteSquareRedYesBlackEightZero-Zero.ttf in Resources */,
+				545266C7FB1AE58A1355BBD5 /* YrBkMess.TTF in Resources */,
+				B911BFFC4134D29193CEDEB3 /* abduction2002.ttf in Resources */,
+				D923E70AD075DD2D3274F376 /* angrybirds-regular.ttf in Resources */,
+				EBE9BF1EBF0B11DD570393C9 /* chintzy.ttf in Resources */,
+				78D70A8275E99516AC1E9B7C /* chintzys.ttf in Resources */,
+				A6FC347D7F9FF55FB0439FE2 /* moon.png in Resources */,
+				4771D49061887879460ACED6 /* space age.ttf in Resources */,
+				3DE80FB47C3CC4CBED7AAE55 /* sun.png in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		4AC7D9E0AA555A4C5C6363D2 /* Copy native reminder sounds */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Copy native reminder sounds";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -eu\ndestination=\"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}\"\nmkdir -p \"$destination\"\ncp /System/Library/Sounds/*.aiff \"$destination/\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		0A9B5B55481EC96E22C80E14 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				94D20C4F14244DE6429383B9 /* AppSettingsTests.swift in Sources */,
+				939DB3E8FE78AFA6A037DD77 /* CalendarNavigationTests.swift in Sources */,
+				0BBAC9E5ADC4082388C5ADFE /* ClockTickTests.swift in Sources */,
+				9ECF276F3948A52DBB6E56AE /* CountdownTimerTests.swift in Sources */,
+				189287AE1EE8456EB3216277 /* DigitDeltaTests.swift in Sources */,
+				8E737533951D41EB2120E0B4 /* InteractionStressTests.swift in Sources */,
+				267BCF2ECA3D8203D9AE88D4 /* PerformanceTests.swift in Sources */,
+				594BA994258053169CA4B976 /* ReminderNotificationsTests.swift in Sources */,
+				0885B7064FA00A60B83963A9 /* ReminderStoreTests.swift in Sources */,
+				827F13319AEA902E1AF09215 /* StopwatchTests.swift in Sources */,
+				5FADC48A6BD1814972C1F742 /* UIControlsTests.swift in Sources */,
+				194E1EF94173475B61746ED7 /* WidgetLayoutTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EC2EF60E399B3B64636E24FF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D01F63A2084AFC06A8CF2DB9 /* AddReminderView.swift in Sources */,
+				E0828FDD412DE4BB523D2D5F /* AppDelegate.swift in Sources */,
+				89365C504E7F7D7AA8695F11 /* AppSettings.swift in Sources */,
+				DC99DFC4C0264158D964E9F0 /* CalendarMonthView.swift in Sources */,
+				179D75977903593A1F53EA1E /* ClackClockApp.swift in Sources */,
+				B10B823E1929C7949DE3D690 /* ClockTick.swift in Sources */,
+				A01FE402D24EE2B6E5B9BD0D /* CountdownTimer.swift in Sources */,
+				DA1829BD7466153F2253090B /* CountdownTimerView.swift in Sources */,
+				CABFF6F53519D5F657ADBE43 /* DateHeaderView.swift in Sources */,
+				72ADE6C078D19D6E2B3BDDED /* DesktopBackdropCapture.swift in Sources */,
+				55F731ED8263A38407C60E69 /* DesktopFocus.swift in Sources */,
+				395930A9324A6899C726FD1E /* DigitDelta.swift in Sources */,
+				26B68FA0B55B952535BB000C /* DigitFaceRenderer.swift in Sources */,
+				F5E5D7DF8BA23FDB785188DE /* DueReminderBanner.swift in Sources */,
+				A4643350656C43CD95D13686 /* FlapColors.swift in Sources */,
+				C0A9BCE44997B8BA33BE0B4E /* FlipCardLayer.swift in Sources */,
+				92D2EACB8C8EA4A98DBC7BF0 /* FlipTimeDisplay.swift in Sources */,
+				B49170AE425D8D77AF101748 /* MenuBarClockView.swift in Sources */,
+				B1096F8BF63C3A24F965FE8B /* OverlayContentView.swift in Sources */,
+				19BDB1762F956D722D0D472C /* OverlayWindow.swift in Sources */,
+				5B66AFAB30382A2E64FB7404 /* OverlayWindowController.swift in Sources */,
+				63640486FC5790AB066D65E1 /* PopoverAppearance.swift in Sources */,
+				0916D1AF0A733EC548252A82 /* PopoverClockView.swift in Sources */,
+				AA49FFBD8EC5066D539B6DD2 /* Reminder.swift in Sources */,
+				54BC1699F23C11D0EA443ACE /* ReminderBadge.swift in Sources */,
+				8C9CCC8E4D87555C80754DB6 /* ReminderBanner.swift in Sources */,
+				FDFA22BE32DA42BB4FBAFF5C /* ReminderNotifications.swift in Sources */,
+				7F4D4049C875FC4360D44566 /* ReminderSound.swift in Sources */,
+				6B941B1AA53DAE7EECF739EF /* ReminderStore.swift in Sources */,
+				0C5CCED7CC442A053695F385 /* SettingsView.swift in Sources */,
+				403C36B635BA0EA34D047210 /* SettingsWindowController.swift in Sources */,
+				DE2DAC92B15B134FCDC8F1CA /* SplitFlapClockFace.swift in Sources */,
+				354602225076DA47E7F2C35E /* SplitFlapDigit.swift in Sources */,
+				201835F8CDC5CD7D14936212 /* SplitFlapPairView.swift in Sources */,
+				B314C7D917179AAC0767B5A8 /* StatusItemController.swift in Sources */,
+				C1A76CA33D0502FA1BC22EE2 /* Stopwatch.swift in Sources */,
+				3809EDDE5FFA735DA2C00DB9 /* StopwatchView.swift in Sources */,
+				6B38F38CE33705FD81A5A697 /* TimeProvider.swift in Sources */,
+				FF36D61FEF94A306A36D3FBB /* TimeWheelPicker.swift in Sources */,
+				D3B547EC08AD2A681ED6D2FB /* VibrantHostingController.swift in Sources */,
+				A5FB990FDC945BC5EC29003A /* WidgetFont.swift in Sources */,
+				09BE4023BF81CD060D086424 /* WidgetGlassBackground.swift in Sources */,
+				56635E46357AAFC749E4AA6C /* WorldClock.swift in Sources */,
+				D2F531EC8AF5BE62C766C86C /* WorldClockCard.swift in Sources */,
+				98156113B37A8391AAE91F2C /* WorldClockMenuBarView.swift in Sources */,
+				0436BBE35335C97F2D8CB168 /* WorldClockOverlayContentView.swift in Sources */,
+				131F5CC14CB8F945CFD721AB /* WorldClockOverlayWindowController.swift in Sources */,
+				78F614E5DE7B2A22EBF2D683 /* WorldClockStatusItemController.swift in Sources */,
+				6DC173EA089025324B88A15A /* WorldClocksCoordinator.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		3FE0CED7A2BD8B8075CD0468 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6DDF32C47F1403FD28421DEA /* ClackClock */;
+			targetProxy = 4AFF59E5C07075E084487609 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		0684B567440EBE9A43522479 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGNING_ALLOWED = YES;
+				CODE_SIGNING_REQUIRED = YES;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = SG8NYPLMNY;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = ClackClock/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.rajeevranjan.clackclock;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		1BFB1C7AAB35E9B0CB54F40C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGNING_ALLOWED = YES;
+				CODE_SIGNING_REQUIRED = YES;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = SG8NYPLMNY;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = ClackClock/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.rajeevranjan.clackclock;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		2AE4E169695B4BC1142BC914 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = SG8NYPLMNY;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.rajeevranjan.clackclock.tests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ClackClock.app/Contents/MacOS/ClackClock";
+			};
+			name = Debug;
+		};
+		68612474685D191E9E9B06E2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		D1869EA8AF2651ED50EEA4C6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = SG8NYPLMNY;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.rajeevranjan.clackclock.tests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ClackClock.app/Contents/MacOS/ClackClock";
+			};
+			name = Release;
+		};
+		F84F8F003FF7F82210FEBECA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		7C5D89ED64CB4A944E223181 /* Build configuration list for PBXNativeTarget "ClackClockTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2AE4E169695B4BC1142BC914 /* Debug */,
+				D1869EA8AF2651ED50EEA4C6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		831CDB7CCB9705070CDFA581 /* Build configuration list for PBXProject "ClackClock" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F84F8F003FF7F82210FEBECA /* Debug */,
+				68612474685D191E9E9B06E2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		8C42E378BC350614C151E922 /* Build configuration list for PBXNativeTarget "ClackClock" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0684B567440EBE9A43522479 /* Debug */,
+				1BFB1C7AAB35E9B0CB54F40C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 55EB6867151D263EC22190EE /* Project object */;
+}

@@ -27,7 +27,7 @@ final class SettingsWindowController {
             window.backgroundColor = .windowBackgroundColor
             window.contentMinSize = NSSize(width: SettingsView.minimumWidth, height: 220)
             window.isReleasedWhenClosed = false
-            window.setFrameAutosaveName("FlipClockSettings")
+            window.setFrameAutosaveName("ClackClockSettings")
             window.contentViewController = NSHostingController(
                 rootView: SettingsView(reminderNotifications: reminderNotifications, onContentHeightChange: { [weak window] height in
                     guard let window, height > 0 else { return }

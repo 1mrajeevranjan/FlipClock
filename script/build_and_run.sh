@@ -8,21 +8,21 @@ case "$MODE" in
 esac
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-BUILD_DIR="${TMPDIR:-/tmp}/FlipClock-DerivedData"
-APP_BUNDLE="$BUILD_DIR/Build/Products/Debug/FlipClock.app"
+BUILD_DIR="${TMPDIR:-/tmp}/ClackClock-DerivedData"
+APP_BUNDLE="$BUILD_DIR/Build/Products/Debug/ClackClock.app"
 
-xcodebuild -quiet -project "$ROOT_DIR/FlipClock.xcodeproj" -scheme FlipClock \
+xcodebuild -quiet -project "$ROOT_DIR/ClackClock.xcodeproj" -scheme ClackClock \
   -configuration Debug -derivedDataPath "$BUILD_DIR" build
-pkill -x FlipClock >/dev/null 2>&1 || true
+pkill -x ClackClock >/dev/null 2>&1 || true
 
 case "$MODE" in
-  --debug) lldb -- "$APP_BUNDLE/Contents/MacOS/FlipClock" ;;
+  --debug) lldb -- "$APP_BUNDLE/Contents/MacOS/ClackClock" ;;
   *)
     /usr/bin/open -n "$APP_BUNDLE"
     case "$MODE" in
-      --logs) /usr/bin/log stream --info --style compact --predicate 'process == "FlipClock"' ;;
-      --telemetry) /usr/bin/log stream --info --style compact --predicate 'subsystem == "com.rajeevranjan.flipclock"' ;;
-      --verify) sleep 1; pgrep -x FlipClock >/dev/null ;;
+      --logs) /usr/bin/log stream --info --style compact --predicate 'process == "ClackClock"' ;;
+      --telemetry) /usr/bin/log stream --info --style compact --predicate 'subsystem == "com.rajeevranjan.clackclock"' ;;
+      --verify) sleep 1; pgrep -x ClackClock >/dev/null ;;
     esac
     ;;
 esac
