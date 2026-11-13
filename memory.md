@@ -1,4 +1,4 @@
-# FlipClock Project Memory
+# ClackClock Project Memory
 
 Non-obvious lessons learned building this app — the "why" behind decisions that would otherwise look arbitrary or wrong on a second read. `CLAUDE.md`'s Known Gotchas is the condensed/authoritative version for AI agents working in this repo; this file has more narrative context behind each one.
 

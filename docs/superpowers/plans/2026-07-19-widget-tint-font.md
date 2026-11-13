@@ -15,14 +15,14 @@
 - Tint opacities: hinge line `0.4`, frosted card `0.3`, separator dot `0.85`, `WidgetGlassBackground` overlay wash `0.18`. Digit ink uses the tint color directly (opacity `1.0`, it's already text ink).
 - Tint priority: when `widgetTintEnabled` is true, the tint color overrides the existing Sunday-red weekday-text color — never both.
 - Scope boundary: tint/font apply to the split-flap clock and date-row digits only. `CalendarMonthView` (popover's calendar grid) is explicitly untouched.
-- No new test target — verification is build success (`xcodebuild -project FlipClock.xcodeproj -scheme FlipClock -configuration Debug build`, must end `** BUILD SUCCEEDED **`) plus visual check per task.
+- No new test target — verification is build success (`xcodebuild -project ClackClock.xcodeproj -scheme ClackClock -configuration Debug build`, must end `** BUILD SUCCEEDED **`) plus visual check per task.
 
 ---
 
 ### Task 1: Settings — `WidgetFont` enum and persisted tint/font properties
 
 **Files:**
-- Modify: `FlipClock/Settings/AppSettings.swift`
+- Modify: `ClackClock/Settings/AppSettings.swift`
 
 **Interfaces:**
 - Produces: `enum WidgetFont: String, CaseIterable, Identifiable` with `.label: String`, `.postscriptName: String?`, `.isMonospacedSystem: Bool`; `AppSettings.widgetFont: WidgetFont`, `AppSettings.widgetTintEnabled: Bool`, `AppSettings.widgetTintColor: Color`; a private `Color(hex:)` init and `.hexString` var (file-scoped extension, used only within this file for persistence).
@@ -236,7 +236,7 @@ private extension Color {
 
 ```bash
 cd /Users/rajeevranjan/ClaudeCode/Clock
-xcodebuild -project FlipClock.xcodeproj -scheme FlipClock -configuration Debug build
+xcodebuild -project ClackClock.xcodeproj -scheme ClackClock -configuration Debug build
 ```
 
 Expected: `** BUILD SUCCEEDED **`. Nothing in the UI changes yet — these properties aren't read anywhere.
@@ -244,7 +244,7 @@ Expected: `** BUILD SUCCEEDED **`. Nothing in the UI changes yet — these prope
 - [ ] **Step 8: Commit**
 
 ```bash
-git add FlipClock/Settings/AppSettings.swift
+git add ClackClock/Settings/AppSettings.swift
 git commit -m "feat: add WidgetFont enum and persisted tint/font settings"
 ```
 
@@ -253,8 +253,8 @@ git commit -m "feat: add WidgetFont enum and persisted tint/font settings"
 ### Task 2: Rendering primitives — tint-aware color tokens and font-aware glyph renderer
 
 **Files:**
-- Modify: `FlipClock/FlipClock/FlapColors.swift`
-- Modify: `FlipClock/FlipClock/DigitFaceRenderer.swift`
+- Modify: `ClackClock/ClackClock/FlapColors.swift`
+- Modify: `ClackClock/ClackClock/DigitFaceRenderer.swift`
 
 **Interfaces:**
 - Consumes: nothing new from Task 1 (pure rendering-layer changes, don't reference `AppSettings`).
@@ -417,7 +417,7 @@ to:
 
 - [ ] **Step 4: Thread `fontName`/`isMonospacedSystemFont` through the full `halfFace(for:...)` signature**
 
-The zero-textColor convenience overload (`halfFace(for:cardSize:top:isDark:)`) is unused anywhere in the codebase (confirmed via `grep -rn "DigitFaceRenderer\." FlipClock/` — only the full signature below is ever called, always with `textColor:` explicit) — leave it untouched, don't add a font variant of it.
+The zero-textColor convenience overload (`halfFace(for:cardSize:top:isDark:)`) is unused anywhere in the codebase (confirmed via `grep -rn "DigitFaceRenderer\." ClackClock/` — only the full signature below is ever called, always with `textColor:` explicit) — leave it untouched, don't add a font variant of it.
 
 Change:
 
@@ -551,7 +551,7 @@ to:
 
 ```bash
 cd /Users/rajeevranjan/ClaudeCode/Clock
-xcodebuild -project FlipClock.xcodeproj -scheme FlipClock -configuration Debug build
+xcodebuild -project ClackClock.xcodeproj -scheme ClackClock -configuration Debug build
 ```
 
 Expected: `** BUILD SUCCEEDED **`. No visible change yet — no call site passes a `tint`/`fontName` yet.
@@ -559,7 +559,7 @@ Expected: `** BUILD SUCCEEDED **`. No visible change yet — no call site passes
 - [ ] **Step 7: Commit**
 
 ```bash
-git add FlipClock/FlipClock/FlapColors.swift FlipClock/FlipClock/DigitFaceRenderer.swift
+git add ClackClock/ClackClock/FlapColors.swift ClackClock/ClackClock/DigitFaceRenderer.swift
 git commit -m "feat: add tint-aware color tokens and font-aware glyph rendering"
 ```
 
@@ -568,11 +568,11 @@ git commit -m "feat: add tint-aware color tokens and font-aware glyph rendering"
 ### Task 3: Thread tint/font through the shared view chain
 
 **Files:**
-- Modify: `FlipClock/FlipClock/SplitFlapDigit.swift`
-- Modify: `FlipClock/FlipClock/FlipCardLayer.swift`
-- Modify: `FlipClock/FlipClock/SplitFlapPairView.swift`
-- Modify: `FlipClock/FlipClock/SplitFlapClockFace.swift`
-- Modify: `FlipClock/DesktopOverlay/WidgetGlassBackground.swift`
+- Modify: `ClackClock/ClackClock/SplitFlapDigit.swift`
+- Modify: `ClackClock/ClackClock/FlipCardLayer.swift`
+- Modify: `ClackClock/ClackClock/SplitFlapPairView.swift`
+- Modify: `ClackClock/ClackClock/SplitFlapClockFace.swift`
+- Modify: `ClackClock/DesktopOverlay/WidgetGlassBackground.swift`
 
 **Interfaces:**
 - Consumes: `FlapColors.leafHinge(isDark:tint:)`, `.frostedCard(isDark:tint:)`, `.separatorDot(isDark:tint:)` and `DigitFaceRenderer.halfFace(...fontName:isMonospacedSystemFont:)` from Task 2.
@@ -1138,7 +1138,7 @@ to:
 
 ```bash
 cd /Users/rajeevranjan/ClaudeCode/Clock
-xcodebuild -project FlipClock.xcodeproj -scheme FlipClock -configuration Debug build
+xcodebuild -project ClackClock.xcodeproj -scheme ClackClock -configuration Debug build
 ```
 
 Expected: `** BUILD SUCCEEDED **`. Still no visible change — no call site in `OverlayContentView`/`MenuBarClockView`/`SecondClockMenuBarView`/`PopoverClockView` passes real settings values yet (Task 4).
@@ -1146,7 +1146,7 @@ Expected: `** BUILD SUCCEEDED **`. Still no visible change — no call site in `
 - [ ] **Step 14: Commit**
 
 ```bash
-git add FlipClock/FlipClock/SplitFlapDigit.swift FlipClock/FlipClock/FlipCardLayer.swift FlipClock/FlipClock/SplitFlapPairView.swift FlipClock/FlipClock/SplitFlapClockFace.swift FlipClock/DesktopOverlay/WidgetGlassBackground.swift
+git add ClackClock/ClackClock/SplitFlapDigit.swift ClackClock/ClackClock/FlipCardLayer.swift ClackClock/ClackClock/SplitFlapPairView.swift ClackClock/ClackClock/SplitFlapClockFace.swift ClackClock/DesktopOverlay/WidgetGlassBackground.swift
 git commit -m "feat: thread tint/font parameters through the shared rendering chain"
 ```
 
@@ -1155,11 +1155,11 @@ git commit -m "feat: thread tint/font parameters through the shared rendering ch
 ### Task 4: Wire settings into all call sites, add Settings UI
 
 **Files:**
-- Modify: `FlipClock/DesktopOverlay/OverlayContentView.swift`
-- Modify: `FlipClock/MenuBar/MenuBarClockView.swift`
-- Modify: `FlipClock/MenuBar/SecondClockMenuBarView.swift`
-- Modify: `FlipClock/Popover/PopoverClockView.swift`
-- Modify: `FlipClock/Settings/SettingsView.swift`
+- Modify: `ClackClock/DesktopOverlay/OverlayContentView.swift`
+- Modify: `ClackClock/MenuBar/MenuBarClockView.swift`
+- Modify: `ClackClock/MenuBar/SecondClockMenuBarView.swift`
+- Modify: `ClackClock/Popover/PopoverClockView.swift`
+- Modify: `ClackClock/Settings/SettingsView.swift`
 
 **Interfaces:**
 - Consumes: `AppSettings.widgetFont/.widgetTintEnabled/.widgetTintColor` (Task 1), `SplitFlapClockFace(...tintColor:fontName:isMonospacedSystemFont:)`, `SplitFlapDigit(...tintColor:fontName:isMonospacedSystemFont:)`, `WidgetGlassBackground(...tintColor:)` (Task 3).
@@ -1521,7 +1521,7 @@ to:
 
 ```bash
 cd /Users/rajeevranjan/ClaudeCode/Clock
-xcodebuild -project FlipClock.xcodeproj -scheme FlipClock -configuration Debug build
+xcodebuild -project ClackClock.xcodeproj -scheme ClackClock -configuration Debug build
 ```
 
 Expected: `** BUILD SUCCEEDED **`.
@@ -1529,7 +1529,7 @@ Expected: `** BUILD SUCCEEDED **`.
 - [ ] **Step 9: Launch and visually verify**
 
 ```bash
-open -n /Users/rajeevranjan/Library/Developer/Xcode/DerivedData/FlipClock-*/Build/Products/Debug/FlipClock.app
+open -n /Users/rajeevranjan/Library/Developer/Xcode/DerivedData/ClackClock-*/Build/Products/Debug/ClackClock.app
 ```
 
 Open Settings → Appearance tab. Confirm:
@@ -1544,7 +1544,7 @@ Open Settings → Appearance tab. Confirm:
 - [ ] **Step 10: Commit**
 
 ```bash
-git add FlipClock/DesktopOverlay/OverlayContentView.swift FlipClock/MenuBar/MenuBarClockView.swift FlipClock/MenuBar/SecondClockMenuBarView.swift FlipClock/Popover/PopoverClockView.swift FlipClock/Settings/SettingsView.swift
+git add ClackClock/DesktopOverlay/OverlayContentView.swift ClackClock/MenuBar/MenuBarClockView.swift ClackClock/MenuBar/SecondClockMenuBarView.swift ClackClock/Popover/PopoverClockView.swift ClackClock/Settings/SettingsView.swift
 git commit -m "feat: wire tint and font settings into all three clock surfaces"
 ```
 
