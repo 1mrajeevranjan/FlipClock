@@ -566,7 +566,6 @@
 			buildPhases = (
 				EC2EF60E399B3B64636E24FF /* Sources */,
 				A51BBC1D3CEE2936DA193623 /* Resources */,
-				4AC7D9E0AA555A4C5C6363D2 /* Copy native reminder sounds */,
 			);
 			buildRules = (
 			);
@@ -686,28 +685,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
-
-/* Begin PBXShellScriptBuildPhase section */
-		4AC7D9E0AA555A4C5C6363D2 /* Copy native reminder sounds */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "Copy native reminder sounds";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "set -eu\ndestination=\"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}\"\nmkdir -p \"$destination\"\ncp /System/Library/Sounds/*.aiff \"$destination/\"\n";
-		};
-/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		0A9B5B55481EC96E22C80E14 /* Sources */ = {

@@ -142,11 +142,11 @@ final class ReminderNotificationsTests: XCTestCase {
         XCTAssertTrue(later.trigger is UNCalendarNotificationTrigger, "Still scheduled natively for when ClackClock isn't running")
     }
 
-    func testNativeSoundsAreBundledAndStoredSelectionIsValidated() {
+    func testNativeSoundsLoadAndStoredSelectionIsValidated() {
         XCTAssertGreaterThan(ReminderSound.all.count, 1)
         XCTAssertEqual(ReminderSound.byID("Glass.aiff").id, "Glass.aiff")
         for sound in ReminderSound.all where sound != .systemDefault {
-            XCTAssertNotNil(Bundle.main.url(forResource: sound.id, withExtension: nil))
+            XCTAssertNotNil(sound.alarm(), "\(sound.id) should load from /System/Library/Sounds")
         }
         XCTAssertEqual(ReminderSound.byID("../untrusted.aiff"), .systemDefault)
         XCTAssertEqual(ReminderSound.byID("removed-sound.aiff"), .systemDefault)

@@ -6,8 +6,13 @@ struct ReminderSound: Identifiable, Hashable {
     private let url: URL?
 
     static let systemDefault = ReminderSound(id: "default", label: "Default", url: nil)
+    /// Read in place rather than copied into the bundle: the sandbox can read system sounds,
+    /// and Apple's sound files aren't ours to redistribute.
+    private static let systemSoundsDirectory = URL(fileURLWithPath: "/System/Library/Sounds")
+
     static let all: [ReminderSound] = [systemDefault] +
-        (Bundle.main.urls(forResourcesWithExtension: "aiff", subdirectory: nil) ?? [])
+        ((try? FileManager.default.contentsOfDirectory(at: systemSoundsDirectory, includingPropertiesForKeys: nil)) ?? [])
+            .filter { $0.pathExtension == "aiff" }
             .sorted { $0.lastPathComponent.localizedStandardCompare($1.lastPathComponent) == .orderedAscending }
             .map { ReminderSound(id: $0.lastPathComponent, label: $0.deletingPathExtension().lastPathComponent, url: $0) }
 
