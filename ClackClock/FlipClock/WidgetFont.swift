@@ -1,4 +1,4 @@
-import AppKit
+import Foundation
 import CoreText
 
 /// One selectable clock-digit font. `.system` is the built-in default —

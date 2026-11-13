@@ -12,23 +12,20 @@ final class ReminderStoreTests: XCTestCase {
         store.add(title: "Done", date: date)
         store.acknowledge(store.reminders[0])
         XCTAssertTrue(store.reminders(on: date).isEmpty)
-        XCTAssertFalse(store.hasReminder(on: date))
         XCTAssertTrue(store.widgetReminders.isEmpty)
         XCTAssertEqual(store.reminders.count, 1, "Acknowledgment history remains persisted without active UI entries")
     }
 
-    func testBulkAcknowledgmentPublishesOnceAndRepeatedAcknowledgmentDoesNoWork() {
+    func testRepeatedAcknowledgmentAndRemovingAMissingReminderDoNoWork() {
         let store = ReminderStore(defaults: defaults)
         for index in 0..<20 { store.add(title: "Reminder \(index)", date: Date()) }
+        for reminder in store.reminders { store.acknowledge(reminder) }
         var updates = 0
         let subscription = store.$reminders.dropFirst().sink { _ in updates += 1 }
         defer { subscription.cancel() }
-        store.acknowledgeAllDueToday()
-        XCTAssertEqual(updates, 1)
-        store.acknowledgeAllDueToday()
         for reminder in store.reminders { store.acknowledge(reminder) }
         store.remove(Reminder(date: Date(), title: "Missing"))
-        XCTAssertEqual(updates, 1)
+        XCTAssertEqual(updates, 0)
         XCTAssertTrue(ReminderStore(defaults: defaults).reminders.allSatisfy(\.isAcknowledged))
     }
 
@@ -141,26 +138,6 @@ final class ReminderStoreTests: XCTestCase {
         XCTAssertEqual(upcoming.map(\.title), ["in 12h"])
     }
 
-    func testAcknowledgeAllDueTodayAcknowledgesEveryUnacknowledgedTodayReminder() {
-        let store = ReminderStore(defaults: defaults)
-        let today = Date()
-        store.add(title: "one", date: today)
-        store.add(title: "two", date: today)
-
-        store.acknowledgeAllDueToday()
-
-        XCTAssertTrue(store.reminders.allSatisfy(\.isAcknowledged))
-        XCTAssertTrue(store.dueTodayUnacknowledged.isEmpty)
-    }
-
-    func testHasReminderBannerReflectsEitherDueOrUpcoming() {
-        let store = ReminderStore(defaults: defaults)
-        XCTAssertFalse(store.hasReminderBanner)
-
-        store.add(title: "today", date: Date())
-        XCTAssertTrue(store.hasReminderBanner)
-    }
-
     func testWidgetRemindersAreSortedAndAcknowledgedItemsDisappear() {
         let store = ReminderStore(defaults: defaults)
         let start = Calendar.current.startOfDay(for: Date())
@@ -203,17 +180,5 @@ final class ReminderStoreTests: XCTestCase {
 
         let reloadedAfterRemoval = ReminderStore(defaults: defaults)
         XCTAssertTrue(reloadedAfterRemoval.reminders.isEmpty)
-    }
-
-    func testStressAcknowledgeAllUnderLoadIsIdempotent() {
-        let store = ReminderStore(defaults: defaults)
-        for i in 0..<200 {
-            store.add(title: "\(i)", date: Date())
-        }
-
-        store.acknowledgeAllDueToday()
-        store.acknowledgeAllDueToday() // calling twice must not throw or double-toggle
-
-        XCTAssertTrue(store.reminders.allSatisfy(\.isAcknowledged))
     }
 }

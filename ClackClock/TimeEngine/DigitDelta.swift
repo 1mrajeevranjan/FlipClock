@@ -1,5 +1,3 @@
-import Foundation
-
 /// Which of the 6 digit positions (H-tens, H-ones, M-tens, M-ones, S-tens, S-ones)
 /// changed between two ticks, plus whether AM/PM flipped. Used so each
 /// `SplitFlapDigit` only animates when its own value actually changed.

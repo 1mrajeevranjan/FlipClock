@@ -23,16 +23,6 @@ enum DigitFaceRenderer {
         }
     }
 
-    private struct SizeKey: Hashable {
-        let value: String
-        let width: Int
-        let height: Int
-        let isDark: Bool
-        let transparentBackground: Bool
-        let fillColor: String
-        let fontIdentifier: String
-    }
-
     private struct HalfKey: Hashable {
         let value: String
         let width: Int
@@ -40,7 +30,6 @@ enum DigitFaceRenderer {
         let top: Bool
         let isDark: Bool
         let transparentBackground: Bool
-        let fillColor: String
         let fontIdentifier: String
         let hingeThickness: Int
         let tintsIcons: Bool
@@ -54,37 +43,13 @@ enum DigitFaceRenderer {
         return fontName ?? "system"
     }
 
-    static func face(for value: String, size: CGSize, isDark: Bool) -> CGImage {
-        face(for: value, size: size, isDark: isDark, textColor: nil)
-    }
-
-    static func face(for value: String, size: CGSize, isDark: Bool, textColor: NSColor?, transparentBackground: Bool = false, fontName: String? = nil, isMonospacedSystemFont: Bool = false) -> CGImage {
-        let key = ImageKey(SizeKey(value: cacheKey(for: value, textColor: textColor), width: Int(size.width.rounded()), height: Int(size.height.rounded()), isDark: isDark, transparentBackground: transparentBackground, fillColor: "leaf", fontIdentifier: fontIdentifier(fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont)))
-        if let image = imageCache.object(forKey: key) {
-            return image
-        }
-        let image = render(value: value, fullSize: size, half: nil, isDark: isDark, textColor: textColor, transparentBackground: transparentBackground, fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont)
-        imageCache.setObject(image, forKey: key, cost: image.bytesPerRow * image.height)
-        return image
-    }
-
     /// Top or bottom half of a card's face, for the static half-cards and
     /// for the animating flap's two content phases.
-    static func halfFace(for value: String, cardSize: CGSize, top: Bool, isDark: Bool) -> CGImage {
-        halfFace(for: value, cardSize: cardSize, top: top, isDark: isDark, textColor: nil)
-    }
-
-    /// `transparentBackground` skips the fill entirely — used for the
-    /// "liquid glass" card style's idle static halves, where a real
-    /// blurred `NSVisualEffectView` sits behind this image and the digit
-    /// needs to read as drawn directly on top of that glass.
     ///
-    /// `fillColor` overrides the default opaque leaf color when a fill is
-    /// drawn — used by the animating flap in glass mode, which needs to
-    /// stay opaque enough to fully mask the static digit underneath (or
-    /// it "ghosts"/double-exposes mid-flip) while still reading as
-    /// translucent glass rather than a solid leaf card, so the card
-    /// doesn't visibly flash to a different color for the flip's duration.
+    /// `transparentBackground` skips the fill entirely — used for the
+    /// "liquid glass" card style, where a real blurred backdrop sits behind
+    /// this image and the digit needs to read as drawn directly on top of
+    /// that glass.
     ///
     /// `hingeThickness` bakes half of the seam line into this image's
     /// outer edge (the edge that abuts the card's other half) instead of
@@ -94,7 +59,7 @@ enum DigitFaceRenderer {
     /// independent rectangle whose apparent overlap with the rotating
     /// layer's edge changed every frame and read as the line's thickness
     /// visibly pulsing mid-flip.
-    static func halfFace(for value: String, cardSize: CGSize, top: Bool, isDark: Bool, textColor: NSColor?, transparentBackground: Bool = false, fillColor: NSColor? = nil, fontName: String? = nil, isMonospacedSystemFont: Bool = false, hingeThickness: CGFloat = 0, tintsIcons: Bool = false) -> CGImage {
+    static func halfFace(for value: String, cardSize: CGSize, top: Bool, isDark: Bool, textColor: NSColor?, transparentBackground: Bool = false, fontName: String? = nil, isMonospacedSystemFont: Bool = false, hingeThickness: CGFloat = 0, tintsIcons: Bool = false) -> CGImage {
         let key = ImageKey(HalfKey(
             value: cacheKey(for: value, textColor: textColor),
             width: Int(cardSize.width.rounded()),
@@ -102,7 +67,6 @@ enum DigitFaceRenderer {
             top: top,
             isDark: isDark,
             transparentBackground: transparentBackground,
-            fillColor: fillColor?.description ?? "leaf",
             fontIdentifier: fontIdentifier(fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont),
             hingeThickness: Int((hingeThickness * 10).rounded()),
             tintsIcons: tintsIcons
@@ -110,7 +74,7 @@ enum DigitFaceRenderer {
         if let image = imageCache.object(forKey: key) {
             return image
         }
-        let image = render(value: value, fullSize: cardSize, half: top ? .top : .bottom, isDark: isDark, textColor: textColor, transparentBackground: transparentBackground, fillColor: fillColor, fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont, hingeThickness: hingeThickness, tintsIcons: tintsIcons)
+        let image = render(value: value, fullSize: cardSize, half: top ? .top : .bottom, isDark: isDark, textColor: textColor, transparentBackground: transparentBackground, fontName: fontName, isMonospacedSystemFont: isMonospacedSystemFont, hingeThickness: hingeThickness, tintsIcons: tintsIcons)
         imageCache.setObject(image, forKey: key, cost: image.bytesPerRow * image.height)
         return image
     }
@@ -121,13 +85,13 @@ enum DigitFaceRenderer {
     /// card, but into a bitmap that may only be the top or bottom half of
     /// that card — the glyph lands cut exactly at the hinge line, matching
     /// the physical two-housing split-flap card.
-    private static func render(value: String, fullSize: CGSize, half: Half?, isDark: Bool, textColor: NSColor?, transparentBackground: Bool = false, fillColor: NSColor? = nil, fontName: String? = nil, isMonospacedSystemFont: Bool = false, hingeThickness: CGFloat = 0, tintsIcons: Bool = false) -> CGImage {
-        let outputSize = half == nil ? fullSize : CGSize(width: fullSize.width, height: fullSize.height / 2)
+    private static func render(value: String, fullSize: CGSize, half: Half, isDark: Bool, textColor: NSColor?, transparentBackground: Bool = false, fontName: String? = nil, isMonospacedSystemFont: Bool = false, hingeThickness: CGFloat = 0, tintsIcons: Bool = false) -> CGImage {
+        let outputSize = CGSize(width: fullSize.width, height: fullSize.height / 2)
         let nsImage = NSImage(size: outputSize)
         nsImage.lockFocus()
 
         if !transparentBackground {
-            (fillColor ?? NSColor(FlapColors.leaf(isDark: isDark))).setFill()
+            NSColor(FlapColors.leaf(isDark: isDark)).setFill()
             CGRect(origin: .zero, size: outputSize).fill()
         }
 
@@ -157,7 +121,7 @@ enum DigitFaceRenderer {
 
             let originY: CGFloat
             switch half {
-            case nil, .bottom:
+            case .bottom:
                 originY = fullCardOriginY
             case .top:
                 originY = fullCardOriginY - fullSize.height / 2
@@ -175,9 +139,8 @@ enum DigitFaceRenderer {
         // drawn at rest, but because each sliver is part of the bitmap
         // that actually rotates during the flip, it foreshortens in lockstep
         // with everything else instead of independently.
-        if let half, hingeThickness > 0 {
-            let isGlass = transparentBackground || fillColor != nil
-            (isGlass ? FlapColors.glassHinge : NSColor(FlapColors.leafHinge(isDark: isDark))).setFill()
+        if hingeThickness > 0 {
+            (transparentBackground ? FlapColors.glassHinge : NSColor(FlapColors.leafHinge(isDark: isDark))).setFill()
             let sliver = hingeThickness / 2
             let hingeRect: CGRect
             switch half {
@@ -231,7 +194,7 @@ enum DigitFaceRenderer {
     /// top/bottom halves line up at the hinge.
     /// `tint` flattens the icon to one colour — the sun/moon PNGs are full
     /// colour, which reads wrong on a Monochrome or dimmed widget.
-    private static func drawIcon(_ icon: NSImage, fullSize: CGSize, half: Half?, tint: NSColor? = nil) {
+    private static func drawIcon(_ icon: NSImage, fullSize: CGSize, half: Half, tint: NSColor? = nil) {
         let maxDimension = min(fullSize.width, fullSize.height) * 0.82
         let iconSize = CGSize(width: maxDimension, height: maxDimension)
         let originX = (fullSize.width - iconSize.width) / 2
@@ -239,7 +202,7 @@ enum DigitFaceRenderer {
 
         let originY: CGFloat
         switch half {
-        case nil, .bottom:
+        case .bottom:
             originY = fullCardOriginY
         case .top:
             originY = fullCardOriginY - fullSize.height / 2

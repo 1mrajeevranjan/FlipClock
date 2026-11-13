@@ -88,7 +88,6 @@
 		C5083C7E656D3C9560648E8C /* BLADRMF_.TTF in Resources */ = {isa = PBXBuildFile; fileRef = 0E117D2F03E67315469660FF /* BLADRMF_.TTF */; };
 		CABFF6F53519D5F657ADBE43 /* DateHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0574994F678BEFDF1D086A96 /* DateHeaderView.swift */; };
 		CCE56B0BC0384C059FDB4D3B /* Tennessee College.ttf in Resources */ = {isa = PBXBuildFile; fileRef = EF72BB2D2A1F5A6F97539D01 /* Tennessee College.ttf */; };
-		CF7459E72984A81ED721FC66 /* Game Of Squids.ttf in Resources */ = {isa = PBXBuildFile; fileRef = F336C53DAD07CBE3DFEBC5BB /* Game Of Squids.ttf */; };
 		D01F63A2084AFC06A8CF2DB9 /* AddReminderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57207B8DF89348C3403EE1B2 /* AddReminderView.swift */; };
 		D2F531EC8AF5BE62C766C86C /* WorldClockCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89F1E3F62A8502AC630B22D8 /* WorldClockCard.swift */; };
 		D3B547EC08AD2A681ED6D2FB /* VibrantHostingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8120A372AECC369C299E66B9 /* VibrantHostingController.swift */; };
@@ -224,7 +223,6 @@
 		EAF588F54C5C715271E62DD6 /* Vlump.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Vlump.ttf; sourceTree = "<group>"; };
 		EF72BB2D2A1F5A6F97539D01 /* Tennessee College.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Tennessee College.ttf"; sourceTree = "<group>"; };
 		F2511FCB15B85A9B47F453CC /* OverlayWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayWindowController.swift; sourceTree = "<group>"; };
-		F336C53DAD07CBE3DFEBC5BB /* Game Of Squids.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Game Of Squids.ttf"; sourceTree = "<group>"; };
 		F426AEB94E7108A958CAD76E /* Sportfield Varsity-Outline3.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Sportfield Varsity-Outline3.otf"; sourceTree = "<group>"; };
 		FB89CF59B1F36281ED73B170 /* PerformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformanceTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -473,7 +471,6 @@
 			isa = PBXGroup;
 			children = (
 				15D373B0E975AB8413738D0F /* Game Of Squids.otf */,
-				F336C53DAD07CBE3DFEBC5BB /* Game Of Squids.ttf */,
 			);
 			path = game_of_squids;
 			sourceTree = "<group>";
@@ -651,7 +648,6 @@
 				0EF7F060F0621C857F499A40 /* Dynamix.ttf in Resources */,
 				1C642DDC265049B90DBCCCD9 /* GFSCUS1D.ttf in Resources */,
 				0CFEB923B680C3A34FC6337B /* Game Of Squids.otf in Resources */,
-				CF7459E72984A81ED721FC66 /* Game Of Squids.ttf in Resources */,
 				046A9DF9E6337DF9789FC7A3 /* KGPrimaryItalics.ttf in Resources */,
 				FEC72E206AECEBC2AB0FFC89 /* KGPrimaryItalicsLined.ttf in Resources */,
 				430EB7606971E55D11623241 /* Linebeam.ttf in Resources */,

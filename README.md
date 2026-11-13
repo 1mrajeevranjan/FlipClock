@@ -357,7 +357,7 @@ The suite has 133 XCTest cases:
 | Area | Coverage |
 |---|---|
 | Time engine | Tick generation, digit deltas, alignment to the wall clock |
-| Settings | Persistence, defaults, fallbacks, migration |
+| Settings | Persistence, defaults, fallbacks |
 | Reminders | Store, native requests, hand-over window, alarm ringing and dismissal, sounds |
 | UI controls | Every popover, Settings and reminder-banner control pressed through the accessibility tree (`UIControlsTests`) |
 | Rendering | Glyph rasterisation, timer-wheel numerals, timer lens in both themes, image-cache reuse |

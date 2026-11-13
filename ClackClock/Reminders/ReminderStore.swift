@@ -1,5 +1,4 @@
 import Foundation
-import Combine
 
 /// Single source of truth for user-created reminders, persisted as JSON in
 /// UserDefaults — mirrors `AppSettings`' persistence style; the list is
@@ -25,10 +24,6 @@ final class ReminderStore: ObservableObject {
         reminders.filter { !$0.isAcknowledged && calendar.isDate($0.date, inSameDayAs: date) }
     }
 
-    func hasReminder(on date: Date) -> Bool {
-        !reminders(on: date).isEmpty
-    }
-
     func add(title: String, date: Date) {
         reminders.append(Reminder(date: date, title: title))
         save()
@@ -45,20 +40,6 @@ final class ReminderStore: ObservableObject {
               !reminders[index].isAcknowledged else { return }
         reminders[index].isAcknowledged = true
         save()
-    }
-
-    /// Acknowledges every reminder due today at once.
-    func acknowledgeAllDueToday() {
-        var updated = reminders
-        var changed = false
-        for index in reminders.indices where calendar.isDateInToday(reminders[index].date) && !reminders[index].isAcknowledged {
-            updated[index].isAcknowledged = true
-            changed = true
-        }
-        if changed {
-            reminders = updated
-            save()
-        }
     }
 
     /// Reminders due today that haven't been acknowledged yet — what
@@ -81,11 +62,6 @@ final class ReminderStore: ObservableObject {
     var widgetReminders: [Reminder] {
         let today = dueTodayUnacknowledged
         return (today.isEmpty ? upcomingWithin24Hours : today).sorted { $0.date < $1.date }
-    }
-
-    /// Retained for callers that only need to know whether reminder details are visible.
-    var hasReminderBanner: Bool {
-        !dueTodayUnacknowledged.isEmpty || !upcomingWithin24Hours.isEmpty
     }
 
     private func load() {

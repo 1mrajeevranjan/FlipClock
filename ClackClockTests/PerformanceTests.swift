@@ -16,13 +16,10 @@ final class PerformanceTests: XCTestCase {
     @MainActor
     func testDigitCacheReusesFacesWithoutMixingStylesOrHalves() {
         let size = CGSize(width: 30, height: 48)
-        let face = DigitFaceRenderer.face(for: "6", size: size, isDark: false)
-        XCTAssertTrue(face === DigitFaceRenderer.face(for: "6", size: size, isDark: false))
-        XCTAssertFalse(face === DigitFaceRenderer.face(for: "6", size: size, isDark: true))
-        let top = DigitFaceRenderer.halfFace(for: "6", cardSize: size, top: true, isDark: false)
-        XCTAssertTrue(top === DigitFaceRenderer.halfFace(for: "6", cardSize: size, top: true, isDark: false))
-        XCTAssertFalse(top === DigitFaceRenderer.halfFace(for: "6", cardSize: size, top: false, isDark: false))
-        XCTAssertEqual(top.height * 2, face.height)
+        let top = DigitFaceRenderer.halfFace(for: "6", cardSize: size, top: true, isDark: false, textColor: nil)
+        XCTAssertTrue(top === DigitFaceRenderer.halfFace(for: "6", cardSize: size, top: true, isDark: false, textColor: nil))
+        XCTAssertFalse(top === DigitFaceRenderer.halfFace(for: "6", cardSize: size, top: true, isDark: true, textColor: nil))
+        XCTAssertFalse(top === DigitFaceRenderer.halfFace(for: "6", cardSize: size, top: false, isDark: false, textColor: nil))
     }
 
     func testDateCardsIgnoreSecondTicksButRefreshAtLocalMidnightAndStyleChanges() {

@@ -115,29 +115,6 @@ final class AppSettingsTests: XCTestCase {
         XCTAssertTrue(settings.canAddWorldClock)
     }
 
-    /// Users of the single-second-clock version keep their clock, carried
-    /// over with the size and format it used to share with the main clock.
-    func testLegacySecondClockMigratesToTheFirstWorldClock() {
-        defaults.set(true, forKey: "showSecondClock")
-        defaults.set(true, forKey: "showSecondClockOverlay")
-        defaults.set("Europe/London", forKey: "secondTimezoneID")
-        defaults.set(OverlaySize.double.rawValue, forKey: "overlaySize")
-        defaults.set(TimeFormat.twentyFourHour.rawValue, forKey: "timeFormat")
-
-        let clocks = AppSettings(defaults: defaults).worldClocks
-        XCTAssertEqual(clocks.count, 1)
-        XCTAssertEqual(clocks.first?.timezoneID, "Europe/London")
-        XCTAssertEqual(clocks.first?.display, .both)
-        XCTAssertEqual(clocks.first?.widgetSize, .double)
-        XCTAssertEqual(clocks.first?.timeFormat, .twentyFourHour)
-    }
-
-    func testSwitchedOffLegacySecondClockIsNotMigrated() {
-        defaults.set(false, forKey: "showSecondClock")
-        defaults.set("Europe/London", forKey: "secondTimezoneID")
-        XCTAssertTrue(AppSettings(defaults: defaults).worldClocks.isEmpty)
-    }
-
     /// World clocks drop seconds in the menu bar so they fit beside the main
     /// clock on a notched display.
     func testMenuBarWorldClockIsNarrowerThanTheMainClock() {

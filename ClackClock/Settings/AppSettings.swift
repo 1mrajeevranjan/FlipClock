@@ -1,5 +1,4 @@
 import Foundation
-import Combine
 import ServiceManagement
 import SwiftUI
 import AppKit
@@ -313,24 +312,6 @@ final class AppSettings: ObservableObject {
         showDesktopOverlay || worldClocks.contains { $0.showsAsWidget }
     }
 
-    /// The pre-world-clocks app had exactly one extra clock stored as three
-    /// separate keys. Carried over as the first world clock the first time the
-    /// new list is read, but only if it was actually switched on.
-    private static func migratedWorldClocks(from defaults: UserDefaults) -> [WorldClock] {
-        let inMenuBar = defaults.object(forKey: Keys.legacyShowSecondClock) as? Bool ?? false
-        let asWidget = defaults.object(forKey: Keys.legacyShowSecondClockOverlay) as? Bool ?? false
-        guard inMenuBar || asWidget else { return [] }
-        let zone = defaults.string(forKey: Keys.legacySecondTimezoneID) ?? "UTC"
-        let format = (defaults.string(forKey: Keys.timeFormat)).flatMap(TimeFormat.init(rawValue:)) ?? .twelveHour
-        let size = (defaults.string(forKey: Keys.overlaySize)).flatMap(OverlaySize.init(rawValue:)) ?? .full
-        let clock = WorldClock(timezoneID: zone, showsInMenuBar: inMenuBar, showsAsWidget: asWidget, widgetSize: size, timeFormat: format)
-        // Keep the widget where the user had put it.
-        if let frame = defaults.string(forKey: "NSWindow Frame SecondClockOverlayFrame") {
-            defaults.set(frame, forKey: "NSWindow Frame \(WorldClockOverlayWindowController.frameAutosaveName(for: clock.id))")
-        }
-        return [clock]
-    }
-
     @Published var timeFormat: TimeFormat {
         didSet { defaults.set(timeFormat.rawValue, forKey: Keys.timeFormat) }
     }
@@ -502,9 +483,6 @@ final class AppSettings: ObservableObject {
         static let overlaySize = "overlaySize"
         static let meridiemStyle = "meridiemStyle"
         static let worldClocks = "worldClocks"
-        static let legacyShowSecondClock = "showSecondClock"
-        static let legacySecondTimezoneID = "secondTimezoneID"
-        static let legacyShowSecondClockOverlay = "showSecondClockOverlay"
         static let timeFormat = "timeFormat"
         static let showDateOnOverlay = "showDateOnOverlay"
         static let floatAcrossScreen = "floatAcrossScreen"
@@ -523,20 +501,9 @@ final class AppSettings: ObservableObject {
         theme = (defaults.string(forKey: Keys.theme)).flatMap(AppTheme.init(rawValue:)) ?? .system
         overlaySize = (defaults.string(forKey: Keys.overlaySize)).flatMap(OverlaySize.init(rawValue:)) ?? .full
         meridiemStyle = (defaults.string(forKey: Keys.meridiemStyle)).flatMap(MeridiemStyle.init(rawValue:)) ?? .text
-        if let data = defaults.data(forKey: Keys.worldClocks),
-           let stored = try? JSONDecoder().decode([WorldClock].self, from: data) {
-            worldClocks = Array(stored.prefix(WorldClock.maxCount))
-        } else {
-            let migrated = Self.migratedWorldClocks(from: defaults)
-            worldClocks = migrated
-            // Saved straight away (`didSet` doesn't run in `init`): otherwise
-            // the migrated clock got a fresh ID every launch, and with it a
-            // fresh widget-position and menu-bar-position key, so neither
-            // could ever stick.
-            if let data = try? JSONEncoder().encode(migrated) {
-                defaults.set(data, forKey: Keys.worldClocks)
-            }
-        }
+        worldClocks = defaults.data(forKey: Keys.worldClocks)
+            .flatMap { try? JSONDecoder().decode([WorldClock].self, from: $0) }
+            .map { Array($0.prefix(WorldClock.maxCount)) } ?? []
         timeFormat = (defaults.string(forKey: Keys.timeFormat)).flatMap(TimeFormat.init(rawValue:)) ?? .twelveHour
         showDateOnOverlay = defaults.object(forKey: Keys.showDateOnOverlay) as? Bool ?? true
         floatAcrossScreen = defaults.object(forKey: Keys.floatAcrossScreen) as? Bool ?? false
