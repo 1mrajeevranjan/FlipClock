@@ -192,26 +192,24 @@ final class FlapAnimatingNSView: NSView {
         prewarm(topValue)
     }
 
-    private func face(_ value: String, top: Bool, flap: Bool = false) -> CGImage? {
+    private func face(_ value: String, top: Bool) -> CGImage? {
         guard let style else { return nil }
-        return face(value, top: top, flap: flap, style: style)
+        return face(value, top: top, style: style)
     }
 
-    private func face(_ value: String, top: Bool, flap: Bool = false, style: FlipCardLayer.Style) -> CGImage? {
+    private func face(_ value: String, top: Bool, style: FlipCardLayer.Style) -> CGImage? {
         guard cardSize.width > 0, cardSize.height > 0 else { return nil }
-        // Solid cards bake their leaf colour into every half. Glass statics
-        // are glyph-only (the SwiftUI platter behind supplies the tint); the
-        // glass flap adds only a faint shade so it reads as a turning leaf
-        // without doubling the platter's tint.
-        let fill: NSColor? = style.glassCard && flap ? FlapColors.glassFlapShade : nil
+        // Solid cards bake their leaf colour into every half. Glass halves are
+        // glyph-only (the SwiftUI platter behind supplies the tint), and the
+        // flap uses that same face: any shade on the moving leaf showed as the
+        // card dimming mid-flip, then popping back to full contrast on landing.
         return DigitFaceRenderer.halfFace(
             for: value,
             cardSize: faceSize,
             top: top,
             isDark: style.isDark,
             textColor: style.textColor,
-            transparentBackground: style.glassCard && !flap,
-            fillColor: fill,
+            transparentBackground: style.glassCard,
             fontName: style.fontName,
             isMonospacedSystemFont: style.isMonospacedSystemFont,
             hingeThickness: style.hingeThickness,
@@ -302,7 +300,7 @@ final class FlapAnimatingNSView: NSView {
         flapLayer.anchorPoint = CGPoint(x: 0.5, y: 0)
         flapLayer.bounds = CGRect(x: 0, y: 0, width: cardSize.width, height: halfHeight)
         flapLayer.position = CGPoint(x: cardSize.width / 2, y: halfHeight)
-        flapLayer.contents = face(oldValue, top: true, flap: true)
+        flapLayer.contents = face(oldValue, top: true)
         flapLayer.transform = CATransform3DIdentity
         // A drop shadow on a glass leaf reads as a stray dark smudge
         // sweeping past the hinge line as the flap rotates — only the
@@ -345,7 +343,7 @@ final class FlapAnimatingNSView: NSView {
         flapLayer.anchorPoint = CGPoint(x: 0.5, y: 1)
         flapLayer.bounds = CGRect(x: 0, y: 0, width: cardSize.width, height: halfHeight)
         flapLayer.position = CGPoint(x: cardSize.width / 2, y: halfHeight)
-        flapLayer.contents = face(newValue, top: false, flap: true)
+        flapLayer.contents = face(newValue, top: false)
         flapLayer.transform = CATransform3DMakeRotation(startAngle, 1, 0, 0)
         CATransaction.commit()
 

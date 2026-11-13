@@ -173,6 +173,30 @@ final class WidgetLayoutTests: XCTestCase {
         XCTAssertNil(effect.appearance)
     }
 
+    /// A glass card's moving leaf must carry exactly the pixels of the static
+    /// half it lifts off (and lands as), or the card dims while it flips and
+    /// pops back to full contrast when the leaf lands.
+    @MainActor
+    func testGlassFlapLeafMatchesTheStaticHalfSoTheFlipNeverDims() throws {
+        try XCTSkipIf(NSWorkspace.shared.accessibilityDisplayShouldReduceMotion, "Reduce Motion snaps instead of flipping")
+        func pixels(_ contents: Any?) -> Data? {
+            guard let contents, CFGetTypeID(contents as CFTypeRef) == CGImage.typeID else { return nil }
+            return (contents as! CGImage).dataProvider?.data as Data?
+        }
+        for isDark in [false, true] {
+            let card = FlapAnimatingNSView(value: "0")
+            card.update(cardSize: CGSize(width: 40, height: 60),
+                        style: FlipCardLayer.Style(isDark: isDark, glassCard: true, textColor: nil, tintsIcons: false,
+                                                   fontName: nil, isMonospacedSystemFont: false, hingeThickness: 0))
+            // Sublayers in setUp order: static top, static bottom, flap.
+            let layers = try XCTUnwrap(card.layer?.sublayers)
+            let staticTop = try XCTUnwrap(pixels(layers[0].contents))
+            card.show("1")
+            XCTAssertFalse(layers[2].isHidden, "The flip should be running")
+            XCTAssertEqual(pixels(layers[2].contents), staticTop, "Glass leaf must not be shaded (isDark: \(isDark))")
+        }
+    }
+
     @MainActor
     func testStopwatchPacesTheVeryFirstHundredthsFlip() {
         let digit = FlapAnimatingNSView(value: "0")

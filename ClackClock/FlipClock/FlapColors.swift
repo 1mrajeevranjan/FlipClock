@@ -129,11 +129,6 @@ enum FlapColors {
     /// full-colour cards and the translucent dimmed ones.
     static let glassHinge = NSColor.black.withAlphaComponent(0.62)
 
-    /// Shade on the moving leaf of a glass card, so the flap reads as a
-    /// surface catching less light while it turns rather than a glyph
-    /// floating on its own.
-    static let glassFlapShade = NSColor.black.withAlphaComponent(0.06)
-
     static func digit(isDark: Bool) -> Color {
         isDark ? Color.white : Color.black
     }
