@@ -93,6 +93,7 @@
 		CCE56B0BC0384C059FDB4D3B /* Tennessee College.ttf in Resources */ = {isa = PBXBuildFile; fileRef = EF72BB2D2A1F5A6F97539D01 /* Tennessee College.ttf */; };
 		D01F63A2084AFC06A8CF2DB9 /* AddReminderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57207B8DF89348C3403EE1B2 /* AddReminderView.swift */; };
 		D2F531EC8AF5BE62C766C86C /* WorldClockCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89F1E3F62A8502AC630B22D8 /* WorldClockCard.swift */; };
+		D3842219FD02B0F3DA7C15F6 /* MissedReminders.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578DD70C573D2DBBF968C90E /* MissedReminders.swift */; };
 		D3B547EC08AD2A681ED6D2FB /* VibrantHostingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8120A372AECC369C299E66B9 /* VibrantHostingController.swift */; };
 		D923E70AD075DD2D3274F376 /* angrybirds-regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 02E1211796210A630A98B72A /* angrybirds-regular.ttf */; };
 		DA1829BD7466153F2253090B /* CountdownTimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC4366C5623EFBDB225AB664 /* CountdownTimerView.swift */; };
@@ -166,6 +167,7 @@
 		52C08D13425898BEB01BA584 /* WhiteSquareRedYesBlackEightWarsaw-Warsaw.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "WhiteSquareRedYesBlackEightWarsaw-Warsaw.ttf"; sourceTree = "<group>"; };
 		53C80629C1C325793FA70555 /* ClackClock.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ClackClock.entitlements; sourceTree = "<group>"; };
 		57207B8DF89348C3403EE1B2 /* AddReminderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddReminderView.swift; sourceTree = "<group>"; };
+		578DD70C573D2DBBF968C90E /* MissedReminders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissedReminders.swift; sourceTree = "<group>"; };
 		58FE84BAEB2987F7E050DC1E /* WhiteSquareRedYesBlackEightZero-Zero.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "WhiteSquareRedYesBlackEightZero-Zero.ttf"; sourceTree = "<group>"; };
 		5939B181AF8C890E3864B472 /* Pullstar-Holinight.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Pullstar-Holinight.ttf"; sourceTree = "<group>"; };
 		59591ECBC79318C58860D0F9 /* ReminderBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderBanner.swift; sourceTree = "<group>"; };
@@ -373,6 +375,7 @@
 			children = (
 				57207B8DF89348C3403EE1B2 /* AddReminderView.swift */,
 				0CF928686A01BA1ED090DC05 /* DueReminderBanner.swift */,
+				578DD70C573D2DBBF968C90E /* MissedReminders.swift */,
 				009B7F69308DFC350F63CB18 /* Reminder.swift */,
 				4E19C0BEE08437852DF2A261 /* ReminderBadge.swift */,
 				59591ECBC79318C58860D0F9 /* ReminderBanner.swift */,
@@ -565,6 +568,13 @@
 			path = DesktopOverlay;
 			sourceTree = "<group>";
 		};
+		"TEMP_035F65ED-2BF3-4563-928F-D2FB95A1D1C7" /* ClackClock */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = ClackClock;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -737,6 +747,7 @@
 				92D2EACB8C8EA4A98DBC7BF0 /* FlipTimeDisplay.swift in Sources */,
 				5B2AEA8E7106521C6DCE099E /* FontGridPicker.swift in Sources */,
 				B49170AE425D8D77AF101748 /* MenuBarClockView.swift in Sources */,
+				D3842219FD02B0F3DA7C15F6 /* MissedReminders.swift in Sources */,
 				B1096F8BF63C3A24F965FE8B /* OverlayContentView.swift in Sources */,
 				19BDB1762F956D722D0D472C /* OverlayWindow.swift in Sources */,
 				5B66AFAB30382A2E64FB7404 /* OverlayWindowController.swift in Sources */,

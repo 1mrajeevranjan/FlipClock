@@ -7,15 +7,21 @@ struct MenuBarClockView: View {
     /// (analytically, not measured), since `NSStatusItem`/`NSHostingView`
     /// sizing must be set explicitly before the view has done a layout
     /// pass.
-    static func itemSize(timeFormat: TimeFormat, meridiemStyle: MeridiemStyle = .text, display: MenuBarDisplay = .time) -> CGSize {
+    static func itemSize(timeFormat: TimeFormat, meridiemStyle: MeridiemStyle = .text, display: MenuBarDisplay = .time,
+                         showsBell: Bool = false) -> CGSize {
+        let clock: CGSize
         switch display {
         case .time:
-            return SplitFlapClockFace.idealSize(scale: 1, compact: true, showMeridiem: timeFormat == .twelveHour,
-                                                meridiemCards: meridiemStyle.cards(isPM: false).count)
+            clock = SplitFlapClockFace.idealSize(scale: 1, compact: true, showMeridiem: timeFormat == .twelveHour,
+                                                 meridiemCards: meridiemStyle.cards(isPM: false).count)
         case .date:
-            return CGSize(width: dateCardSize.width * 2 + dateDigitSpacing + datePadding * 2, height: dateCardSize.height)
+            clock = CGSize(width: dateCardSize.width * 2 + dateDigitSpacing + datePadding * 2, height: dateCardSize.height)
         }
+        // The clock's own trailing padding spaces the bell from the last card.
+        return showsBell ? CGSize(width: clock.width + bellDiameter + datePadding, height: clock.height) : clock
     }
+
+    static let bellDiameter: CGFloat = 15
 
     /// Same card as the compact clock face, so switching modes only drops cards.
     private static let dateCardSize = CGSize(width: 14, height: 20)
@@ -30,9 +36,25 @@ struct MenuBarClockView: View {
 
     let timeProvider: TimeProvider
     @ObservedObject var settings: AppSettings
+    /// Passed in, not observed: the status item has to be resized for the bell
+    /// before this view lays out (see `StatusItemController`).
+    var missedBell: MissedBellState = .none
     @Environment(\.colorScheme) private var systemColorScheme
 
     var body: some View {
+        HStack(spacing: 0) {
+            clock
+            if missedBell != .none {
+                MissedReminderBell(isRinging: missedBell == .ringing, diameter: Self.bellDiameter)
+                    .padding(.trailing, Self.datePadding)
+            }
+        }
+        .modifier(MissedReminderHop(isActive: missedBell == .ringing))
+        .frame(maxHeight: .infinity)
+    }
+
+    @ViewBuilder
+    private var clock: some View {
         // Status-item hosting doesn't reliably propagate preferredColorScheme.
         let isDark = settings.theme.resolvedColorScheme(system: systemColorScheme) == .dark
         switch settings.menuBarDisplay {

@@ -13,13 +13,18 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
     private let timerModel: CountdownTimer
     private let stopwatch: Stopwatch
     private let popoverPresentation: PopoverPresentation
+    private let notifications: ReminderNotifications
+    private var missedBell: MissedBellState = .none
     private let onOpenSettings: () -> Void
     private var hosting: NSHostingView<MenuBarClockView>?
     private var cancellables = Set<AnyCancellable>()
 
-    init(timeProvider: TimeProvider, settings: AppSettings, reminderStore: ReminderStore, timerModel: CountdownTimer, stopwatch: Stopwatch, onOpenSettings: @escaping () -> Void) {
+    @MainActor
+    init(timeProvider: TimeProvider, settings: AppSettings, reminderStore: ReminderStore, notifications: ReminderNotifications,
+         timerModel: CountdownTimer, stopwatch: Stopwatch, onOpenSettings: @escaping () -> Void) {
         self.timeProvider = timeProvider
         self.settings = settings
+        self.notifications = notifications
         self.timerModel = timerModel
         self.stopwatch = stopwatch
         popoverPresentation = PopoverPresentation(timeProvider: timeProvider, timerModel: timerModel, stopwatch: stopwatch)
@@ -38,7 +43,8 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         popover.behavior = .transient
         popover.delegate = self
         popover.contentViewController = VibrantHostingController(
-            rootView: PopoverClockView(timeProvider: timeProvider, settings: settings, reminderStore: reminderStore, timerModel: timerModel, stopwatch: stopwatch, presentation: popoverPresentation),
+            rootView: PopoverClockView(timeProvider: timeProvider, settings: settings, reminderStore: reminderStore, reminderNotifications: notifications,
+                                       timerModel: timerModel, stopwatch: stopwatch, presentation: popoverPresentation),
             settings: settings
         )
 
@@ -58,14 +64,35 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.updateHostedRootView() }
             .store(in: &cancellables)
+
+        // The hop to the next run-loop turn lets the state be read after it's stored.
+        Publishers.CombineLatest3(notifications.$missedIDs, notifications.$missedNeedsAttention, notifications.$isUserAway)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _, _, _ in
+                MainActor.assumeIsolated { self?.updateMissedBell() }
+            }
+            .store(in: &cancellables)
+    }
+
+    /// The bell needs its own slot in the status item, so a change resizes the item.
+    @MainActor
+    private func updateMissedBell() {
+        let bell: MissedBellState = notifications.missedIDs.isEmpty ? .none
+            : notifications.wantsMissedAttention ? .ringing : .waiting
+        guard bell != missedBell else { return }
+        missedBell = bell
+        applyItemSize(timeFormat: settings.timeFormat, meridiemStyle: settings.meridiemStyle, display: settings.menuBarDisplay)
     }
 
     private func applyItemSize(timeFormat: TimeFormat, meridiemStyle: MeridiemStyle, display: MenuBarDisplay) {
-        let itemSize = MenuBarClockView.itemSize(timeFormat: timeFormat, meridiemStyle: meridiemStyle, display: display)
+        let itemSize = MenuBarClockView.itemSize(timeFormat: timeFormat, meridiemStyle: meridiemStyle, display: display,
+                                                 showsBell: missedBell != .none)
         statusItem.length = itemSize.width
 
-        let hosting = NSHostingView(rootView: MenuBarClockView(timeProvider: timeProvider, settings: settings))
-        hosting.frame = NSRect(x: 0, y: 0, width: itemSize.width, height: itemSize.height)
+        let hosting = NSHostingView(rootView: MenuBarClockView(timeProvider: timeProvider, settings: settings, missedBell: missedBell))
+        // The button's full height with the clock centred, leaving the missed-reminder hop room.
+        let height = max(itemSize.height, statusItem.button?.bounds.height ?? 0)
+        hosting.frame = NSRect(x: 0, y: 0, width: itemSize.width, height: height)
         self.hosting = hosting
 
         if let button = statusItem.button {
@@ -85,7 +112,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
     /// it needs to be told explicitly, on the *button* itself (not just
     /// the hosted subview), that its content changed.
     private func updateHostedRootView() {
-        hosting?.rootView = MenuBarClockView(timeProvider: timeProvider, settings: settings)
+        hosting?.rootView = MenuBarClockView(timeProvider: timeProvider, settings: settings, missedBell: missedBell)
         statusItem.button?.needsDisplay = true
     }
 
@@ -114,6 +141,10 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
             // VibrantHostingController), which is the correct place to
             // control it without touching the frame's own resolution.
             popover.animates = !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+            // Opening the popover is noticing: the missed reminders it lists stop the bounce.
+            MainActor.assumeIsolated {
+                if !notifications.missedIDs.isEmpty { notifications.acknowledgeMissedAttention() }
+            }
             NSApp.activate(ignoringOtherApps: true)
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
             popover.contentViewController?.view.window?.makeKey()

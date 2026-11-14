@@ -130,6 +130,63 @@ final class ReminderNotificationsTests: XCTestCase {
         XCTAssertFalse(notifications.isRinging, "Acknowledging from the popover or menu bar also silences it")
     }
 
+    /// A reminder that rings while nobody is at the Mac (asleep or locked) is
+    /// "missed": the widget bounces for it once the user is back, stops when
+    /// they click it, and keeps listing it until it's dismissed.
+    @MainActor
+    func testRemindersThatRingWhileAwayAreMissedUntilDismissed() throws {
+        let suite = "ReminderMissedTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let store = ReminderStore(defaults: defaults)
+        let now = Date()
+        store.add(title: "Rings while here", date: now.addingTimeInterval(60))
+        store.add(title: "Team meeting", date: now.addingTimeInterval(120))
+        store.add(title: "Also while away", date: now.addingTimeInterval(180))
+        let here = store.reminders[0], meeting = store.reminders[1], also = store.reminders[2]
+        let notifications = ReminderNotifications(store: store, settings: AppSettings(defaults: defaults))
+        defer { notifications.stopAlarm() }
+
+        notifications.ringDueReminders(now: here.date)
+        XCTAssertTrue(notifications.missedIDs.isEmpty, "Ringing in front of the user isn't missed")
+
+        notifications.stopAlarm()
+        notifications.setUserAway(true)
+        notifications.ringDueReminders(now: also.date)
+        XCTAssertEqual(notifications.missedIDs, [meeting.id, also.id])
+        XCTAssertFalse(notifications.wantsMissedAttention, "Nobody's there to see a bounce yet")
+        XCTAssertFalse(notifications.isRinging, "Missed reminders don't ring: the moment has passed")
+        XCTAssertTrue(notifications.ringingIDs.isEmpty, "...nor show ClackClock's banner")
+        XCTAssertTrue(notifications.presentationOptions(for: ReminderNotifications.identifier(for: meeting.id),
+                                                        now: also.date).isEmpty, "...nor macOS's own alert")
+
+        notifications.setUserAway(false)
+        XCTAssertTrue(notifications.wantsMissedAttention, "Back at the Mac: the widget asks for attention")
+        XCTAssertEqual(notifications.missedReminders.map(\.title), ["Team meeting", "Also while away"])
+
+        notifications.acknowledgeMissedAttention()
+        XCTAssertFalse(notifications.wantsMissedAttention, "Clicking the widget stops the bounce")
+        XCTAssertEqual(notifications.missedIDs.count, 2, "...but the missed reminders stay listed")
+
+        notifications.handleResponse(actionIdentifier: ReminderNotifications.dismissActionIdentifier,
+                                     requestIdentifier: ReminderNotifications.identifier(for: meeting.id))
+        XCTAssertEqual(notifications.missedIDs, [also.id])
+        XCTAssertFalse(store.reminders.contains { $0.id == meeting.id })
+
+        store.add(title: "Next one", date: also.date.addingTimeInterval(60))
+        let next = try XCTUnwrap(store.reminders.last)
+        notifications.setUserAway(true)
+        notifications.ringDueReminders(now: next.date)
+        notifications.setUserAway(false)
+        XCTAssertTrue(notifications.wantsMissedAttention, "A new missed reminder asks for attention again")
+
+        store.acknowledge(also)
+        store.acknowledge(next)
+        notifications.ringDueReminders(now: next.date.addingTimeInterval(1))
+        XCTAssertTrue(notifications.missedIDs.isEmpty, "Acknowledged elsewhere: no longer missed")
+        XCTAssertFalse(notifications.wantsMissedAttention)
+    }
+
     func testNativeAlertHandsOverToTheAppBannerJustBeforeItsDue() throws {
         let now = Date()
         let lead = ReminderNotifications.handoverLead

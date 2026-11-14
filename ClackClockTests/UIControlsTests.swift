@@ -111,7 +111,7 @@ final class UIControlsTests: XCTestCase {
 
     // MARK: Popover
 
-    private func popover(date: Date = Date()) -> (HostedView<PopoverClockView>, PopoverPresentation) {
+    private func popover(date: Date = Date(), notifications: ReminderNotifications? = nil) -> (HostedView<PopoverClockView>, PopoverPresentation) {
         let timeProvider = TimeProvider()
         let timer = CountdownTimer(playCompletionSound: {})
         let stopwatch = Stopwatch()
@@ -119,8 +119,30 @@ final class UIControlsTests: XCTestCase {
                                                now: { date })
         presentation.setPresented(true, timeProvider: timeProvider, date: date)
         let view = PopoverClockView(timeProvider: timeProvider, settings: settings, reminderStore: store,
+                                    reminderNotifications: notifications ?? ReminderNotifications(store: store, settings: settings),
                                     timerModel: timer, stopwatch: stopwatch, presentation: presentation)
         return (HostedView(view), presentation)
+    }
+
+    /// A reminder missed while away is listed in the menu bar popover with a
+    /// Dismiss button, and isn't repeated under "Due Today".
+    func testPopoverListsMissedRemindersWithDismissInsteadOfDueToday() throws {
+        let now = Date().addingTimeInterval(30)
+        store.add(title: "Team meeting", date: now)
+        store.add(title: "Later today", date: now.addingTimeInterval(60))
+        let meeting = store.reminders[0]
+        let notifications = ReminderNotifications(store: store, settings: settings)
+        defer { notifications.stopAlarm() }
+        notifications.setUserAway(true)
+        notifications.ringDueReminders(now: now)
+        notifications.setUserAway(false)
+
+        let (ui, _) = popover(date: now, notifications: notifications)
+        XCTAssertTrue(ui.has("Missed"))
+        XCTAssertFalse(ui.has("Acknowledge Team meeting"), "Listed once, under Missed")
+        try ui.press("Dismiss Team meeting")
+        XCTAssertFalse(store.reminders.contains { $0.id == meeting.id })
+        XCTAssertTrue(notifications.missedIDs.isEmpty)
     }
 
     func testPopoverTabsSwitchTools() throws {
@@ -289,6 +311,16 @@ final class UIControlsTests: XCTestCase {
         button.select(ping)
         coordinator.picked(button)
         XCTAssertEqual(selection.label, "Ping")
+    }
+
+    func testMissedReminderPopUpDismissesTheReminderOnItsRow() throws {
+        let meeting = Reminder(date: Date(), title: "Team meeting")
+        let gym = Reminder(date: Date(), title: "Gym")
+        var dismissed: [String] = []
+        let ui = HostedView(MissedRemindersView(reminders: [meeting, gym]) { dismissed.append($0.title) })
+        XCTAssertTrue(ui.has("Missed Reminders"))
+        try ui.press("Dismiss Gym")
+        XCTAssertEqual(dismissed, ["Gym"])
     }
 
     func testFontGridArrowKeysMoveByTileAndRowWithoutLeavingTheList() {

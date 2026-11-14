@@ -137,6 +137,16 @@ final class AppSettingsTests: XCTestCase {
         XCTAssertEqual(worldText - worldIcon, text - icon, accuracy: 0.01)
     }
 
+    func testMenuBarItemMakesRoomForTheMissedReminderBellOnlyWhileItShows() {
+        for display in MenuBarDisplay.allCases {
+            let plain = MenuBarClockView.itemSize(timeFormat: .twelveHour, meridiemStyle: .icon, display: display)
+            let belled = MenuBarClockView.itemSize(timeFormat: .twelveHour, meridiemStyle: .icon, display: display, showsBell: true)
+            XCTAssertEqual(belled.width - plain.width, MenuBarClockView.bellDiameter + 4, accuracy: 0.01)
+            XCTAssertEqual(belled.height, plain.height)
+            XCTAssertLessThanOrEqual(MenuBarClockView.bellDiameter, plain.height, "The bell fits the menu bar's card height")
+        }
+    }
+
     func testMenuBarShowsTheTimeUntilTheDateIsChosenAndTheChoicePersists() {
         let first = AppSettings(defaults: defaults)
         XCTAssertEqual(first.menuBarDisplay, .time)

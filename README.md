@@ -102,6 +102,7 @@ Every character (digits, weekday, date, AM/PM) is a real rasterised flip card wi
   - Clicking the banner body only silences the sound.
 - **If ClackClock isn't running,** the native macOS notification still fires.
 - **After sleep,** reminders that came due while the Mac slept ring on wake. Reminders that were already overdue at launch are never replayed.
+- **Missed reminders:** a reminder that comes due while the Mac is asleep or locked doesn't ring or show a banner — by the time you're back the moment has passed. Instead, once you unlock, the menu bar clock and the desktop widget bounce with a ringing red bell until you click either one. The menu bar popover then lists them under **Missed**, and clicking the widget opens the same list; each has a **Dismiss** button.
 
 > [!NOTE]
 > macOS can hold its own notifications back by several seconds while it runs Apple Intelligence processing on them. That's why ClackClock shows its own banner instead, and withdraws the native notification 5 seconds before the reminder is due so you never see it twice.

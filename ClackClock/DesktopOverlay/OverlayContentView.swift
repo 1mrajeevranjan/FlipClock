@@ -135,6 +135,8 @@ struct OverlayContentView: View {
     /// `GeometryReader` preference never reached `onPreferenceChange` in this
     /// window, so the clock silently fell back to `overlaySize`.
     var fillArea: CGSize = .zero
+    /// Set by `OverlayWindowController` from `ReminderNotifications`' missed reminders.
+    var missedBell: MissedBellState = .none
 
     private var contentScale: CGFloat {
         guard settings.fillScreen, fillArea.width > 0, fillArea.height > 0 else { return settings.overlaySize.scale }
@@ -181,6 +183,15 @@ struct OverlayContentView: View {
         // weekday) otherwise pins content to the window's top-left corner
         // instead of centering it, producing lopsided margins.
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .overlay(alignment: .topTrailing) {
+            if missedBell != .none {
+                // Sized with the widget so it reads at a glance, and set in from the
+                // corner so the rounded edge doesn't clip it; the top-right sits clear
+                // of the AM/PM card at every size.
+                MissedReminderBell(isRinging: missedBell == .ringing, diameter: (34 * scale).clamped(to: 22...46))
+                    .padding((9 * scale).clamped(to: 7...14))
+            }
+        }
         .background(
             WidgetGlassBackground(scale: settings.overlaySize.scale, fullyClear: settings.fillScreen, backdropImage: backdropCapture.image, dimmedBackdropImage: backdropCapture.dimmedImage, tone: settings.widgetGlassTone)
                 // The fade between vivid and dimmed the system's own widgets do
@@ -198,7 +209,8 @@ struct OverlayContentView: View {
 
     private var accessibilityText: String {
         let time = Self.spokenTime(tick.date, showDate: settings.showDateOnOverlay)
-        return ([time] + reminders.map { $0.summary(relativeTo: tick.date) }).joined(separator: ". ")
+        let missed = missedBell == .none ? [] : ["Missed reminder — click the widget to see it"]
+        return (missed + [time] + reminders.map { $0.summary(relativeTo: tick.date) }).joined(separator: ". ")
     }
 }
 

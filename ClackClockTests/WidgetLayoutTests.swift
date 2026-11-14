@@ -282,4 +282,22 @@ final class WidgetLayoutTests: XCTestCase {
             XCTAssert((11...22).contains(OverlayContentView.padding(scale: size.scale)), "\(size)")
         }
     }
+
+    /// The missed-reminder bounce must stay inside the widget's window: the
+    /// window clips its content, so any frame poking past it would be cut off.
+    func testMissedReminderBounceNeverLeavesTheWidget() {
+        for size in [CGSize(width: 339, height: 249), CGSize(width: 658, height: 447), CGSize(width: 1470, height: 900)] {
+            let bounds = CGRect(origin: .zero, size: size)
+            let transforms = WidgetBounce.transforms(size: size)
+            XCTAssertTrue(CATransform3DIsIdentity(transforms.first!) && CATransform3DIsIdentity(transforms.last!),
+                          "Each cycle starts and rests exactly in place")
+            XCTAssertTrue(transforms.contains { $0.m42 > 0 }, "It actually hops")
+            for transform in transforms {
+                let affine = CATransform3DGetAffineTransform(transform)
+                let moved = bounds.applying(affine)
+                XCTAssertTrue(bounds.insetBy(dx: -0.5, dy: -0.5).contains(moved), "\(moved) leaves \(bounds)")
+            }
+        }
+        XCTAssertEqual(WidgetBounce.animation(size: CGSize(width: 100, height: 100)).repeatCount, .infinity)
+    }
 }
