@@ -27,7 +27,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         super.init()
 
-        applyItemSize(timeFormat: settings.timeFormat, display: settings.menuBarDisplay)
+        applyItemSize(timeFormat: settings.timeFormat, meridiemStyle: settings.meridiemStyle, display: settings.menuBarDisplay)
 
         if let button = statusItem.button {
             button.target = self
@@ -42,22 +42,14 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
             settings: settings
         )
 
-        // Switching 12h/24h changes whether the AM/PM card renders, which
-        // changes the item's ideal width — reapply so the status item
-        // never ends up with leftover empty space or clipped content.
-        settings.$timeFormat
+        // 12h/24h, AM/PM vs Sun/Moon and Time vs Date all change the item's
+        // ideal width — reapply so it never has leftover space or clipped
+        // content. @Published emits before the property changes, so the new
+        // values come from the publishers rather than from `settings`.
+        Publishers.CombineLatest3(settings.$timeFormat, settings.$meridiemStyle, settings.$menuBarDisplay)
             .dropFirst()
-            .sink { [weak self] format in
-                guard let self else { return }
-                applyItemSize(timeFormat: format, display: settings.menuBarDisplay)
-            }
-            .store(in: &cancellables)
-
-        settings.$menuBarDisplay
-            .dropFirst()
-            .sink { [weak self] display in
-                guard let self else { return }
-                applyItemSize(timeFormat: settings.timeFormat, display: display)
+            .sink { [weak self] format, meridiem, display in
+                self?.applyItemSize(timeFormat: format, meridiemStyle: meridiem, display: display)
             }
             .store(in: &cancellables)
 
@@ -68,8 +60,8 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
             .store(in: &cancellables)
     }
 
-    private func applyItemSize(timeFormat: TimeFormat, display: MenuBarDisplay) {
-        let itemSize = MenuBarClockView.itemSize(timeFormat: timeFormat, display: display)
+    private func applyItemSize(timeFormat: TimeFormat, meridiemStyle: MeridiemStyle, display: MenuBarDisplay) {
+        let itemSize = MenuBarClockView.itemSize(timeFormat: timeFormat, meridiemStyle: meridiemStyle, display: display)
         statusItem.length = itemSize.width
 
         let hosting = NSHostingView(rootView: MenuBarClockView(timeProvider: timeProvider, settings: settings))

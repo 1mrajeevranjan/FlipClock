@@ -13,8 +13,9 @@ struct WorldClockMenuBarView: View {
     /// Measured, not left to layout: the status item's length has to be set
     /// before SwiftUI has laid anything out (same reason as
     /// `MenuBarClockView.itemSize`).
-    static func itemSize(label: String, timeFormat: TimeFormat) -> CGSize {
-        let clock = SplitFlapClockFace.idealSize(scale: 1, compact: true, showMeridiem: timeFormat == .twelveHour, showSeconds: false)
+    static func itemSize(label: String, timeFormat: TimeFormat, meridiemStyle: MeridiemStyle = .text) -> CGSize {
+        let clock = SplitFlapClockFace.idealSize(scale: 1, compact: true, showMeridiem: timeFormat == .twelveHour, showSeconds: false,
+                                                 meridiemCards: meridiemStyle.cards(isPM: false).count)
         let labelWidth = ceil((label as NSString).size(withAttributes: [.font: labelFont]).width)
         return CGSize(width: labelWidth + labelSpacing + clock.width, height: clock.height)
     }

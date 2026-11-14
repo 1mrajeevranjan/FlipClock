@@ -123,6 +123,20 @@ final class AppSettingsTests: XCTestCase {
         XCTAssertLessThan(world, main)
     }
 
+    /// Sun/Moon is one card, AM/PM two. Reserving two for both left a whole
+    /// card of empty space around the Sun/Moon clock, split across both sides.
+    func testMenuBarClocksReserveOnlyTheMeridiemCardsTheyShow() {
+        let none = MenuBarClockView.itemSize(timeFormat: .twentyFourHour, meridiemStyle: .icon).width
+        let icon = MenuBarClockView.itemSize(timeFormat: .twelveHour, meridiemStyle: .icon).width
+        let text = MenuBarClockView.itemSize(timeFormat: .twelveHour, meridiemStyle: .text).width
+        let card = icon - none - 4 // one gap (row spacing) plus the single icon card
+        XCTAssertEqual(text - icon, card + 2, accuracy: 0.01, "AM/PM adds exactly one more card and its 2pt gap")
+
+        let worldIcon = WorldClockMenuBarView.itemSize(label: "TOKYO", timeFormat: .twelveHour, meridiemStyle: .icon).width
+        let worldText = WorldClockMenuBarView.itemSize(label: "TOKYO", timeFormat: .twelveHour, meridiemStyle: .text).width
+        XCTAssertEqual(worldText - worldIcon, text - icon, accuracy: 0.01)
+    }
+
     func testMenuBarShowsTheTimeUntilTheDateIsChosenAndTheChoicePersists() {
         let first = AppSettings(defaults: defaults)
         XCTAssertEqual(first.menuBarDisplay, .time)

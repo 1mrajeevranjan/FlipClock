@@ -31,8 +31,9 @@ final class WorldClockStatusItemController {
             .sink { [weak self] clock in self?.render(clock) }
             .store(in: &cancellables)
 
-        settings.$theme
-            .dropFirst()
+        settings.$theme.map { _ in () }
+            .merge(with: settings.$meridiemStyle.map { _ in () })
+            .dropFirst(2)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 guard let self, let clock = self.settings.worldClocks.first(where: { $0.id == self.clockID }) else { return }
@@ -42,7 +43,7 @@ final class WorldClockStatusItemController {
     }
 
     private func render(_ clock: WorldClock) {
-        let size = WorldClockMenuBarView.itemSize(label: clock.menuBarLabel, timeFormat: clock.timeFormat)
+        let size = WorldClockMenuBarView.itemSize(label: clock.menuBarLabel, timeFormat: clock.timeFormat, meridiemStyle: settings.meridiemStyle)
         statusItem.length = size.width
 
         let hosting = NSHostingView(rootView: WorldClockMenuBarView(timeProvider: timeProvider, clock: clock, settings: settings))
