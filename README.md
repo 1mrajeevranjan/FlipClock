@@ -61,6 +61,7 @@ Every character (digits, weekday, date, AM/PM) is a real rasterised flip card wi
 ### Menu bar clock
 
 - Live split-flap clock in the menu bar, always at full brightness.
+- Or show only today's day of the month (e.g. `14`) to save menu bar space.
 - Left-click opens the popover. Right-click opens Settings, More (About, Support & Feedback, Tips, FAQ, Website, Share App, More Apps by Me) and Quit.
 
 ### Popover
@@ -111,8 +112,9 @@ Every character (digits, weekday, date, AM/PM) is a real rasterised flip card wi
 |---|---|
 | Theme | Light, Dark, System |
 | Time format | 12-hour, 24-hour |
+| Menu bar | Time, or the day of the month only |
 | AM/PM style | Text or a sun/moon icon |
-| Digit font | System plus 37 bundled decorative fonts |
+| Digit font | System plus 37 bundled decorative fonts; the menu shows each in its own face and the preview follows the highlighted one |
 | Widget style | Full Color, Monochrome |
 | Card colour | Default, Graphite, Red, Orange, Yellow, Green, Blue, Purple, Pink |
 | Frosted glass | Translucent smoked-glass cards that keep a hint of the chosen colour |

@@ -73,6 +73,21 @@ enum TimeFormat: String, CaseIterable, Identifiable, Codable {
     }
 }
 
+/// What the menu bar item flips: the full time, or only today's day of the
+/// month — one card pair, for a crowded (notched) menu bar.
+enum MenuBarDisplay: String, CaseIterable, Identifiable {
+    case time, date
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .time: return "Time"
+        case .date: return "Date"
+        }
+    }
+}
+
 enum MeridiemStyle: String, CaseIterable, Identifiable {
     case text, icon
 
@@ -283,6 +298,10 @@ final class AppSettings: ObservableObject {
         didSet { defaults.set(meridiemStyle.rawValue, forKey: Keys.meridiemStyle) }
     }
 
+    @Published var menuBarDisplay: MenuBarDisplay {
+        didSet { defaults.set(menuBarDisplay.rawValue, forKey: Keys.menuBarDisplay) }
+    }
+
     /// Extra time-zone clocks beside the main one, in the order the user
     /// added them — at most `WorldClock.maxCount`. Persisted as JSON.
     @Published var worldClocks: [WorldClock] {
@@ -482,6 +501,7 @@ final class AppSettings: ObservableObject {
         static let theme = "theme"
         static let overlaySize = "overlaySize"
         static let meridiemStyle = "meridiemStyle"
+        static let menuBarDisplay = "menuBarDisplay"
         static let worldClocks = "worldClocks"
         static let timeFormat = "timeFormat"
         static let showDateOnOverlay = "showDateOnOverlay"
@@ -501,6 +521,7 @@ final class AppSettings: ObservableObject {
         theme = (defaults.string(forKey: Keys.theme)).flatMap(AppTheme.init(rawValue:)) ?? .system
         overlaySize = (defaults.string(forKey: Keys.overlaySize)).flatMap(OverlaySize.init(rawValue:)) ?? .full
         meridiemStyle = (defaults.string(forKey: Keys.meridiemStyle)).flatMap(MeridiemStyle.init(rawValue:)) ?? .text
+        menuBarDisplay = (defaults.string(forKey: Keys.menuBarDisplay)).flatMap(MenuBarDisplay.init(rawValue:)) ?? .time
         worldClocks = defaults.data(forKey: Keys.worldClocks)
             .flatMap { try? JSONDecoder().decode([WorldClock].self, from: $0) }
             .map { Array($0.prefix(WorldClock.maxCount)) } ?? []
