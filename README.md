@@ -62,7 +62,7 @@ Every character (digits, weekday, date, AM/PM) is a real rasterised flip card wi
 
 - Live split-flap clock in the menu bar, always at full brightness.
 - Or show only today's day of the month (e.g. `14`) to save menu bar space.
-- Left-click opens the popover. Right-click opens Settings, More (About, Support & Feedback, Tips, FAQ, Website, Share App, More Apps by Me) and Quit.
+- Left-click opens the popover. Right-click opens Settings, More (About, Support & Feedback, Tips, FAQ, Website, Rate App, Share App, More Apps by Me) and Quit.
 
 ### Popover
 

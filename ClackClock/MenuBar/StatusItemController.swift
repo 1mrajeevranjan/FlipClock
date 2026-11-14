@@ -191,12 +191,13 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
     }
 
     enum Links {
-        static let website = URL(string: "https://github.com/1mrajeevranjan/ClackClock")!
-        static let support = URL(string: "https://github.com/1mrajeevranjan/ClackClock/issues")!
-        static let moreApps = URL(string: "https://github.com/1mrajeevranjan")!
+        static let website = URL(string: "https://www.mishorastudio.com/apps/clackclock")!
+        static let support = URL(string: "https://www.mishorastudio.com/contact")!
+        static let moreApps = URL(string: "https://www.mishorastudio.com/apps")!
+        // ponytail: the app's page until there's an App Store listing; then its review URL.
+        static let rate = website
     }
 
-    // ponytail: no "Rate App" until there's an App Store listing to rate on.
     static func makeMoreMenu(target: NSObject) -> NSMenu {
         let submenu = NSMenu()
         func item(_ title: String, symbol: String, action: Selector) {
@@ -213,6 +214,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         item("FAQ", symbol: "questionmark.circle", action: #selector(showFAQ))
         item("Website", symbol: "globe", action: #selector(openWebsite))
         submenu.addItem(.separator())
+        item("Rate App", symbol: "star", action: #selector(rateApp))
         item("Share App", symbol: "square.and.arrow.up", action: #selector(shareApp))
         item("More Apps by Me", symbol: "square.stack.3d.up", action: #selector(openMoreApps))
         return submenu
@@ -253,6 +255,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
     @objc private func openSupport() { NSWorkspace.shared.open(Links.support) }
     @objc private func openWebsite() { NSWorkspace.shared.open(Links.website) }
     @objc private func openMoreApps() { NSWorkspace.shared.open(Links.moreApps) }
+    @objc private func rateApp() { NSWorkspace.shared.open(Links.rate) }
 
     @objc private func shareApp() {
         guard let button = statusItem.button else { return }
