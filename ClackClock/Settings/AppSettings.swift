@@ -523,7 +523,7 @@ final class AppSettings: ObservableObject {
         theme = (defaults.string(forKey: Keys.theme)).flatMap(AppTheme.init(rawValue:)) ?? .system
         overlaySize = (defaults.string(forKey: Keys.overlaySize)).flatMap(OverlaySize.init(rawValue:)) ?? .full
         meridiemStyle = (defaults.string(forKey: Keys.meridiemStyle)).flatMap(MeridiemStyle.init(rawValue:)) ?? .text
-        menuBarDisplay = (defaults.string(forKey: Keys.menuBarDisplay)).flatMap(MenuBarDisplay.init(rawValue:)) ?? .time
+        menuBarDisplay = (defaults.string(forKey: Keys.menuBarDisplay)).flatMap(MenuBarDisplay.init(rawValue:)) ?? .date
         worldClocks = defaults.data(forKey: Keys.worldClocks)
             .flatMap { try? JSONDecoder().decode([WorldClock].self, from: $0) }
             .map { Array($0.prefix(WorldClock.maxCount)) } ?? []

@@ -147,11 +147,12 @@ final class AppSettingsTests: XCTestCase {
         }
     }
 
-    func testMenuBarShowsTheTimeUntilTheDateIsChosenAndTheChoicePersists() {
+    /// The compact date is the default: it fits a crowded notched menu bar.
+    func testMenuBarShowsTheDateUntilTheTimeIsChosenAndTheChoicePersists() {
         let first = AppSettings(defaults: defaults)
-        XCTAssertEqual(first.menuBarDisplay, .time)
-        first.menuBarDisplay = .date
-        XCTAssertEqual(AppSettings(defaults: defaults).menuBarDisplay, .date)
+        XCTAssertEqual(first.menuBarDisplay, .date)
+        first.menuBarDisplay = .time
+        XCTAssertEqual(AppSettings(defaults: defaults).menuBarDisplay, .time)
     }
 
     /// The date option exists to save menu bar space, so it has to be one flip
