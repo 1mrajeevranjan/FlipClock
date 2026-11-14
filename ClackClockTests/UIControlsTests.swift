@@ -257,6 +257,40 @@ final class UIControlsTests: XCTestCase {
         XCTAssertEqual(settings.widgetFont.label, "Dynamix")
     }
 
+    /// Moving through the open sound list (pointer or arrow keys) plays each
+    /// sound; merely opening the list — which highlights the current choice —
+    /// must stay silent, and nothing is chosen until an item is picked.
+    func testSoundListPreviewsEachHighlightedSoundButNotTheOneItOpensOn() throws {
+        let menu = SoundPopUpPicker.makeMenu()
+        XCTAssertEqual(menu.items.map(\.title), ReminderSound.all.map(\.label))
+        let glass = try XCTUnwrap(menu.items.first { $0.title == "Glass" })
+        let ping = try XCTUnwrap(menu.items.first { $0.title == "Ping" })
+
+        var selection = ReminderSound.byID("Glass.aiff")
+        var played: [String] = []
+        let coordinator = SoundPopUpPicker.Coordinator(SoundPopUpPicker(
+            selection: Binding(get: { selection }, set: { selection = $0 }),
+            onPreview: { played.append($0.label) }
+        ))
+        let button = NSPopUpButton(frame: .zero, pullsDown: false)
+        button.menu = menu
+        button.select(glass)
+        coordinator.button = button
+
+        coordinator.menuWillOpen(menu)
+        coordinator.menu(menu, willHighlight: glass)
+        XCTAssertEqual(played, [], "Opening the list highlights the current sound without playing it")
+        coordinator.menu(menu, willHighlight: ping)
+        coordinator.menu(menu, willHighlight: nil)
+        coordinator.menu(menu, willHighlight: glass)
+        XCTAssertEqual(played, ["Ping", "Glass"])
+        XCTAssertEqual(selection.label, "Glass", "Previewing doesn't choose")
+
+        button.select(ping)
+        coordinator.picked(button)
+        XCTAssertEqual(selection.label, "Ping")
+    }
+
     func testFontGridArrowKeysMoveByTileAndRowWithoutLeavingTheList() {
         let count = 10, columns = 3
         XCTAssertEqual(FontGridPicker.moved(from: 4, by: .rightArrow, count: count, columns: columns), 5)

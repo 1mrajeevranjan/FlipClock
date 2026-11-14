@@ -132,10 +132,8 @@ struct SettingsView: View {
                 Divider()
                 SettingsRow("Notification sound") {
                     HStack(spacing: 8) {
-                        Picker("Notification sound", selection: $settings.reminderSound) {
-                            ForEach(ReminderSound.all) { Text($0.label).tag($0) }
-                        }
-                        .pickerStyle(.menu)
+                        SoundPopUpPicker(selection: $settings.reminderSound) { reminderNotifications.playPreview($0) }
+                            .fixedSize()
                         Button { reminderNotifications.playPreview(settings.reminderSound) } label: {
                             Image(systemName: "speaker.wave.2.fill").frame(width: 24, height: 24)
                         }

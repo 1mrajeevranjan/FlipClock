@@ -77,6 +77,7 @@
 		A5FB990FDC945BC5EC29003A /* WidgetFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCEEA19EE16DB81E4193FBD7 /* WidgetFont.swift */; };
 		A6FC347D7F9FF55FB0439FE2 /* moon.png in Resources */ = {isa = PBXBuildFile; fileRef = 5DE5C0D7C142D5B47F5588B2 /* moon.png */; };
 		AA49FFBD8EC5066D539B6DD2 /* Reminder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 009B7F69308DFC350F63CB18 /* Reminder.swift */; };
+		AFB201356D91B05D16800D75 /* SoundPopUpPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = C06084734E029366FEB096F0 /* SoundPopUpPicker.swift */; };
 		B1096F8BF63C3A24F965FE8B /* OverlayContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC233EB51EB23A2F247F60F0 /* OverlayContentView.swift */; };
 		B10B823E1929C7949DE3D690 /* ClockTick.swift in Sources */ = {isa = PBXBuildFile; fileRef = D342C436BFA37683F7CA1024 /* ClockTick.swift */; };
 		B314C7D917179AAC0767B5A8 /* StatusItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 728D9D185A09578FB6A1CCD5 /* StatusItemController.swift */; };
@@ -206,6 +207,7 @@
 		BC4366C5623EFBDB225AB664 /* CountdownTimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownTimerView.swift; sourceTree = "<group>"; };
 		BDF655AAC23963B85EA4B91D /* Vlump Black.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Vlump Black.ttf"; sourceTree = "<group>"; };
 		BE8F7DCE2631DB135DDAFF2A /* Destroy All Humans!.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Destroy All Humans!.otf"; sourceTree = "<group>"; };
+		C06084734E029366FEB096F0 /* SoundPopUpPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundPopUpPicker.swift; sourceTree = "<group>"; };
 		C30E99A660838F24945EC2D7 /* DigitDelta.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigitDelta.swift; sourceTree = "<group>"; };
 		C379C726B35E237B714820E2 /* StopwatchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StopwatchView.swift; sourceTree = "<group>"; };
 		C88F2E69960F857AB0E9EAC9 /* Sportfield Varsity-Italic.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Sportfield Varsity-Italic.otf"; sourceTree = "<group>"; };
@@ -325,6 +327,7 @@
 				0BD7EF6BB5DCF1B8A9599FFA /* FontGridPicker.swift */,
 				E5E8E4841DCFFA2FFB4D259B /* SettingsView.swift */,
 				4136E0697AE1920BBA44A3E2 /* SettingsWindowController.swift */,
+				C06084734E029366FEB096F0 /* SoundPopUpPicker.swift */,
 				0DA34DA01723AF0C6E20230B /* WorldClock.swift */,
 				89F1E3F62A8502AC630B22D8 /* WorldClockCard.swift */,
 			);
@@ -747,6 +750,7 @@
 				6B941B1AA53DAE7EECF739EF /* ReminderStore.swift in Sources */,
 				0C5CCED7CC442A053695F385 /* SettingsView.swift in Sources */,
 				403C36B635BA0EA34D047210 /* SettingsWindowController.swift in Sources */,
+				AFB201356D91B05D16800D75 /* SoundPopUpPicker.swift in Sources */,
 				DE2DAC92B15B134FCDC8F1CA /* SplitFlapClockFace.swift in Sources */,
 				354602225076DA47E7F2C35E /* SplitFlapDigit.swift in Sources */,
 				201835F8CDC5CD7D14936212 /* SplitFlapPairView.swift in Sources */,

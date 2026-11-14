@@ -118,7 +118,7 @@ Every character (digits, weekday, date, AM/PM) is a real rasterised flip card wi
 | Widget style | Full Color, Monochrome |
 | Card colour | Default, Graphite, Red, Orange, Yellow, Green, Blue, Purple, Pink |
 | Frosted glass | Translucent smoked-glass cards that keep a hint of the chosen colour |
-| Reminder sound | Your system alert sound, or any built-in macOS alert sound (with preview) |
+| Reminder sound | Your system alert sound, or any built-in macOS alert sound; each plays as you move to it in the open list |
 | Launch at login | On or off |
 
 ## Requirements
