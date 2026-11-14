@@ -1,12 +1,26 @@
 name: ClackClock
 options:
   bundleIdPrefix: com.rajeevranjan
+  # Marks the project as already on Xcode 27's recommended settings, so Xcode
+  # doesn't offer the upgrade (and rewrite the generated project) again.
+  xcodeVersion: "27.2"
   deploymentTarget:
     macOS: "14.0"
 settings:
   base:
     SWIFT_VERSION: "5.0"
     MACOSX_DEPLOYMENT_TARGET: "14.0"
+    # Version and build number live here and reach the bundle through
+    # Info.plist's $(MARKETING_VERSION)/$(CURRENT_PROJECT_VERSION). Bump
+    # CURRENT_PROJECT_VERSION for every App Store Connect upload.
+    MARKETING_VERSION: "1.1.0"
+    CURRENT_PROJECT_VERSION: "2"
+    DEVELOPMENT_TEAM: SG8NYPLMNY
+    # Xcode 27's recommended settings.
+    DEAD_CODE_STRIPPING: YES
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS: YES
+    STRING_CATALOG_GENERATE_SYMBOLS: YES
 targets:
   ClackClock:
     type: application
@@ -44,15 +58,15 @@ targets:
         # required for TCC grants (Screen Recording, etc.) to survive a
         # rebuild — ad-hoc signing hashes the binary itself into the
         # designated requirement, so every rebuild looks like a brand-new
-        # app to macOS and every permission has to be re-granted. Manual
-        # (not Automatic) signing since this is a personal, direct-run app
-        # with no App Store provisioning profile to manage.
-        CODE_SIGN_STYLE: Manual
+        # app to macOS and every permission has to be re-granted. Automatic
+        # signing keeps that (same team) and lets Xcode manage the Mac App
+        # Store provisioning profile when distributing.
+        CODE_SIGN_STYLE: Automatic
         CODE_SIGN_IDENTITY: "Apple Development"
-        DEVELOPMENT_TEAM: SG8NYPLMNY
         CODE_SIGNING_REQUIRED: YES
         CODE_SIGNING_ALLOWED: YES
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS: YES
     # The Mac App Store rejects any build without the sandbox. Nothing else is
     # needed: ScreenCaptureKit, notifications, SMAppService and reading
     # /System/Library/Sounds all work inside it without extra entitlements.
@@ -64,14 +78,15 @@ targets:
       path: ClackClock/Info.plist
       properties:
         LSUIElement: true
-        LSApplicationCategoryType: public.app-category.utilities
+        CFBundleDisplayName: ClackClock
+        LSApplicationCategoryType: public.app-category.productivity
         # No encryption beyond what macOS itself does — skips App Store Connect's export-compliance question.
         ITSAppUsesNonExemptEncryption: false
         # Default to persistent "Alerts" (not auto-hiding banners) so the Dismiss button stays until the
         # user acts on a ringing reminder. Only applies on first registration; users can still change it.
         NSUserNotificationAlertStyle: alert
-        CFBundleShortVersionString: "1.0"
-        CFBundleVersion: "1"
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         NSHumanReadableCopyright: ""
   ClackClockTests:
     type: bundle.unit-test
@@ -86,9 +101,8 @@ targets:
         # dlopen'd into the app process, and macOS refuses to map a bundle
         # whose Team ID differs from the loading process ("mapping process
         # and mapped file (non-platform) have different Team IDs").
-        CODE_SIGN_STYLE: Manual
+        CODE_SIGN_STYLE: Automatic
         CODE_SIGN_IDENTITY: "Apple Development"
-        DEVELOPMENT_TEAM: SG8NYPLMNY
     dependencies:
       - target: ClackClock
 schemes:
