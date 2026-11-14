@@ -246,6 +246,44 @@ final class UIControlsTests: XCTestCase {
         }
     }
 
+    /// SwiftUI's menu picker drew every font name in the system font, so the
+    /// list couldn't be judged by eye; and the clock preview only changed on
+    /// commit. Each item now names itself in its own face, and the highlighted
+    /// item (mouse or arrow keys) is reported while the menu is open.
+    func testFontMenuShowsEachFontInItselfAndReportsTheHighlightedOne() throws {
+        let menu = FontPopUpPicker.makeMenu()
+        XCTAssertEqual(menu.items.map(\.title), WidgetFont.all.map(\.label))
+        for (item, font) in zip(menu.items, WidgetFont.all) {
+            let shown = item.attributedTitle?.attribute(.font, at: 0, effectiveRange: nil) as? NSFont
+            if let name = font.postscriptName {
+                XCTAssertEqual(shown?.fontName, name, "\(font.label) isn't drawn in its own face")
+            } else {
+                XCTAssertEqual(shown?.familyName, NSFont.menuFont(ofSize: 0).familyName)
+            }
+        }
+
+        var selection = WidgetFont.system
+        var highlighted: [WidgetFont?] = []
+        let coordinator = FontPopUpPicker.Coordinator(FontPopUpPicker(
+            selection: Binding(get: { selection }, set: { selection = $0 }),
+            onHighlight: { highlighted.append($0) }
+        ))
+        let rock = try XCTUnwrap(menu.items.first { $0.title == "Rock Font" })
+        coordinator.menu(menu, willHighlight: rock)
+        XCTAssertEqual(highlighted.last??.label, "Rock Font")
+        XCTAssertEqual(selection, .system, "Highlighting previews without committing")
+
+        coordinator.menuDidClose(menu)
+        RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+        XCTAssertEqual(highlighted.last, .some(nil), "Closing the menu hands the preview back to the selection")
+
+        let button = NSPopUpButton(frame: .zero, pullsDown: false)
+        button.menu = menu
+        button.select(rock)
+        coordinator.picked(button)
+        XCTAssertEqual(selection.label, "Rock Font")
+    }
+
     func testSettingsDesktopClockControls() throws {
         let ui = settingsUI()
         try ui.press("Desktop Clock")

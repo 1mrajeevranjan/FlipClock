@@ -38,6 +38,7 @@
 		44586EE2FD39BC97BE0270C0 /* WhiteSquareRedYesBlackEightWarsaw-Warsaw.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 52C08D13425898BEB01BA584 /* WhiteSquareRedYesBlackEightWarsaw-Warsaw.ttf */; };
 		46D58EE324E33B8985EEDFEA /* Pullstar-Holinight.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 5939B181AF8C890E3864B472 /* Pullstar-Holinight.ttf */; };
 		4771D49061887879460ACED6 /* space age.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 330A14F157186EBD9CB182D6 /* space age.ttf */; };
+		4790B366889331A4581B5EC9 /* FontPopUpPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A5ACD9F8C055C92607EC5C6 /* FontPopUpPicker.swift */; };
 		4A6CE919C184F84CA1EE7BD1 /* Vlump.ttf in Resources */ = {isa = PBXBuildFile; fileRef = EAF588F54C5C715271E62DD6 /* Vlump.ttf */; };
 		545266C7FB1AE58A1355BBD5 /* YrBkMess.TTF in Resources */ = {isa = PBXBuildFile; fileRef = B3878A6C35B561BEB7038580 /* YrBkMess.TTF */; };
 		54BC1699F23C11D0EA443ACE /* ReminderBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E19C0BEE08437852DF2A261 /* ReminderBadge.swift */; };
@@ -186,6 +187,7 @@
 		89F1E3F62A8502AC630B22D8 /* WorldClockCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockCard.swift; sourceTree = "<group>"; };
 		90ADC3BAFCE63EB420730D8F /* TimeWheelPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeWheelPicker.swift; sourceTree = "<group>"; };
 		9A3C7E9F996E6ABBCB9A6C9A /* Bing Bam Boum.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Bing Bam Boum.ttf"; sourceTree = "<group>"; };
+		9A5ACD9F8C055C92607EC5C6 /* FontPopUpPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontPopUpPicker.swift; sourceTree = "<group>"; };
 		9B3D1D5294AB573D5BD2B919 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		9C609C7530BEED3610B9674B /* CountdownTimerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownTimerTests.swift; sourceTree = "<group>"; };
 		9CA88A78A659959F6E2D632E /* WhiteSquareRedYesBlackEightPingpong-Pingpong.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "WhiteSquareRedYesBlackEightPingpong-Pingpong.ttf"; sourceTree = "<group>"; };
@@ -320,6 +322,7 @@
 			isa = PBXGroup;
 			children = (
 				1066265487AB6476BB9516D4 /* AppSettings.swift */,
+				9A5ACD9F8C055C92607EC5C6 /* FontPopUpPicker.swift */,
 				E5E8E4841DCFFA2FFB4D259B /* SettingsView.swift */,
 				4136E0697AE1920BBA44A3E2 /* SettingsWindowController.swift */,
 				0DA34DA01723AF0C6E20230B /* WorldClock.swift */,
@@ -729,6 +732,7 @@
 				A4643350656C43CD95D13686 /* FlapColors.swift in Sources */,
 				C0A9BCE44997B8BA33BE0B4E /* FlipCardLayer.swift in Sources */,
 				92D2EACB8C8EA4A98DBC7BF0 /* FlipTimeDisplay.swift in Sources */,
+				4790B366889331A4581B5EC9 /* FontPopUpPicker.swift in Sources */,
 				B49170AE425D8D77AF101748 /* MenuBarClockView.swift in Sources */,
 				B1096F8BF63C3A24F965FE8B /* OverlayContentView.swift in Sources */,
 				19BDB1762F956D722D0D472C /* OverlayWindow.swift in Sources */,

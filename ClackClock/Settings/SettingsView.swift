@@ -33,6 +33,9 @@ struct SettingsView: View {
     @State private var selectedTab: SettingsTab = .general
     @State private var pickingTimezoneFor: WorldClock.ID?
     @State private var addingClock = false
+    /// The font under the pointer/arrow keys while the font menu is open.
+    @State private var highlightedFont: WidgetFont?
+    private var previewFont: WidgetFont { highlightedFont ?? settings.widgetFont }
 
     init(reminderNotifications: ReminderNotifications, onContentHeightChange: @escaping (CGFloat) -> Void = { _ in }) {
         self.reminderNotifications = reminderNotifications
@@ -175,14 +178,8 @@ struct SettingsView: View {
                 }
                 Divider()
                 SettingsRow("Digit font") {
-                    Picker("Digit font", selection: $settings.widgetFont) {
-                        ForEach(WidgetFont.all) { font in
-                            Text(font.label)
-                                .font(font.postscriptName.map { .custom($0, size: 14) } ?? .system(size: 14))
-                                .tag(font)
-                        }
-                    }
-                    .pickerStyle(.menu)
+                    FontPopUpPicker(selection: $settings.widgetFont) { highlightedFont = $0 }
+                        .frame(width: 220)
                 }
             }
 
@@ -292,12 +289,12 @@ struct SettingsView: View {
                 tick: Self.previewTick, scale: 0.6, showPedestal: false,
                 meridiemStyle: settings.meridiemStyle, timeFormat: settings.timeFormat,
                 glassCard: true, showOwnGlassPanel: false,
-                fontName: settings.widgetFont.postscriptName
+                fontName: previewFont.postscriptName
             )
             if selectedTab == .desktopClock && settings.showDateOnOverlay {
                 DateFlapRow(date: Self.previewTick.date, scale: 0.6,
                             isDark: colorScheme == .dark, glassCard: true,
-                            fontName: settings.widgetFont.postscriptName)
+                            fontName: previewFont.postscriptName)
             }
             Text("CLOCK PREVIEW")
                 .font(.system(size: 9, weight: .semibold))
@@ -310,7 +307,7 @@ struct SettingsView: View {
         .padding(.vertical, 14)
         .background(Color.primary.opacity(0.035), in: RoundedRectangle(cornerRadius: 12))
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Clock preview, 10:09:30, \(settings.widgetFont.label) font")
+        .accessibilityLabel("Clock preview, 10:09:30, \(previewFont.label) font")
     }
 
     private func settingsCard<Content: View>(_ title: String? = nil, @ViewBuilder content: () -> Content) -> some View {
