@@ -58,6 +58,15 @@ final class DesktopBackdropCapture: ObservableObject {
     private var spaceObserver: NSObjectProtocol?
     private var screenObserver: NSObjectProtocol?
     private var captureTask: Task<Void, Never>?
+    /// Drops this widget's copy of the backdrop at the retention limit — a
+    /// covered or hidden widget stops refreshing and would otherwise hold it
+    /// indefinitely. See `SharedBackdrop.maxRetention`.
+    private var expiryTask: Task<Void, Never>?
+    /// Only the very first capture happens while covered (so the glass is ready
+    /// the moment the widget is uncovered). After an expiry the next one waits
+    /// until the widget is actually visible — re-capturing for nobody would
+    /// just collect pixels again.
+    private var hasCaptured = false
     private var lastCropFrame: CGRect?
     private var lastCropScreen: CGRect?
 
@@ -188,6 +197,9 @@ final class DesktopBackdropCapture: ObservableObject {
         screenObserver = nil
         activeWindow = nil
         if releaseImages {
+            hasCaptured = false
+            expiryTask?.cancel()
+            expiryTask = nil
             fullBackdrop = nil
             image = nil
             dimmedImage = nil
@@ -267,7 +279,7 @@ final class DesktopBackdropCapture: ObservableObject {
         // The capture is wallpaper-only, so it's valid even while app windows
         // cover the widget — take the first one regardless, or the widget
         // shows the fallback look for a beat each time it's first uncovered.
-        guard fullBackdrop == nil || Self.shouldCapture(occlusionState: window.occlusionState) else { return }
+        guard !hasCaptured || Self.shouldCapture(occlusionState: window.occlusionState) else { return }
         guard let screen = window.screen ?? NSScreen.main,
               let displayID = Self.displayID(of: screen) else { return }
 
@@ -289,10 +301,40 @@ final class DesktopBackdropCapture: ObservableObject {
             guard !Task.isCancelled, let backdrop, let self, let window else { return }
             await MainActor.run {
                 self.fullBackdrop = backdrop
+                self.hasCaptured = true
                 self.lastCropFrame = nil
                 self.publishCrop(for: window)
+                self.scheduleExpiry(capturedAt: backdrop.captured)
             }
         }
+    }
+
+    static func isExpired(captured: Date, now: Date) -> Bool {
+        now.timeIntervalSince(captured) >= SharedBackdrop.maxRetention
+    }
+
+    @MainActor
+    private func scheduleExpiry(capturedAt: Date) {
+        expiryTask?.cancel()
+        let delay = max(0, capturedAt.addingTimeInterval(SharedBackdrop.maxRetention).timeIntervalSinceNow)
+        expiryTask = Task { [weak self] in
+            // Continuous clock: keeps counting while the Mac sleeps.
+            try? await Task.sleep(for: .seconds(delay + 1))
+            guard !Task.isCancelled else { return }
+            await MainActor.run { self?.releaseExpiredBackdrop() }
+        }
+    }
+
+    /// The widget falls back to plain vibrancy until its next capture, which
+    /// happens as soon as it's visible again.
+    @MainActor
+    private func releaseExpiredBackdrop() {
+        guard let backdrop = fullBackdrop, Self.isExpired(captured: backdrop.captured, now: Date()) else { return }
+        fullBackdrop = nil
+        image = nil
+        dimmedImage = nil
+        lastCropFrame = nil
+        lastCropScreen = nil
     }
 
     private static func displayID(of screen: NSScreen) -> CGDirectDisplayID? {
@@ -303,6 +345,8 @@ final class DesktopBackdropCapture: ObservableObject {
 struct BackdropPair {
     let vivid: CGImage
     let dimmed: CGImage
+    /// When the screen was captured — what the retention limit counts from.
+    var captured = Date()
 }
 
 /// One blurred full-display backdrop per display, shared by every widget on
@@ -331,12 +375,49 @@ actor SharedBackdrop {
     /// nothing; working at a quarter of it makes that second blur cheap.
     private static let dimmedDownsample: CGFloat = 0.25
 
+    /// Privacy ceiling: pixels from Screen Recording are dropped from memory
+    /// this long after capture, whatever else happens — widgets hidden or
+    /// covered (nothing asks for a refresh), captures failing, the Mac asleep.
+    /// Nothing is ever written to disk or sent anywhere (the sandbox has no
+    /// network entitlement); normal refreshes replace it every 1–3 minutes, so
+    /// this only bites when something has gone wrong. Kept well inside the
+    /// 15 minutes the privacy notes promise.
+    static let maxRetention: TimeInterval = 10 * 60
+
     private var entries: [CGDirectDisplayID: Entry] = [:]
     private var inFlight: [CaptureRequest: Task<BackdropPair?, Never>] = [:]
     private let captureOverride: ((CaptureRequest) async -> BackdropPair?)?
+    private let now: () -> Date
+    private var expiryTask: Task<Void, Never>?
 
-    init(capture: ((CaptureRequest) async -> BackdropPair?)? = nil) {
+    init(capture: ((CaptureRequest) async -> BackdropPair?)? = nil, now: @escaping () -> Date = Date.init) {
         captureOverride = capture
+        self.now = now
+    }
+
+    var cachedDisplayCount: Int { entries.count }
+
+    func purgeExpired() {
+        let cutoff = now().addingTimeInterval(-Self.maxRetention)
+        entries = entries.filter { $0.value.captured > cutoff }
+    }
+
+    /// Sleeps on the continuous clock, which keeps counting while the Mac is
+    /// asleep, so a capture taken just before sleep is gone the moment it wakes.
+    private func scheduleExpiry() {
+        expiryTask?.cancel()
+        guard let oldest = entries.values.map(\.captured).min() else { return }
+        let delay = max(0, oldest.addingTimeInterval(Self.maxRetention).timeIntervalSince(now()))
+        expiryTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(delay + 1))
+            guard !Task.isCancelled else { return }
+            await self?.expire()
+        }
+    }
+
+    private func expire() {
+        purgeExpired()
+        scheduleExpiry()
     }
     /// Intermediates aren't reused between captures a minute apart; keeping
     /// them cached only pinned tens of MB of blur buffers between refreshes.
@@ -352,10 +433,12 @@ actor SharedBackdrop {
         let interval = DesktopBackdropCapture.refreshInterval(
             isLowPowerModeEnabled: ProcessInfo.processInfo.isLowPowerModeEnabled
         )
+        // Never hand out, or fall back to, anything past the retention limit.
+        purgeExpired()
         if !force,
            let entry = entries[displayID],
            entry.request == request,
-           Date().timeIntervalSince(entry.captured) < interval {
+           now().timeIntervalSince(entry.captured) < interval {
             return entry.pair
         }
 
@@ -364,11 +447,14 @@ actor SharedBackdrop {
         }
         let task = Task { await self.capture(request) }
         inFlight[request] = task
-        let pair = await task.value
+        let captured = await task.value
         inFlight[request] = nil
+        let pair = captured.map { BackdropPair(vivid: $0.vivid, dimmed: $0.dimmed, captured: now()) }
         if let pair {
-            entries[displayID] = Entry(pair: pair, request: request, captured: Date())
+            entries[displayID] = Entry(pair: pair, request: request, captured: pair.captured)
+            scheduleExpiry()
         }
+        purgeExpired()
         return pair ?? entries[displayID]?.pair
     }
 

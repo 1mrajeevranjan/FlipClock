@@ -230,7 +230,9 @@ Open Settings by right-clicking the menu bar clock, or from the widget's context
 
 - **Notifications:** enable them in Settings › General, or accept the prompt when you add your first reminder. Set **Alert Style** to **Persistent** in System Settings › Notifications › ClackClock so native reminders stay on screen until dismissed. **Open Settings…** in ClackClock jumps there.
 - **Privacy:** ClackClock makes no network requests and collects no data.
-  - The captured wallpaper frame is blurred in memory and never written to disk or sent anywhere.
+  - **Screen Recording captures the wallpaper only**, never app windows. The raw frame is blurred in memory and discarded straight away.
+  - **Nothing from the screen is ever written to disk or shared.** The App Sandbox grants no network access, so the app can't send anything off the Mac.
+  - **Hard retention limit:** the blurred copy is replaced every 1–3 minutes while the widget is visible, and is dropped from memory 10 minutes after capture whatever else happens — widget covered or hidden, captures failing, or the Mac asleep (the countdown keeps running through sleep). A covered widget doesn't re-capture until it's visible again.
   - Preferences and reminders are stored locally in `UserDefaults`.
 
 ## Configuration
