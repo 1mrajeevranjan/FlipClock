@@ -240,6 +240,10 @@ final class UIControlsTests: XCTestCase {
             try ui.press(style.label)
             XCTAssertEqual(settings.meridiemStyle, style)
         }
+        for display in MenuBarDisplay.allCases {
+            try ui.press(display.label)
+            XCTAssertEqual(settings.menuBarDisplay, display)
+        }
     }
 
     func testSettingsDesktopClockControls() throws {

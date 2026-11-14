@@ -160,6 +160,13 @@ struct SettingsView: View {
                     .pickerStyle(.segmented)
                 }
                 Divider()
+                SettingsRow("Menu bar", detail: "Date shows only the day of the month, using less space.") {
+                    Picker("Menu bar", selection: $settings.menuBarDisplay) {
+                        ForEach(MenuBarDisplay.allCases) { Text($0.label).tag($0) }
+                    }
+                    .pickerStyle(.segmented)
+                }
+                Divider()
                 SettingsRow("AM/PM style") {
                     Picker("AM/PM style", selection: $settings.meridiemStyle) {
                         ForEach(MeridiemStyle.allCases) { Text($0.label).tag($0) }

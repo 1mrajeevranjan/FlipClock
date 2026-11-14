@@ -123,6 +123,29 @@ final class AppSettingsTests: XCTestCase {
         XCTAssertLessThan(world, main)
     }
 
+    func testMenuBarShowsTheTimeUntilTheDateIsChosenAndTheChoicePersists() {
+        let first = AppSettings(defaults: defaults)
+        XCTAssertEqual(first.menuBarDisplay, .time)
+        first.menuBarDisplay = .date
+        XCTAssertEqual(AppSettings(defaults: defaults).menuBarDisplay, .date)
+    }
+
+    /// The date option exists to save menu bar space, so it has to be one flip
+    /// pair — a fraction of the full clock's width.
+    func testMenuBarDateIsJustTheDayOfTheMonthAndMuchNarrowerThanTheTime() {
+        let time = MenuBarClockView.itemSize(timeFormat: .twelveHour, display: .time)
+        let date = MenuBarClockView.itemSize(timeFormat: .twelveHour, display: .date)
+        XCTAssertLessThan(date.width, time.width * 0.4)
+        XCTAssertEqual(date.height, time.height)
+
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "UTC")!
+        let november14 = calendar.date(from: DateComponents(year: 2026, month: 11, day: 14, hour: 23))!
+        XCTAssertTrue(MenuBarClockView.dayDigits(of: november14, calendar: calendar) == (1, 4))
+        let march5 = calendar.date(from: DateComponents(year: 2026, month: 3, day: 5))!
+        XCTAssertTrue(MenuBarClockView.dayDigits(of: march5, calendar: calendar) == (0, 5))
+    }
+
     func testWorldClockNamesAndOffsets() {
         var clock = WorldClock(timezoneID: "America/New_York")
         XCTAssertEqual(clock.displayName, "New York")

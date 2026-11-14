@@ -27,7 +27,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         super.init()
 
-        applyItemSize(timeFormat: settings.timeFormat)
+        applyItemSize(timeFormat: settings.timeFormat, display: settings.menuBarDisplay)
 
         if let button = statusItem.button {
             button.target = self
@@ -47,7 +47,18 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         // never ends up with leftover empty space or clipped content.
         settings.$timeFormat
             .dropFirst()
-            .sink { [weak self] format in self?.applyItemSize(timeFormat: format) }
+            .sink { [weak self] format in
+                guard let self else { return }
+                applyItemSize(timeFormat: format, display: settings.menuBarDisplay)
+            }
+            .store(in: &cancellables)
+
+        settings.$menuBarDisplay
+            .dropFirst()
+            .sink { [weak self] display in
+                guard let self else { return }
+                applyItemSize(timeFormat: settings.timeFormat, display: display)
+            }
             .store(in: &cancellables)
 
         settings.$theme
@@ -57,8 +68,8 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
             .store(in: &cancellables)
     }
 
-    private func applyItemSize(timeFormat: TimeFormat) {
-        let itemSize = MenuBarClockView.itemSize(timeFormat: timeFormat)
+    private func applyItemSize(timeFormat: TimeFormat, display: MenuBarDisplay) {
+        let itemSize = MenuBarClockView.itemSize(timeFormat: timeFormat, display: display)
         statusItem.length = itemSize.width
 
         let hosting = NSHostingView(rootView: MenuBarClockView(timeProvider: timeProvider, settings: settings))
