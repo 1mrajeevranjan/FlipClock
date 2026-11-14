@@ -137,11 +137,22 @@ final class AppSettingsTests: XCTestCase {
         XCTAssertEqual(worldText - worldIcon, text - icon, accuracy: 0.01)
     }
 
-    func testMenuBarShowsTheTimeUntilTheDateIsChosenAndTheChoicePersists() {
+    func testMenuBarItemMakesRoomForTheMissedReminderBellOnlyWhileItShows() {
+        for display in MenuBarDisplay.allCases {
+            let plain = MenuBarClockView.itemSize(timeFormat: .twelveHour, meridiemStyle: .icon, display: display)
+            let belled = MenuBarClockView.itemSize(timeFormat: .twelveHour, meridiemStyle: .icon, display: display, showsBell: true)
+            XCTAssertEqual(belled.width - plain.width, MenuBarClockView.bellDiameter + 4, accuracy: 0.01)
+            XCTAssertEqual(belled.height, plain.height)
+            XCTAssertLessThanOrEqual(MenuBarClockView.bellDiameter, plain.height, "The bell fits the menu bar's card height")
+        }
+    }
+
+    /// The compact date is the default: it fits a crowded notched menu bar.
+    func testMenuBarShowsTheDateUntilTheTimeIsChosenAndTheChoicePersists() {
         let first = AppSettings(defaults: defaults)
-        XCTAssertEqual(first.menuBarDisplay, .time)
-        first.menuBarDisplay = .date
-        XCTAssertEqual(AppSettings(defaults: defaults).menuBarDisplay, .date)
+        XCTAssertEqual(first.menuBarDisplay, .date)
+        first.menuBarDisplay = .time
+        XCTAssertEqual(AppSettings(defaults: defaults).menuBarDisplay, .time)
     }
 
     /// The date option exists to save menu bar space, so it has to be one flip
@@ -242,6 +253,20 @@ final class AppSettingsTests: XCTestCase {
         }
         XCTAssertTrue(SystemWidgetDimming.automatic.dims(desktopFocused: false))
         XCTAssertFalse(SystemWidgetDimming.automatic.dims(desktopFocused: true))
+    }
+
+    /// Opening the menu bar popover makes ClackClock frontmost, but it's a
+    /// menu bar extra, not an app window in front of the desktop: macOS's own
+    /// widgets stay vivid, so ClackClock's must too. Its Settings window is a
+    /// real window, though, and dims them like any other.
+    func testClackClockInFrontKeepsDesktopFocusUnlessAWindowCoversTheDesktop() {
+        let screen = [CGRect(x: 0, y: 0, width: 1000, height: 800)]
+        let clackClock = "com.rajeevranjan.clackclock"
+        let settingsWindow = DesktopFocus.WindowInfo(layer: 0, bounds: CGRect(x: 200, y: 150, width: 700, height: 460), alpha: 1)
+        let popover = DesktopFocus.WindowInfo(layer: 101, bounds: CGRect(x: 600, y: 30, width: 340, height: 520), alpha: 1)
+        XCTAssertTrue(DesktopFocus.isFocused(frontmostBundleID: clackClock, windows: [popover], screens: screen, ownBundleID: clackClock))
+        XCTAssertFalse(DesktopFocus.isFocused(frontmostBundleID: clackClock, windows: [settingsWindow], screens: screen, ownBundleID: clackClock))
+        XCTAssertFalse(DesktopFocus.isFocused(frontmostBundleID: "com.apple.Safari", windows: [], screens: screen, ownBundleID: clackClock))
     }
 
     /// Matched against the system widgets side by side: Finder in front with

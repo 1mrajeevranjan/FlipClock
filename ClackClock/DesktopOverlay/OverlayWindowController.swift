@@ -10,6 +10,8 @@ final class OverlayWindowController {
     private let hostingController: NSHostingController<OverlayContentView>
     private let settings: AppSettings
     private let reminderStore: ReminderStore
+    private let notifications: ReminderNotifications
+    private let missedPopover = NSPopover()
     private let backdropCapture = DesktopBackdropCapture()
     private let visibility: WindowVisibility
     private var cancellables = Set<AnyCancellable>()
@@ -38,9 +40,12 @@ final class OverlayWindowController {
     /// entirely below the screen when fill screen was turned off.
     private var hasWidgetPosition = false
 
-    init(timeProvider: TimeProvider, settings: AppSettings, reminderStore: ReminderStore, openSettings: @escaping () -> Void) {
+    @MainActor
+    init(timeProvider: TimeProvider, settings: AppSettings, reminderStore: ReminderStore, notifications: ReminderNotifications,
+         openSettings: @escaping () -> Void) {
         self.settings = settings
         self.reminderStore = reminderStore
+        self.notifications = notifications
         window = OverlayWindow()
 
         visibility = WindowVisibility(window: window, timeProvider: timeProvider)
@@ -140,6 +145,19 @@ final class OverlayWindowController {
             .sink { [weak self] _ in self?.applySize() }
             .store(in: &cancellables)
 
+        missedPopover.behavior = .transient
+        window.onClick = { [weak self] in
+            MainActor.assumeIsolated { self?.showMissedReminders() }
+        }
+        // `@Published` sends before the value is stored; the hop to the next
+        // run-loop turn lets `updateMissedReminders` read the current state.
+        Publishers.CombineLatest3(notifications.$missedIDs, notifications.$missedNeedsAttention, notifications.$isUserAway)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _, _, _ in
+                MainActor.assumeIsolated { self?.updateMissedReminders() }
+            }
+            .store(in: &cancellables)
+
         NotificationCenter.default.publisher(for: .NSCalendarDayChanged)
             .merge(with: NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange))
             .receive(on: DispatchQueue.main)
@@ -159,6 +177,56 @@ final class OverlayWindowController {
     }
 
     private static let frameName = "DesktopOverlayFrame"
+
+    /// Bell and bounce follow the missed reminders; the pop-up, if open, keeps
+    /// its list current and closes once the last one is dismissed.
+    @MainActor
+    private func updateMissedReminders() {
+        let missed = notifications.missedReminders
+        let bell: MissedBellState = missed.isEmpty ? .none : notifications.wantsMissedAttention ? .ringing : .waiting
+        hostingController.rootView.missedBell = bell
+
+        if let layer = window.contentView?.layer {
+            let bounce = bell == .ringing && !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+            if bounce, layer.animation(forKey: WidgetBounce.key) == nil {
+                layer.add(WidgetBounce.animation(size: layer.bounds.size), forKey: WidgetBounce.key)
+            } else if !bounce {
+                layer.removeAnimation(forKey: WidgetBounce.key)
+            }
+        }
+
+        if missed.isEmpty {
+            missedPopover.performClose(nil)
+        } else if missedPopover.isShown {
+            missedPopover.contentViewController = missedRemindersController(missed)
+        }
+    }
+
+    /// Clicking the widget is the user noticing: it stops the bounce and the
+    /// alarm, and lists what they missed.
+    @MainActor
+    private func showMissedReminders() {
+        let missed = notifications.missedReminders
+        guard !missed.isEmpty, let contentView = window.contentView else { return }
+        notifications.acknowledgeMissedAttention()
+        missedPopover.contentViewController = missedRemindersController(missed)
+        missedPopover.animates = !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+        // The widget's panel never activates the app; the pop-up's buttons need it.
+        NSApp.activate(ignoringOtherApps: true)
+        let bounds = contentView.bounds
+        let bell = NSRect(x: bounds.maxX - 36, y: contentView.isFlipped ? 4 : bounds.maxY - 36, width: 32, height: 32)
+        missedPopover.show(relativeTo: bell, of: contentView, preferredEdge: .minY)
+    }
+
+    @MainActor
+    private func missedRemindersController(_ missed: [Reminder]) -> NSViewController {
+        let controller = NSHostingController(rootView: MissedRemindersView(reminders: missed) { [weak self] reminder in
+            self?.notifications.handleResponse(actionIdentifier: ReminderNotifications.dismissActionIdentifier,
+                                               requestIdentifier: ReminderNotifications.identifier(for: reminder.id))
+        })
+        controller.sizingOptions = .preferredContentSize
+        return controller
+    }
 
     private func applySize() {
         if settings.fillScreen, let screen = NSScreen.main {
@@ -186,6 +254,7 @@ final class OverlayWindowController {
             window.setFrameOrigin(area.origin)
             hostingController.rootView.fillArea = area.size
             maskContentView(cornerRadius: 0)
+            resizeBounce()
             return
         }
         window.isMovableByWindowBackground = true
@@ -229,6 +298,14 @@ final class OverlayWindowController {
         }
         hasWidgetPosition = true
         maskContentView(cornerRadius: WidgetGlassBackground.cornerRadius(scale: settings.overlaySize.scale))
+        resizeBounce()
+    }
+
+    /// The bounce's keyframes are built for one size; a resize mid-bounce
+    /// would otherwise scale about the old centre and spill past the window.
+    private func resizeBounce() {
+        guard let layer = window.contentView?.layer, layer.animation(forKey: WidgetBounce.key) != nil else { return }
+        layer.add(WidgetBounce.animation(size: layer.bounds.size), forKey: WidgetBounce.key)
     }
 
     /// The glass card fills the window's content view edge-to-edge (no

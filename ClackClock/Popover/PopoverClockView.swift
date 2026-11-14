@@ -76,6 +76,7 @@ struct PopoverClockView: View {
     let timeProvider: TimeProvider
     @ObservedObject var settings: AppSettings
     @ObservedObject var reminderStore: ReminderStore
+    @ObservedObject var reminderNotifications: ReminderNotifications
     // Child tools observe their own ticks; the whole popover needn't redraw at 30 Hz.
     let timerModel: CountdownTimer
     let stopwatch: Stopwatch
@@ -144,8 +145,16 @@ struct PopoverClockView: View {
     private var calendarContent: some View {
         VStack(spacing: 18) {
             PopoverClockHeader(timeProvider: timeProvider, settings: settings, presentation: presentation)
-            if !reminderStore.dueTodayUnacknowledged.isEmpty {
-                DueReminderBanner(reminders: reminderStore.dueTodayUnacknowledged) {
+            let missed = reminderNotifications.missedReminders
+            if !missed.isEmpty {
+                MissedReminderBanner(reminders: missed) { reminder in
+                    reminderNotifications.handleResponse(actionIdentifier: ReminderNotifications.dismissActionIdentifier,
+                                                         requestIdentifier: ReminderNotifications.identifier(for: reminder.id))
+                }
+            }
+            let dueToday = reminderStore.dueTodayUnacknowledged.filter { !reminderNotifications.missedIDs.contains($0.id) }
+            if !dueToday.isEmpty {
+                DueReminderBanner(reminders: dueToday) {
                     reminderStore.acknowledge($0)
                 }
             }

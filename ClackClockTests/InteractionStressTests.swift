@@ -183,14 +183,18 @@ final class InteractionStressTests: XCTestCase {
     func testEveryMoreMenuCommandIsEnabledAndImplemented() throws {
         let menu = StatusItemController.makeMoreMenu(target: NSObject())
         let commands = menu.items.filter { !$0.isSeparatorItem }
-        XCTAssertEqual(commands.count, 7)
+        // Titles lead with their SF Symbol as a text attachment (see `iconTitle`).
+        let titles = commands.map { $0.title.replacingOccurrences(of: "\u{FFFC}", with: "").trimmingCharacters(in: .whitespaces) }
+        XCTAssertEqual(titles, ["About", "Support & Feedback", "Tips", "FAQ", "Website",
+                                               "Rate App", "Share App", "More Apps by Me"])
         for command in commands {
             let action = try XCTUnwrap(command.action, "\(command.title) has no action — a dead menu item")
             XCTAssertTrue(StatusItemController.instancesRespond(to: action), "\(command.title) must have an implemented action")
             XCTAssertTrue(command.isEnabled)
         }
-        for link in [StatusItemController.Links.website, StatusItemController.Links.support, StatusItemController.Links.moreApps] {
-            XCTAssertEqual(link.scheme, "https")
-        }
+        XCTAssertEqual(StatusItemController.Links.support.absoluteString, "https://www.mishorastudio.com/contact")
+        XCTAssertEqual(StatusItemController.Links.website.absoluteString, "https://www.mishorastudio.com/apps/clackclock")
+        XCTAssertEqual(StatusItemController.Links.rate, StatusItemController.Links.website)
+        XCTAssertEqual(StatusItemController.Links.moreApps.absoluteString, "https://www.mishorastudio.com/apps")
     }
 }

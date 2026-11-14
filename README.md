@@ -61,8 +61,8 @@ Every character (digits, weekday, date, AM/PM) is a real rasterised flip card wi
 ### Menu bar clock
 
 - Live split-flap clock in the menu bar, always at full brightness.
-- Or show only today's day of the month (e.g. `14`) to save menu bar space.
-- Left-click opens the popover. Right-click opens Settings, More (About, Support & Feedback, Tips, FAQ, Website, Share App, More Apps by Me) and Quit.
+- By default it shows just today's day of the month (e.g. `14`) to save menu bar space; switch to the full time in Settings › Appearance.
+- Left-click opens the popover. Right-click opens Settings, More (About, Support & Feedback, Tips, FAQ, Website, Rate App, Share App, More Apps by Me) and Quit.
 
 ### Popover
 
@@ -102,6 +102,7 @@ Every character (digits, weekday, date, AM/PM) is a real rasterised flip card wi
   - Clicking the banner body only silences the sound.
 - **If ClackClock isn't running,** the native macOS notification still fires.
 - **After sleep,** reminders that came due while the Mac slept ring on wake. Reminders that were already overdue at launch are never replayed.
+- **Missed reminders:** a reminder that comes due while the Mac is asleep or locked doesn't ring or show a banner — by the time you're back the moment has passed. Instead, once you unlock, the menu bar clock and the desktop widget bounce with a ringing red bell until you click either one. The menu bar popover then lists them under **Missed**, and clicking the widget opens the same list; each has a **Dismiss** button.
 
 > [!NOTE]
 > macOS can hold its own notifications back by several seconds while it runs Apple Intelligence processing on them. That's why ClackClock shows its own banner instead, and withdraws the native notification 5 seconds before the reminder is due so you never see it twice.
@@ -112,7 +113,7 @@ Every character (digits, weekday, date, AM/PM) is a real rasterised flip card wi
 |---|---|
 | Theme | Light, Dark, System |
 | Time format | 12-hour, 24-hour |
-| Menu bar | Time, or the day of the month only |
+| Menu bar | The day of the month (default), or the full time |
 | AM/PM style | Text or a sun/moon icon |
 | Digit font | System plus 37 bundled decorative fonts; chosen from a grid of samples; the preview follows the hovered or arrowed-to font |
 | Widget style | Full Color, Monochrome |
@@ -148,8 +149,6 @@ cd ClackClock
 `project.yml` pins the author's team. Replace it with your own, then regenerate the project:
 
 ```yaml
-CODE_SIGN_STYLE: Manual
-CODE_SIGN_IDENTITY: "Apple Development"
 DEVELOPMENT_TEAM: YOUR_TEAM_ID   # find it with: security find-identity -v -p codesigning
 ```
 
@@ -181,6 +180,19 @@ open ~/Applications/ClackClock.app
 > Run ClackClock from a stable location. macOS won't register notifications for an app launched from a temporary build folder.
 
 ClackClock is an agent app: it has no Dock icon and no main window. Look for the clock in the menu bar.
+
+### 4. Make an installer DMG (optional)
+
+```bash
+script/make_dmg.sh        # → dist/ClackClock-<version>.dmg
+```
+
+The DMG opens to ClackClock beside an **Applications** shortcut; drag one onto the other to install. Signed with an Apple Development certificate it runs on your own Mac only — Gatekeeper on other Macs blocks it. To share it, sign with a Developer ID and notarize:
+
+```bash
+xcrun notarytool store-credentials clackclock-notary   # once
+DEVELOPER_ID="Developer ID Application: Your Name (TEAMID)" NOTARY_PROFILE=clackclock-notary script/make_dmg.sh
+```
 
 ## Usage
 
@@ -229,7 +241,9 @@ Open Settings by right-clicking the menu bar clock, or from the widget's context
 
 - **Notifications:** enable them in Settings › General, or accept the prompt when you add your first reminder. Set **Alert Style** to **Persistent** in System Settings › Notifications › ClackClock so native reminders stay on screen until dismissed. **Open Settings…** in ClackClock jumps there.
 - **Privacy:** ClackClock makes no network requests and collects no data.
-  - The captured wallpaper frame is blurred in memory and never written to disk or sent anywhere.
+  - **Screen Recording captures the wallpaper only**, never app windows. The raw frame is blurred in memory and discarded straight away.
+  - **Nothing from the screen is ever written to disk or shared.** The App Sandbox grants no network access, so the app can't send anything off the Mac.
+  - **Hard retention limit:** the blurred copy is replaced every 1–3 minutes while the widget is visible, and is dropped from memory 10 minutes after capture whatever else happens — widget covered or hidden, captures failing, or the Mac asleep (the countdown keeps running through sleep). A covered widget doesn't re-capture until it's visible again.
   - Preferences and reminders are stored locally in `UserDefaults`.
 
 ## Configuration

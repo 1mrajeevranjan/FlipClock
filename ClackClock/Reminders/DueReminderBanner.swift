@@ -6,12 +6,6 @@ struct DueReminderBanner: View {
     let reminders: [Reminder]
     let onAcknowledge: (Reminder) -> Void
 
-    private static let timeFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.timeStyle = .short
-        return f
-    }()
-
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Label("Due Today", systemImage: "bell.fill")
@@ -21,14 +15,7 @@ struct DueReminderBanner: View {
 
             ForEach(reminders) { reminder in
                 HStack(spacing: 8) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(reminder.title)
-                            .font(.callout.weight(.medium))
-                        Text(Self.timeFormatter.string(from: reminder.date))
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    }
-                    Spacer()
+                    ReminderLine(reminder: reminder)
                     Button {
                         onAcknowledge(reminder)
                     } label: {

@@ -65,6 +65,48 @@ final class PerformanceTests: XCTestCase {
         XCTAssertEqual(count, 4, "A later forced refresh still replaces cached wallpaper")
     }
 
+    /// Privacy guarantee: pixels from Screen Recording never outlive the
+    /// retention limit, which itself sits well inside the promised 15 minutes —
+    /// even when nothing asks for a fresh capture (widget hidden or covered)
+    /// or capturing starts failing.
+    func testCapturedBackdropsAreReleasedWithinTheRetentionLimit() async throws {
+        XCTAssertLessThanOrEqual(SharedBackdrop.maxRetention, 10 * 60)
+        let image = try XCTUnwrap(CGContext(data: nil, width: 2, height: 2, bitsPerComponent: 8,
+                                           bytesPerRow: 8, space: CGColorSpaceCreateDeviceRGB(),
+                                           bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)?.makeImage())
+        var clock = Date(timeIntervalSince1970: 1_000_000)
+        let failing = FailingSwitch()
+        let shared = SharedBackdrop(capture: { _ in
+            await failing.isOn ? nil : BackdropPair(vivid: image, dimmed: image)
+        }, now: { clock })
+
+        _ = await shared.backdrop(displayID: 1, blurRadius: 4, dimmedBlurRadius: 12, pixelScale: 1)
+        var cached = await shared.cachedDisplayCount
+        XCTAssertEqual(cached, 1)
+
+        clock = clock.addingTimeInterval(SharedBackdrop.maxRetention - 1)
+        await failing.set(true)
+        let stale = await shared.backdrop(displayID: 1, blurRadius: 4, dimmedBlurRadius: 12, pixelScale: 1, force: true)
+        XCTAssertNotNil(stale, "A failed refresh may fall back to a backdrop that's still inside the limit")
+
+        clock = clock.addingTimeInterval(2)
+        let expired = await shared.backdrop(displayID: 1, blurRadius: 4, dimmedBlurRadius: 12, pixelScale: 1, force: true)
+        XCTAssertNil(expired, "...but never to one past it")
+        cached = await shared.cachedDisplayCount
+        XCTAssertEqual(cached, 0, "Expired pixels are dropped, not just hidden")
+
+        await failing.set(false)
+        _ = await shared.backdrop(displayID: 1, blurRadius: 4, dimmedBlurRadius: 12, pixelScale: 1)
+        clock = clock.addingTimeInterval(SharedBackdrop.maxRetention)
+        await shared.purgeExpired()
+        cached = await shared.cachedDisplayCount
+        XCTAssertEqual(cached, 0, "The expiry sweep drops them with no capture asked for")
+
+        let captured = Date(timeIntervalSince1970: 0)
+        XCTAssertFalse(DesktopBackdropCapture.isExpired(captured: captured, now: captured.addingTimeInterval(SharedBackdrop.maxRetention - 1)))
+        XCTAssertTrue(DesktopBackdropCapture.isExpired(captured: captured, now: captured.addingTimeInterval(SharedBackdrop.maxRetention)))
+    }
+
     private func calendar() -> Calendar {
         var cal = Calendar(identifier: .gregorian)
         cal.timeZone = utc
@@ -220,4 +262,9 @@ private actor BackdropCaptureProbe {
         try? await Task.sleep(for: .milliseconds(30))
         return BackdropPair(vivid: image, dimmed: image)
     }
+}
+
+private actor FailingSwitch {
+    private(set) var isOn = false
+    func set(_ on: Bool) { isOn = on }
 }

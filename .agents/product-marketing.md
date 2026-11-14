@@ -167,12 +167,12 @@ Screen Recording permission is optional and only used to blur the wallpaper behi
 **Keywords (≤100, name/subtitle words already indexed):** flip,desktop,widget,menu bar,retro,timer,stopwatch,reminder,calendar,world time,zone,countdown
 
 **Screenshot captions:**
-Images: `marketing/screenshots/captioned/` (with headlines) and `plain/` (raw), 2880×1800.
+Images: `marketing/screenshots/captioned/` (with headlines) and `plain/` (raw), 2880×1800. Retaken 2026-11-15 on the 1.1.0 build.
 1. A real flip clock for your Mac
 2. Your calendar, one click away
-3. Every time zone you care about
-4. Frosted glass, nine colours
-5. Set a timer in seconds
-6. A stopwatch to the hundredth
-7. Fill your screen with time
-8. Make it yours
+3. Never miss a reminder
+4. Set a timer in seconds
+5. Every time zone you care about
+6. Pick the face you love
+7. Frosted glass, nine colours
+8. Beautiful in light and dark

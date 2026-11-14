@@ -93,6 +93,7 @@
 		CCE56B0BC0384C059FDB4D3B /* Tennessee College.ttf in Resources */ = {isa = PBXBuildFile; fileRef = EF72BB2D2A1F5A6F97539D01 /* Tennessee College.ttf */; };
 		D01F63A2084AFC06A8CF2DB9 /* AddReminderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57207B8DF89348C3403EE1B2 /* AddReminderView.swift */; };
 		D2F531EC8AF5BE62C766C86C /* WorldClockCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89F1E3F62A8502AC630B22D8 /* WorldClockCard.swift */; };
+		D3842219FD02B0F3DA7C15F6 /* MissedReminders.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578DD70C573D2DBBF968C90E /* MissedReminders.swift */; };
 		D3B547EC08AD2A681ED6D2FB /* VibrantHostingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8120A372AECC369C299E66B9 /* VibrantHostingController.swift */; };
 		D923E70AD075DD2D3274F376 /* angrybirds-regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 02E1211796210A630A98B72A /* angrybirds-regular.ttf */; };
 		DA1829BD7466153F2253090B /* CountdownTimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC4366C5623EFBDB225AB664 /* CountdownTimerView.swift */; };
@@ -166,6 +167,7 @@
 		52C08D13425898BEB01BA584 /* WhiteSquareRedYesBlackEightWarsaw-Warsaw.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "WhiteSquareRedYesBlackEightWarsaw-Warsaw.ttf"; sourceTree = "<group>"; };
 		53C80629C1C325793FA70555 /* ClackClock.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ClackClock.entitlements; sourceTree = "<group>"; };
 		57207B8DF89348C3403EE1B2 /* AddReminderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddReminderView.swift; sourceTree = "<group>"; };
+		578DD70C573D2DBBF968C90E /* MissedReminders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissedReminders.swift; sourceTree = "<group>"; };
 		58FE84BAEB2987F7E050DC1E /* WhiteSquareRedYesBlackEightZero-Zero.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "WhiteSquareRedYesBlackEightZero-Zero.ttf"; sourceTree = "<group>"; };
 		5939B181AF8C890E3864B472 /* Pullstar-Holinight.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Pullstar-Holinight.ttf"; sourceTree = "<group>"; };
 		59591ECBC79318C58860D0F9 /* ReminderBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderBanner.swift; sourceTree = "<group>"; };
@@ -373,6 +375,7 @@
 			children = (
 				57207B8DF89348C3403EE1B2 /* AddReminderView.swift */,
 				0CF928686A01BA1ED090DC05 /* DueReminderBanner.swift */,
+				578DD70C573D2DBBF968C90E /* MissedReminders.swift */,
 				009B7F69308DFC350F63CB18 /* Reminder.swift */,
 				4E19C0BEE08437852DF2A261 /* ReminderBadge.swift */,
 				59591ECBC79318C58860D0F9 /* ReminderBanner.swift */,
@@ -565,6 +568,13 @@
 			path = DesktopOverlay;
 			sourceTree = "<group>";
 		};
+		"TEMP_FC9E3450-8482-4E05-BEB2-15F940CEC0F7" /* ClackClock */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = ClackClock;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -611,15 +621,15 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 1430;
+				LastUpgradeCheck = 2720;
 				TargetAttributes = {
 					6DDF32C47F1403FD28421DEA = {
 						DevelopmentTeam = SG8NYPLMNY;
-						ProvisioningStyle = Manual;
+						ProvisioningStyle = Automatic;
 					};
 					76D67A42AABBAA2E4B56697B = {
 						DevelopmentTeam = SG8NYPLMNY;
-						ProvisioningStyle = Manual;
+						ProvisioningStyle = Automatic;
 					};
 				};
 			};
@@ -737,6 +747,7 @@
 				92D2EACB8C8EA4A98DBC7BF0 /* FlipTimeDisplay.swift in Sources */,
 				5B2AEA8E7106521C6DCE099E /* FontGridPicker.swift in Sources */,
 				B49170AE425D8D77AF101748 /* MenuBarClockView.swift in Sources */,
+				D3842219FD02B0F3DA7C15F6 /* MissedReminders.swift in Sources */,
 				B1096F8BF63C3A24F965FE8B /* OverlayContentView.swift in Sources */,
 				19BDB1762F956D722D0D472C /* OverlayWindow.swift in Sources */,
 				5B66AFAB30382A2E64FB7404 /* OverlayWindowController.swift in Sources */,
@@ -787,13 +798,13 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGNING_ALLOWED = YES;
 				CODE_SIGNING_REQUIRED = YES;
 				CODE_SIGN_ENTITLEMENTS = ClackClock/ClackClock.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Manual;
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = SG8NYPLMNY;
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = ClackClock/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -809,13 +820,13 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGNING_ALLOWED = YES;
 				CODE_SIGNING_REQUIRED = YES;
 				CODE_SIGN_ENTITLEMENTS = ClackClock/ClackClock.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Manual;
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = SG8NYPLMNY;
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = ClackClock/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -832,9 +843,8 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Manual;
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = SG8NYPLMNY;
 				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -851,6 +861,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -881,9 +892,13 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 2;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = SG8NYPLMNY;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -893,10 +908,12 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.1.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
@@ -908,9 +925,8 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Manual;
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = SG8NYPLMNY;
 				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -927,6 +943,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -957,9 +974,13 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 2;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = SG8NYPLMNY;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -975,11 +996,13 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.1.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;

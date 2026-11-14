@@ -25,6 +25,17 @@ final class ReminderNotifications: NSObject, ObservableObject, UNUserNotificatio
     @Published private(set) var ringingIDs = Set<UUID>()
     /// Reminders that already rang (or were already overdue at launch), so a relaunch never replays old alarms.
     private var rungIDs: Set<UUID>
+    /// Reminders that rang while nobody was at the Mac (asleep or locked) and aren't dismissed yet.
+    @Published private(set) var missedIDs = Set<UUID>()
+    /// Asleep, display off or locked: a reminder ringing now goes unseen.
+    @Published private(set) var isUserAway = false
+    /// Cleared by clicking the widget; the next missed reminder sets it again.
+    @Published private(set) var missedNeedsAttention = false
+    /// The desktop widget bounces while this is true.
+    var wantsMissedAttention: Bool { missedNeedsAttention && !isUserAway && !missedIDs.isEmpty }
+    var missedReminders: [Reminder] {
+        store.reminders.filter { missedIDs.contains($0.id) }.sorted { $0.date < $1.date }
+    }
     /// While ClackClock runs it shows a due reminder itself (`ReminderBannerController`) the
     /// moment it's due, so the native alert is withdrawn this long beforehand. usernoted held
     /// every banner on this Mac back ~10s in its Apple Intelligence step, and that late native
@@ -66,10 +77,28 @@ final class ReminderNotifications: NSObject, ObservableObject, UNUserNotificatio
                 self.ringDueReminders()
             }
             .store(in: &cancellables)
-        // A sleeping Mac delays the one-shot alarm timer; catch up on anything that came due meanwhile.
-        NSWorkspace.shared.notificationCenter.publisher(for: NSWorkspace.didWakeNotification)
+        // A sleeping Mac delays the one-shot alarm timer; catch up on anything that came due
+        // meanwhile. Those came due while nobody could see them, so they count as missed.
+        let workspace = NSWorkspace.shared.notificationCenter
+        workspace.publisher(for: NSWorkspace.didWakeNotification)
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in self?.ringDueReminders() }
+            .sink { [weak self] _ in
+                self?.setUserAway(true)
+                self?.ringDueReminders()
+                self?.setUserAway(Self.isScreenLocked())
+            }
+            .store(in: &cancellables)
+        workspace.publisher(for: NSWorkspace.willSleepNotification)
+            .merge(with: workspace.publisher(for: NSWorkspace.screensDidSleepNotification))
+            .merge(with: DistributedNotificationCenter.default().publisher(for: Self.screenLocked))
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.setUserAway(true) }
+            .store(in: &cancellables)
+        // Without a login password there's no unlock to wait for: the screen waking is the user back.
+        workspace.publisher(for: NSWorkspace.screensDidWakeNotification)
+            .merge(with: DistributedNotificationCenter.default().publisher(for: Self.screenUnlocked))
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.setUserAway(Self.isScreenLocked()) }
             .store(in: &cancellables)
         NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)
             .receive(on: DispatchQueue.main)
@@ -89,6 +118,24 @@ final class ReminderNotifications: NSObject, ObservableObject, UNUserNotificatio
         queue(reminders: store.reminders, requestPermission: true)
     }
 
+    nonisolated private static let screenLocked = Notification.Name("com.apple.screenIsLocked")
+    nonisolated private static let screenUnlocked = Notification.Name("com.apple.screenIsUnlocked")
+
+    nonisolated static func isScreenLocked() -> Bool {
+        (CGSessionCopyCurrentDictionary() as? [String: Any])?["CGSSessionScreenIsLocked"] as? Bool ?? false
+    }
+
+    func setUserAway(_ away: Bool) {
+        if away != isUserAway { isUserAway = away }
+    }
+
+    /// The user clicked the missed-reminder widget: stop bouncing and ringing,
+    /// but keep listing the reminders until each is dismissed.
+    func acknowledgeMissedAttention() {
+        missedNeedsAttention = false
+        stopAlarm()
+    }
+
     /// Starts the looping alarm for reminders whose time has come, stops it once every ringing
     /// reminder is dismissed/acknowledged anywhere, and arms a timer for the next one.
     func ringDueReminders(now: Date = Date()) {
@@ -97,8 +144,20 @@ final class ReminderNotifications: NSObject, ObservableObject, UNUserNotificatio
         let pending = store.reminders.filter { !$0.isAcknowledged }
         let due = pending.filter { $0.date <= now && !rungIDs.contains($0.id) }.map(\.id)
         rungIDs.formUnion(due)
-        ringingIDs.formUnion(due)
+        // Nobody's at the Mac to see a banner or hear the alarm, and by the time
+        // they're back the moment has passed: the widget and menu bar bounce for
+        // it instead, and macOS's own copy of the alert is withdrawn.
+        if isUserAway, !due.isEmpty {
+            missedIDs.formUnion(due)
+            missedNeedsAttention = true
+            center.removeDeliveredNotifications(withIdentifiers: due.map(Self.identifier(for:)))
+        } else {
+            ringingIDs.formUnion(due)
+        }
         ringingIDs.formIntersection(pending.map(\.id))
+        let stillMissed = missedIDs.intersection(pending.map(\.id))
+        if stillMissed != missedIDs { missedIDs = stillMissed }
+        if missedIDs.isEmpty, missedNeedsAttention { missedNeedsAttention = false }
         if ringingIDs.isEmpty {
             stopAlarm()
         } else if alarm == nil {
@@ -150,6 +209,8 @@ final class ReminderNotifications: NSObject, ObservableObject, UNUserNotificatio
         previewSound?.stop()
         newReminderIDs.remove(id)
         ringingIDs.remove(id)
+        missedIDs.remove(id)
+        if missedIDs.isEmpty { missedNeedsAttention = false }
         if ringingIDs.isEmpty { stopAlarm() }
         if let reminder = store.reminders.first(where: { $0.id == id }) {
             store.remove(reminder)
@@ -264,7 +325,7 @@ final class ReminderNotifications: NSObject, ObservableObject, UNUserNotificatio
 
     func presentationOptions(for identifier: String, now: Date = Date()) -> UNNotificationPresentationOptions {
         guard let reminder = store.reminders.first(where: { Self.identifier(for: $0.id) == identifier }),
-              !reminder.isAcknowledged,
+              !reminder.isAcknowledged, !missedIDs.contains(reminder.id),
               // Calendar notification triggers have whole-second precision.
               floor(reminder.date.timeIntervalSince1970) <= now.timeIntervalSince1970 else { return [] }
         return [.banner, .list]

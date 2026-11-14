@@ -445,7 +445,7 @@ final class AppSettings: ObservableObject {
             // Switching to any other app always ends desktop focus at once;
             // Finder activating is usually the wallpaper click itself, which
             // the click monitor has already handled.
-            if app?.bundleIdentifier != DesktopFocus.finderBundleID { self.focusPredictedUntil = nil }
+            if !DesktopFocus.keepsDesktopFocus(app?.bundleIdentifier) { self.focusPredictedUntil = nil }
             self.refreshDesktopFocus()
         }
         // Mouse-down only, so no Accessibility permission is involved.
@@ -483,13 +483,15 @@ final class AppSettings: ObservableObject {
         let focused = DesktopFocus.current()
         let predicting = focusPredictedUntil.map { $0 > Date() } ?? false
         if !predicting, focused != isDesktopFocused { isDesktopFocused = focused }
-        let finderFrontmost = NSWorkspace.shared.frontmostApplication?.bundleIdentifier == DesktopFocus.finderBundleID
-        if finderFrontmost, desktopFocusTimer == nil {
+        // Also polled while ClackClock is in front: its Settings window can open
+        // over the desktop with no app switch to report it.
+        let focusKeeperFrontmost = DesktopFocus.keepsDesktopFocus(NSWorkspace.shared.frontmostApplication?.bundleIdentifier)
+        if focusKeeperFrontmost, desktopFocusTimer == nil {
             let timer = Timer(timeInterval: 0.4, repeats: true) { [weak self] _ in self?.refreshDesktopFocus() }
             timer.tolerance = 0.1
             RunLoop.main.add(timer, forMode: .common)
             desktopFocusTimer = timer
-        } else if !finderFrontmost {
+        } else if !focusKeeperFrontmost {
             desktopFocusTimer?.invalidate()
             desktopFocusTimer = nil
         }
@@ -521,7 +523,7 @@ final class AppSettings: ObservableObject {
         theme = (defaults.string(forKey: Keys.theme)).flatMap(AppTheme.init(rawValue:)) ?? .system
         overlaySize = (defaults.string(forKey: Keys.overlaySize)).flatMap(OverlaySize.init(rawValue:)) ?? .full
         meridiemStyle = (defaults.string(forKey: Keys.meridiemStyle)).flatMap(MeridiemStyle.init(rawValue:)) ?? .text
-        menuBarDisplay = (defaults.string(forKey: Keys.menuBarDisplay)).flatMap(MenuBarDisplay.init(rawValue:)) ?? .time
+        menuBarDisplay = (defaults.string(forKey: Keys.menuBarDisplay)).flatMap(MenuBarDisplay.init(rawValue:)) ?? .date
         worldClocks = defaults.data(forKey: Keys.worldClocks)
             .flatMap { try? JSONDecoder().decode([WorldClock].self, from: $0) }
             .map { Array($0.prefix(WorldClock.maxCount)) } ?? []

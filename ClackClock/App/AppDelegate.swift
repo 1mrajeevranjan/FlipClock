@@ -25,10 +25,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         WidgetFont.registerAll()
-        statusItemController = StatusItemController(timeProvider: timeProvider, settings: settings, reminderStore: reminderStore, timerModel: timerModel, stopwatch: stopwatch) { [weak self] in
+        statusItemController = StatusItemController(timeProvider: timeProvider, settings: settings, reminderStore: reminderStore,
+                                                    notifications: reminderNotifications,
+                                                    timerModel: timerModel, stopwatch: stopwatch) { [weak self] in
             self?.settingsWindowController.show()
         }
-        overlayWindowController = OverlayWindowController(timeProvider: timeProvider, settings: settings, reminderStore: reminderStore) { [weak self] in
+        overlayWindowController = OverlayWindowController(timeProvider: timeProvider, settings: settings, reminderStore: reminderStore,
+                                                          notifications: reminderNotifications) { [weak self] in
             self?.settingsWindowController.show()
         }
         worldClocksCoordinator = WorldClocksCoordinator(timeProvider: timeProvider, settings: settings) { [weak self] in

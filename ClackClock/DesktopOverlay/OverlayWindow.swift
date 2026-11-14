@@ -52,6 +52,11 @@ final class OverlayWindow: NSPanel {
     /// the new location — the per-step crop keeps the position right, but the
     /// pixels are still as old as the last refresh.
     var onDragEnd: (() -> Void)?
+    /// A press released without dragging (the cursor stayed within a few
+    /// points), in every mode — including fill screen and float, which can't
+    /// be dragged.
+    var onClick: (() -> Void)?
+    private static let clickSlop: CGFloat = 3
 
     /// HIG: every interactive surface answers right-click (and control-
     /// click) with its most relevant commands. Handled here rather than via
@@ -79,15 +84,18 @@ final class OverlayWindow: NSPanel {
             return
         }
         super.sendEvent(event)
+        if event.type == .leftMouseDown { onClick?() }
     }
 
     private func trackDrag(from mouseDown: NSEvent) {
         let startMouse = NSEvent.mouseLocation
         let startOrigin = frame.origin
+        var dragged = false
 
         while let event = nextEvent(matching: [.leftMouseDragged, .leftMouseUp]) {
             guard event.type == .leftMouseDragged else { break }
             let current = NSEvent.mouseLocation
+            dragged = dragged || hypot(current.x - startMouse.x, current.y - startMouse.y) > Self.clickSlop
             setFrameOrigin(
                 NSPoint(
                     x: startOrigin.x + (current.x - startMouse.x),
@@ -96,7 +104,7 @@ final class OverlayWindow: NSPanel {
             )
             onDragStep?()
         }
-        onDragEnd?()
+        if dragged { onDragEnd?() } else { onClick?() }
     }
 
     override var canBecomeKey: Bool { false }
