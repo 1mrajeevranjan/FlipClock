@@ -18,6 +18,7 @@
 		0EE2807C3AD5C2B1E21FB347 /* Sportfield Varsity-Grunge.otf in Resources */ = {isa = PBXBuildFile; fileRef = 6D1EC68FB8A0378C6BA3B917 /* Sportfield Varsity-Grunge.otf */; };
 		0EF7F060F0621C857F499A40 /* Dynamix.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 29E26A3AEE7920E0E3D2B7A8 /* Dynamix.ttf */; };
 		131F5CC14CB8F945CFD721AB /* WorldClockOverlayWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E301335F1936F41E722E9EB /* WorldClockOverlayWindowController.swift */; };
+		141075F3A9D071883216E4CB /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 4D37631441DDAB78F1953414 /* PrivacyInfo.xcprivacy */; };
 		179D75977903593A1F53EA1E /* ClackClockApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FDE66E13101E216B95F4973 /* ClackClockApp.swift */; };
 		189287AE1EE8456EB3216277 /* DigitDeltaTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17AB64C40126160D6BCD1ABB /* DigitDeltaTests.swift */; };
 		194E1EF94173475B61746ED7 /* WidgetLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1597F2A0F654D8E8B254A2B1 /* WidgetLayoutTests.swift */; };
@@ -154,11 +155,13 @@
 		481A3F34EE9CD31F5A82E5D9 /* FlipTimeDisplay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlipTimeDisplay.swift; sourceTree = "<group>"; };
 		49782EC191E164E27DC68054 /* abduction2002.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = abduction2002.ttf; sourceTree = "<group>"; };
 		4BFD0F4A952E5B63314A1AE6 /* Linebeam.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Linebeam.ttf; sourceTree = "<group>"; };
+		4D37631441DDAB78F1953414 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		4E19C0BEE08437852DF2A261 /* ReminderBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderBadge.swift; sourceTree = "<group>"; };
 		4E301335F1936F41E722E9EB /* WorldClockOverlayWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockOverlayWindowController.swift; sourceTree = "<group>"; };
 		4E61DD75469DA7ED73419D44 /* Sportfield Varsity-Outline1.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Sportfield Varsity-Outline1.otf"; sourceTree = "<group>"; };
 		4E8DE93AB8E6ACA2F2BEE474 /* WorldClocksCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClocksCoordinator.swift; sourceTree = "<group>"; };
 		52C08D13425898BEB01BA584 /* WhiteSquareRedYesBlackEightWarsaw-Warsaw.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "WhiteSquareRedYesBlackEightWarsaw-Warsaw.ttf"; sourceTree = "<group>"; };
+		53C80629C1C325793FA70555 /* ClackClock.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ClackClock.entitlements; sourceTree = "<group>"; };
 		57207B8DF89348C3403EE1B2 /* AddReminderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddReminderView.swift; sourceTree = "<group>"; };
 		58FE84BAEB2987F7E050DC1E /* WhiteSquareRedYesBlackEightZero-Zero.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "WhiteSquareRedYesBlackEightZero-Zero.ttf"; sourceTree = "<group>"; };
 		5939B181AF8C890E3864B472 /* Pullstar-Holinight.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Pullstar-Holinight.ttf"; sourceTree = "<group>"; };
@@ -378,7 +381,9 @@
 			isa = PBXGroup;
 			children = (
 				9B3D1D5294AB573D5BD2B919 /* Assets.xcassets */,
+				53C80629C1C325793FA70555 /* ClackClock.entitlements */,
 				12EC1BCFDC1430085D7C6E70 /* Info.plist */,
+				4D37631441DDAB78F1953414 /* PrivacyInfo.xcprivacy */,
 				838798FCC47B4D0F927A5EB2 /* App */,
 				C3D5C7F6B85D8399763FE48D /* CountdownTimer */,
 				E5D0C2C27270E004F1A588FE /* DesktopOverlay */,
@@ -651,6 +656,7 @@
 				046A9DF9E6337DF9789FC7A3 /* KGPrimaryItalics.ttf in Resources */,
 				FEC72E206AECEBC2AB0FFC89 /* KGPrimaryItalicsLined.ttf in Resources */,
 				430EB7606971E55D11623241 /* Linebeam.ttf in Resources */,
+				141075F3A9D071883216E4CB /* PrivacyInfo.xcprivacy in Resources */,
 				46D58EE324E33B8985EEDFEA /* Pullstar-Holinight.ttf in Resources */,
 				7D314406E85EA5E2624CD340 /* RockFont.ttf in Resources */,
 				0EE2807C3AD5C2B1E21FB347 /* Sportfield Varsity-Grunge.otf in Resources */,
@@ -775,6 +781,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGNING_ALLOWED = YES;
 				CODE_SIGNING_REQUIRED = YES;
+				CODE_SIGN_ENTITLEMENTS = ClackClock/ClackClock.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -796,6 +803,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGNING_ALLOWED = YES;
 				CODE_SIGNING_REQUIRED = YES;
+				CODE_SIGN_ENTITLEMENTS = ClackClock/ClackClock.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
