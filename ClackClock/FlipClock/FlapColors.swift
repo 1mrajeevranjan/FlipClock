@@ -6,13 +6,14 @@ import AppKit
 enum GlassTone: Equatable {
     case vivid, monochrome, dimmed
 
-    /// Vivid <-> dimmed completes within 5-10ms — one frame at 120Hz — as
-    /// explicitly specified, so it reads as an immediate switch. That only
-    /// works because nothing is rendered at switch time: the dimmed backdrop
-    /// is pre-blurred (`DesktopBackdropCapture.dimmedImage`) and every card's
-    /// faces for the other look are pre-rasterised (`FlipCardLayer`'s
-    /// `upcomingStyles`). One shared timing keeps every layer in step.
-    static let transitionDuration: Double = 0.008
+    /// Vivid <-> dimmed fades over about a third of a second, matching
+    /// macOS's own desktop widgets side by side (an earlier near-instant 8ms
+    /// switch read as a jump next to them). The fade is cheap because nothing
+    /// is rendered at switch time: the dimmed backdrop is pre-blurred
+    /// (`DesktopBackdropCapture.dimmedImage`) and every card's faces for the
+    /// other look are pre-rasterised (`FlipCardLayer`'s `upcomingStyles`), so
+    /// it's a crossfade. One shared timing keeps every layer in step.
+    static let transitionDuration: Double = 0.35
     static let transitionCurve = (c0x: 0.25, c0y: 0.1, c1x: 0.25, c1y: 1.0)
     static let transition = Animation.timingCurve(
         transitionCurve.c0x, transitionCurve.c0y, transitionCurve.c1x, transitionCurve.c1y,

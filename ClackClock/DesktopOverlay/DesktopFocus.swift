@@ -24,8 +24,19 @@ enum DesktopFocus {
     /// Ignores the invisible/tiny helper windows apps park at layer 0.
     static let minimumSide: CGFloat = 80
 
-    static func isFocused(frontmostBundleID: String?, windows: [WindowInfo], screens: [CGRect]) -> Bool {
-        guard frontmostBundleID == finderBundleID else { return false }
+    /// Whether this app being frontmost leaves the desktop in focus: Finder
+    /// (clicking the wallpaper activates it) and ClackClock itself — opening
+    /// its menu bar popover activates it, but a menu bar extra isn't an app in
+    /// front, and macOS's own widgets stay vivid. ClackClock's Settings window
+    /// is a real window, so it still dims them through the window check below.
+    static func keepsDesktopFocus(_ bundleID: String?, ownBundleID: String? = Bundle.main.bundleIdentifier) -> Bool {
+        guard let bundleID else { return false }
+        return bundleID == finderBundleID || bundleID == ownBundleID
+    }
+
+    static func isFocused(frontmostBundleID: String?, windows: [WindowInfo], screens: [CGRect],
+                          ownBundleID: String? = Bundle.main.bundleIdentifier) -> Bool {
+        guard keepsDesktopFocus(frontmostBundleID, ownBundleID: ownBundleID) else { return false }
         return !windows.contains { window in
             window.layer == 0
                 && window.alpha > 0
@@ -98,7 +109,7 @@ enum DesktopFocus {
     static func current() -> Bool {
         let workspace = NSWorkspace.shared
         let frontmost = workspace.frontmostApplication
-        guard frontmost?.bundleIdentifier == finderBundleID else { return false }
+        guard keepsDesktopFocus(frontmost?.bundleIdentifier) else { return false }
         let windows = windowInfos(options: [.optionOnScreenOnly, .excludeDesktopElements])
         // CG window bounds are top-left-origin global coordinates; converting
         // every screen the same way keeps the overlap maths in one space.

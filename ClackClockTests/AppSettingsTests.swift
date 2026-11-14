@@ -254,6 +254,20 @@ final class AppSettingsTests: XCTestCase {
         XCTAssertFalse(SystemWidgetDimming.automatic.dims(desktopFocused: true))
     }
 
+    /// Opening the menu bar popover makes ClackClock frontmost, but it's a
+    /// menu bar extra, not an app window in front of the desktop: macOS's own
+    /// widgets stay vivid, so ClackClock's must too. Its Settings window is a
+    /// real window, though, and dims them like any other.
+    func testClackClockInFrontKeepsDesktopFocusUnlessAWindowCoversTheDesktop() {
+        let screen = [CGRect(x: 0, y: 0, width: 1000, height: 800)]
+        let clackClock = "com.rajeevranjan.clackclock"
+        let settingsWindow = DesktopFocus.WindowInfo(layer: 0, bounds: CGRect(x: 200, y: 150, width: 700, height: 460), alpha: 1)
+        let popover = DesktopFocus.WindowInfo(layer: 101, bounds: CGRect(x: 600, y: 30, width: 340, height: 520), alpha: 1)
+        XCTAssertTrue(DesktopFocus.isFocused(frontmostBundleID: clackClock, windows: [popover], screens: screen, ownBundleID: clackClock))
+        XCTAssertFalse(DesktopFocus.isFocused(frontmostBundleID: clackClock, windows: [settingsWindow], screens: screen, ownBundleID: clackClock))
+        XCTAssertFalse(DesktopFocus.isFocused(frontmostBundleID: "com.apple.Safari", windows: [], screens: screen, ownBundleID: clackClock))
+    }
+
     /// Matched against the system widgets side by side: Finder in front with
     /// another app's window still on screen leaves them dimmed; they turn
     /// vivid only once clicking the wallpaper has slid every window aside.
