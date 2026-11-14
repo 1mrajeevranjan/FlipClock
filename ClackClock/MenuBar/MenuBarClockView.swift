@@ -7,10 +7,11 @@ struct MenuBarClockView: View {
     /// (analytically, not measured), since `NSStatusItem`/`NSHostingView`
     /// sizing must be set explicitly before the view has done a layout
     /// pass.
-    static func itemSize(timeFormat: TimeFormat, display: MenuBarDisplay = .time) -> CGSize {
+    static func itemSize(timeFormat: TimeFormat, meridiemStyle: MeridiemStyle = .text, display: MenuBarDisplay = .time) -> CGSize {
         switch display {
         case .time:
-            return SplitFlapClockFace.idealSize(scale: 1, compact: true, showMeridiem: timeFormat == .twelveHour)
+            return SplitFlapClockFace.idealSize(scale: 1, compact: true, showMeridiem: timeFormat == .twelveHour,
+                                                meridiemCards: meridiemStyle.cards(isPM: false).count)
         case .date:
             return CGSize(width: dateCardSize.width * 2 + dateDigitSpacing + datePadding * 2, height: dateCardSize.height)
         }

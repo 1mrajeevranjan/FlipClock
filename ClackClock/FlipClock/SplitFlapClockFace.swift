@@ -78,8 +78,10 @@ struct SplitFlapClockFace: View {
     /// runloop turn the view is attached, and a hand-copied hardcoded
     /// frame silently drifts out of sync with the real layout — both bugs
     /// this project already hit once.
-    static func idealSize(scale: CGFloat, compact: Bool, showPedestal: Bool = true, showMeridiem: Bool = true, showSeconds: Bool = true) -> CGSize {
-        Metrics(scale: scale, compact: compact, showPedestal: showPedestal, showMeridiem: showMeridiem, showSeconds: showSeconds).totalSize
+    /// `meridiemCards`: 2 reserves room for "A"+"M" (wide enough for either
+    /// style); the menu bar passes the style's real count so it wastes nothing.
+    static func idealSize(scale: CGFloat, compact: Bool, showPedestal: Bool = true, showMeridiem: Bool = true, showSeconds: Bool = true, meridiemCards: Int = 2) -> CGSize {
+        Metrics(scale: scale, compact: compact, showPedestal: showPedestal, showMeridiem: showMeridiem, showSeconds: showSeconds, meridiemCards: meridiemCards).totalSize
     }
 
     private func separator(_ m: Metrics) -> some View {
@@ -101,6 +103,7 @@ private struct Metrics {
     let showPedestal: Bool
     let showMeridiem: Bool
     var showSeconds: Bool = true
+    var meridiemCards: Int = 2
 
     var digitCardSize: CGSize {
         compact ? CGSize(width: 14, height: 20) : CGSize(width: 46, height: 74).scaled(scale)
@@ -158,9 +161,7 @@ private struct Metrics {
         // SS) = 4 gaps; the meridiem card adds a 6th item and 5th gap.
         let pairs: CGFloat = showSeconds ? 3 : 2
         let gaps = Int(pairs * 2 - 2) + (showMeridiem ? 1 : 0)
-        // Worst case (text style, "AM"/"PM" as two cards) reserves enough
-        // width for icon style's single card too.
-        let meridiemWidth = showMeridiem ? ampmGroupWidth(cardCount: 2) : 0
+        let meridiemWidth = showMeridiem ? ampmGroupWidth(cardCount: meridiemCards) : 0
         let width = pairWidth * pairs + separatorDotSize * (pairs - 1) + rowSpacing * CGFloat(gaps) + meridiemWidth + horizontalPadding * 2
         let rowHeight = digitCardSize.height
         let pedestalHeight = (!compact && showPedestal) ? vGroupSpacing + 28 * scale : 0

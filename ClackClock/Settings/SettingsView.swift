@@ -33,7 +33,7 @@ struct SettingsView: View {
     @State private var selectedTab: SettingsTab = .general
     @State private var pickingTimezoneFor: WorldClock.ID?
     @State private var addingClock = false
-    /// The font under the pointer/arrow keys while the font menu is open.
+    /// The font hovered or arrowed to in the font grid, previewed before it's chosen.
     @State private var highlightedFont: WidgetFont?
     private var previewFont: WidgetFont { highlightedFont ?? settings.widgetFont }
 
@@ -53,6 +53,7 @@ struct SettingsView: View {
                 ForEach(Array(SettingsTab.allCases.enumerated()), id: \.element) { index, tab in
                     SettingsNavigationCard(tab: tab, isSelected: selectedTab == tab) {
                         selectedTab = tab
+                        highlightedFont = nil
                     }
                     .keyboardShortcut(KeyEquivalent(Character("\(index + 1)")), modifiers: .command)
                     .help("\(tab.label) (⌘\(index + 1))")
@@ -131,10 +132,8 @@ struct SettingsView: View {
                 Divider()
                 SettingsRow("Notification sound") {
                     HStack(spacing: 8) {
-                        Picker("Notification sound", selection: $settings.reminderSound) {
-                            ForEach(ReminderSound.all) { Text($0.label).tag($0) }
-                        }
-                        .pickerStyle(.menu)
+                        SoundPopUpPicker(selection: $settings.reminderSound) { reminderNotifications.playPreview($0) }
+                            .fixedSize()
                         Button { reminderNotifications.playPreview(settings.reminderSound) } label: {
                             Image(systemName: "speaker.wave.2.fill").frame(width: 24, height: 24)
                         }
@@ -176,11 +175,9 @@ struct SettingsView: View {
                     }
                     .pickerStyle(.segmented)
                 }
-                Divider()
-                SettingsRow("Digit font") {
-                    FontPopUpPicker(selection: $settings.widgetFont) { highlightedFont = $0 }
-                        .frame(width: 220)
-                }
+            }
+            settingsCard("Digit font") {
+                FontGridPicker(selection: $settings.widgetFont, highlighted: $highlightedFont)
             }
 
         case .desktopClock:
