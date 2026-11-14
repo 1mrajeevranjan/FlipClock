@@ -13,6 +13,11 @@ targets:
     platform: macOS
     sources:
       - path: ClackClock
+        # Exported builds saved into the source folder would otherwise be
+        # copied into the app bundle — a nested .app is an App Store rejection.
+        excludes:
+          - "**/*.dmg"
+          - "**/*.app"
       - path: Fonts
         buildPhase: resources
         # Xcode's resource copy phase flattens this folder's subdirectories
