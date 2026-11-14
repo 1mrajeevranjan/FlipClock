@@ -95,9 +95,10 @@ struct ReminderBannerStack: View {
     }
 }
 
-/// Matches the native alert layout: app icon, bold title and a secondary
-/// line, with the Dismiss action in its own column on the right. Clicking the
-/// body only silences the alarm, as it does on the native alert.
+/// App icon, bold title and a secondary line, with Dismiss as a capsule
+/// button on the right — no hairline column, which looked like a seam in the
+/// glass. Clicking the body only silences the alarm, as it does on the native
+/// alert.
 private struct ReminderBannerCard: View {
     private static let cornerRadius: CGFloat = 16
 
@@ -130,14 +131,11 @@ private struct ReminderBannerCard: View {
             .accessibilityLabel("\(reminder.title), reminder")
             .accessibilityHint("Silences the alarm")
 
-            Divider()
-
             Button("Dismiss", action: onDismiss)
-                .buttonStyle(.plain)
-                .font(.system(size: 13, weight: .medium))
-                .frame(width: 84)
-                .frame(maxHeight: .infinity)
-                .contentShape(Rectangle())
+                .buttonStyle(.bordered)
+                .buttonBorderShape(.capsule)
+                .controlSize(.large)
+                .padding(.trailing, 14)
                 .accessibilityLabel("Dismiss \(reminder.title)")
         }
         .frame(width: 360)
