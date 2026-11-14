@@ -246,42 +246,28 @@ final class UIControlsTests: XCTestCase {
         }
     }
 
-    /// SwiftUI's menu picker drew every font name in the system font, so the
-    /// list couldn't be judged by eye; and the clock preview only changed on
-    /// commit. Each item now names itself in its own face, and the highlighted
-    /// item (mouse or arrow keys) is reported while the menu is open.
-    func testFontMenuShowsEachFontInItselfAndReportsTheHighlightedOne() throws {
-        let menu = FontPopUpPicker.makeMenu()
-        XCTAssertEqual(menu.items.map(\.title), WidgetFont.all.map(\.label))
-        for (item, font) in zip(menu.items, WidgetFont.all) {
-            let shown = item.attributedTitle?.attribute(.font, at: 0, effectiveRange: nil) as? NSFont
-            if let name = font.postscriptName {
-                XCTAssertEqual(shown?.fontName, name, "\(font.label) isn't drawn in its own face")
-            } else {
-                XCTAssertEqual(shown?.familyName, NSFont.menuFont(ofSize: 0).familyName)
-            }
-        }
+    /// A menu covered the very preview it drove and spilled outside Settings;
+    /// the font grid stays in the window and its tiles are real buttons.
+    func testFontGridPicksAFontByItsTile() throws {
+        let ui = settingsUI()
+        try ui.press("Appearance")
+        try ui.press("Rock Font")
+        XCTAssertEqual(settings.widgetFont.label, "Rock Font")
+        try ui.press("Dynamix")
+        XCTAssertEqual(settings.widgetFont.label, "Dynamix")
+    }
 
-        var selection = WidgetFont.system
-        var highlighted: [WidgetFont?] = []
-        let coordinator = FontPopUpPicker.Coordinator(FontPopUpPicker(
-            selection: Binding(get: { selection }, set: { selection = $0 }),
-            onHighlight: { highlighted.append($0) }
-        ))
-        let rock = try XCTUnwrap(menu.items.first { $0.title == "Rock Font" })
-        coordinator.menu(menu, willHighlight: rock)
-        XCTAssertEqual(highlighted.last??.label, "Rock Font")
-        XCTAssertEqual(selection, .system, "Highlighting previews without committing")
-
-        coordinator.menuDidClose(menu)
-        RunLoop.main.run(until: Date().addingTimeInterval(0.05))
-        XCTAssertEqual(highlighted.last, .some(nil), "Closing the menu hands the preview back to the selection")
-
-        let button = NSPopUpButton(frame: .zero, pullsDown: false)
-        button.menu = menu
-        button.select(rock)
-        coordinator.picked(button)
-        XCTAssertEqual(selection.label, "Rock Font")
+    func testFontGridArrowKeysMoveByTileAndRowWithoutLeavingTheList() {
+        let count = 10, columns = 3
+        XCTAssertEqual(FontGridPicker.moved(from: 4, by: .rightArrow, count: count, columns: columns), 5)
+        XCTAssertEqual(FontGridPicker.moved(from: 4, by: .leftArrow, count: count, columns: columns), 3)
+        XCTAssertEqual(FontGridPicker.moved(from: 4, by: .downArrow, count: count, columns: columns), 7)
+        XCTAssertEqual(FontGridPicker.moved(from: 4, by: .upArrow, count: count, columns: columns), 1)
+        XCTAssertEqual(FontGridPicker.moved(from: 1, by: .upArrow, count: count, columns: columns), 1)
+        XCTAssertEqual(FontGridPicker.moved(from: 0, by: .leftArrow, count: count, columns: columns), 0)
+        XCTAssertEqual(FontGridPicker.moved(from: 8, by: .downArrow, count: count, columns: columns), 9,
+                       "Down from a row above a short last row lands on the last tile")
+        XCTAssertEqual(FontGridPicker.moved(from: 9, by: .rightArrow, count: count, columns: columns), 9)
     }
 
     func testSettingsDesktopClockControls() throws {

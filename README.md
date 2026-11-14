@@ -114,7 +114,7 @@ Every character (digits, weekday, date, AM/PM) is a real rasterised flip card wi
 | Time format | 12-hour, 24-hour |
 | Menu bar | Time, or the day of the month only |
 | AM/PM style | Text or a sun/moon icon |
-| Digit font | System plus 37 bundled decorative fonts; the menu shows each in its own face and the preview follows the highlighted one |
+| Digit font | System plus 37 bundled decorative fonts; chosen from a grid of samples; the preview follows the hovered or arrowed-to font |
 | Widget style | Full Color, Monochrome |
 | Card colour | Default, Graphite, Red, Orange, Yellow, Green, Blue, Purple, Pink |
 | Frosted glass | Translucent smoked-glass cards that keep a hint of the chosen colour |
