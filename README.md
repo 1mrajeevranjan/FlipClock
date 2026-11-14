@@ -149,8 +149,6 @@ cd ClackClock
 `project.yml` pins the author's team. Replace it with your own, then regenerate the project:
 
 ```yaml
-CODE_SIGN_STYLE: Manual
-CODE_SIGN_IDENTITY: "Apple Development"
 DEVELOPMENT_TEAM: YOUR_TEAM_ID   # find it with: security find-identity -v -p codesigning
 ```
 
@@ -182,6 +180,19 @@ open ~/Applications/ClackClock.app
 > Run ClackClock from a stable location. macOS won't register notifications for an app launched from a temporary build folder.
 
 ClackClock is an agent app: it has no Dock icon and no main window. Look for the clock in the menu bar.
+
+### 4. Make an installer DMG (optional)
+
+```bash
+script/make_dmg.sh        # → dist/ClackClock-<version>.dmg
+```
+
+The DMG opens to ClackClock beside an **Applications** shortcut; drag one onto the other to install. Signed with an Apple Development certificate it runs on your own Mac only — Gatekeeper on other Macs blocks it. To share it, sign with a Developer ID and notarize:
+
+```bash
+xcrun notarytool store-credentials clackclock-notary   # once
+DEVELOPER_ID="Developer ID Application: Your Name (TEAMID)" NOTARY_PROFILE=clackclock-notary script/make_dmg.sh
+```
 
 ## Usage
 
