@@ -109,10 +109,6 @@ struct SettingsView: View {
         case .general:
             clockPreview
             settingsCard {
-                SettingsRow("Desktop clock", detail: "Keep the time visible on your wallpaper.") {
-                    Toggle("Desktop clock", isOn: $settings.showDesktopOverlay).fixedSize()
-                }
-                Divider()
                 SettingsRow("Launch at login", detail: settings.launchAtLoginIssue ?? "Ready whenever you start your Mac.") {
                     Toggle("Launch at login", isOn: $settings.launchAtLogin).fixedSize()
                 }
@@ -182,6 +178,11 @@ struct SettingsView: View {
 
         case .desktopClock:
             clockPreview
+            settingsCard {
+                SettingsRow("Show widget", detail: "Keep the time visible on your wallpaper.") {
+                    Toggle("Show widget", isOn: $settings.showDesktopOverlay).fixedSize()
+                }
+            }
             settingsCard("Layout") {
                 SettingsRow("Size", detail: settings.fillScreen ? "Fill screen sizes the clock to your screen." : nil) {
                     Picker("Size", selection: $settings.overlaySize) {
