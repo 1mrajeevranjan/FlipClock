@@ -1,6 +1,7 @@
 import AppKit
 import CoreImage
 import ScreenCaptureKit
+import os
 
 /// Software equivalent of `NSVisualEffectView.behindWindow` blending, but
 /// with a real, tunable Gaussian blur radius — `NSVisualEffectView`'s own
@@ -22,8 +23,8 @@ import ScreenCaptureKit
 /// is shared across every widget on that display via `SharedBackdrop`, so
 /// adding world clock widgets doesn't multiply it.
 ///
-/// Requires Screen Recording permission (macOS prompts on first capture
-/// attempt). If the user denies it, `image` just stays `nil` forever and
+/// Requires Screen Recording permission (asked once ever; a grant made in
+/// System Settings relaunches the app — see `ScreenCaptureRelaunch`). If the user denies it, `image` just stays `nil` and
 /// `WidgetGlassBackground` falls back to its `NSVisualEffectView` look —
 /// there's no hard failure, only a softer diffusion.
 ///
@@ -36,11 +37,11 @@ import ScreenCaptureKit
 /// detail showing through.
 final class DesktopBackdropCapture: ObservableObject {
     @Published private(set) var image: CGImage?
-    /// The same backdrop blurred much harder, for the dimmed look. Prepared
-    /// alongside `image` so switching looks is an opacity crossfade between
-    /// two ready images — animating a live SwiftUI blur across the whole
-    /// panel instead cost enough GPU per frame that the fade visibly lagged
-    /// the click and stuttered.
+    /// The same backdrop blurred far harder, blended half-strength over
+    /// `image` for the dimmed look (see `WidgetGlassBackground.dimmedMix`).
+    /// Prepared alongside it so switching looks is an opacity fade between two
+    /// ready images — animating a live SwiftUI blur across the whole panel
+    /// cost enough GPU per frame that the fade visibly lagged and stuttered.
     @Published private(set) var dimmedImage: CGImage?
 
     /// Last full-display blurred backdrops this widget received. Held here so
@@ -458,8 +459,28 @@ actor SharedBackdrop {
         return pair ?? entries[displayID]?.pair
     }
 
+    /// Whether this launch has already shown the Screen Recording prompt.
+    /// Set by the first ScreenCaptureKit failure this launch. A call macOS
+    /// won't allow pops its Screen Recording prompt, and captures are retried
+    /// on every uncover, Space switch and drag — so while the permission check
+    /// and ScreenCaptureKit disagree (seen with several differently built
+    /// copies of the app registered), retrying turned into a prompt that kept
+    /// coming back. Any failure stops the attempts until the next launch.
+    private var captureDeclined = false
+
     private func capture(_ request: CaptureRequest) async -> BackdropPair? {
         if let captureOverride { return await captureOverride(request) }
+        // Every `SCShareableContent` call made without permission pops the
+        // system Screen Recording dialog again — on a 60s timer plus every
+        // Space switch and drag, that meant a fresh prompt over the widget
+        // every few minutes. Check first, ask at most once ever, and
+        // otherwise stay on the vibrancy fallback quietly.
+        guard !captureDeclined else { return nil }
+        guard CGPreflightScreenCaptureAccess() else {
+            screenCaptureLog.notice("Screen Recording not granted to \(Bundle.main.bundlePath, privacy: .public)")
+            await ScreenCaptureRelaunch.accessMissing()
+            return nil
+        }
         let displayID = request.displayID
         let blurRadius = request.blurRadius
         let dimmedBlurRadius = request.dimmedBlurRadius
@@ -487,17 +508,17 @@ actor SharedBackdrop {
             let raw = try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: config)
             let source = CIImage(cgImage: raw)
             let small = source.transformed(by: CGAffineTransform(scaleX: Self.dimmedDownsample, y: Self.dimmedDownsample))
-            // Gaussians compose in quadrature, so this lands where blurring the
-            // vivid backdrop by `dimmedBlurRadius` again would.
-            let dimmedRadius = (blurRadius * blurRadius + dimmedBlurRadius * dimmedBlurRadius).squareRoot()
             guard let blurred = blur(source, radius: blurRadius * pixelScale),
                   let output = ciContext.createCGImage(blurred, from: source.extent),
-                  let dimmedBlurred = blur(small, radius: dimmedRadius * pixelScale * Self.dimmedDownsample),
+                  let dimmedBlurred = blur(small, radius: dimmedBlurRadius * pixelScale * Self.dimmedDownsample),
                   let dimmedOutput = ciContext.createCGImage(dimmedBlurred, from: small.extent) else {
                 return nil
             }
+            screenCaptureLog.notice("Captured backdrop")
             return BackdropPair(vivid: output, dimmed: dimmedOutput)
         } catch {
+            screenCaptureLog.error("Capture failed: \(String(describing: error), privacy: .public)")
+            captureDeclined = true
             // Denied Screen Recording permission or a transient capture
             // failure — the last good backdrop (or none) stays in place and
             // `WidgetGlassBackground` falls back gracefully.
@@ -519,5 +540,88 @@ actor SharedBackdrop {
         // Clamping makes the blur output infinite in extent — crop back to the
         // source rect so it lines up with the display's bounds.
         return output.cropped(to: image.extent)
+    }
+}
+
+/// A Screen Recording grant reaches only processes started after it, which is
+/// why System Settings itself offers "Quit & Reopen". So while access is
+/// missing, coming back from System Settings relaunches the app once, and the
+/// glass is there without a manual restart.
+///
+/// Loop-free by construction: a relaunch needs the user to visit Settings and
+/// leave it again, and nothing else ever starts a copy of the app.
+/// Screen Recording state changes are invisible from outside the app (macOS
+/// keeps no readable record of its decisions), so the capture path logs them:
+/// `log stream --predicate 'subsystem == "com.rajeevranjan.clackclock"'`.
+let screenCaptureLog = Logger(subsystem: "com.rajeevranjan.clackclock", category: "screen-capture")
+
+@MainActor
+enum ScreenCaptureRelaunch {
+    nonisolated static let systemSettingsBundleID = "com.apple.systempreferences"
+    /// Persisted, so macOS's prompt is shown once ever rather than once per
+    /// launch: declining and relaunching doesn't bring it back, and the
+    /// switch in System Settings stays the way to turn it on later.
+    static let promptedKey = "screenCapturePromptShown"
+
+    private static var hasPrompted = false
+    private static var visitedSettings = false
+    private static var observer: NSObjectProtocol?
+
+    /// Called whenever a capture finds Screen Recording access missing.
+    static func accessMissing() {
+        if !hasPrompted, !UserDefaults.standard.bool(forKey: promptedKey) {
+            hasPrompted = true
+            UserDefaults.standard.set(true, forKey: promptedKey)
+            screenCaptureLog.notice("Showing the Screen Recording prompt")
+            CGRequestScreenCaptureAccess()
+        }
+        relaunchOnReturnFromSettings()
+    }
+
+    /// The widget's "Turn On Glass Effect…" item, after the one-time prompt
+    /// was declined or ClackClock was removed from the list. Asking again here
+    /// is the user's own request, and it puts ClackClock back in the list so
+    /// there's a switch to turn on.
+    static func requestFromUser() {
+        screenCaptureLog.notice("Glass effect requested from the widget menu")
+        CGRequestScreenCaptureAccess()
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
+            NSWorkspace.shared.open(url)
+        }
+        relaunchOnReturnFromSettings()
+    }
+
+    private static func relaunchOnReturnFromSettings() {
+        guard observer == nil else { return }
+        observer = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main
+        ) { note in
+            let bundleID = (note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication)?.bundleIdentifier
+            MainActor.assumeIsolated { appActivated(bundleID) }
+        }
+    }
+
+    /// Pure, for testing: relaunch on the first switch away from System
+    /// Settings after it has been visited — not on Settings itself, and not
+    /// before it was ever opened.
+    nonisolated static func shouldRelaunch(activated bundleID: String?, visitedSettings: Bool) -> Bool {
+        visitedSettings && bundleID != systemSettingsBundleID
+    }
+
+    private static func appActivated(_ bundleID: String?) {
+        if bundleID == systemSettingsBundleID { visitedSettings = true }
+        guard shouldRelaunch(activated: bundleID, visitedSettings: visitedSettings) else { return }
+        if let observer { NSWorkspace.shared.notificationCenter.removeObserver(observer) }
+        observer = nil
+        screenCaptureLog.notice("Left System Settings without access; relaunching")
+        let config = NSWorkspace.OpenConfiguration()
+        config.createsNewApplicationInstance = true
+        config.activates = false
+        config.addsToRecentItems = false
+        NSWorkspace.shared.openApplication(at: Bundle.main.bundleURL, configuration: config) { app, _ in
+            Task { @MainActor in
+                if app != nil { NSApp.terminate(nil) }
+            }
+        }
     }
 }

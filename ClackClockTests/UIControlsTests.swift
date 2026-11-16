@@ -244,9 +244,7 @@ final class UIControlsTests: XCTestCase {
 
     func testSettingsGeneralControls() throws {
         let ui = settingsUI()
-        let overlay = settings.showDesktopOverlay
-        try ui.press("Desktop clock")
-        XCTAssertEqual(settings.showDesktopOverlay, !overlay)
+        XCTAssertFalse(ui.has("Show widget"), "The widget switch lives with the widget's options")
         XCTAssertTrue(try ui.element("Preview notification sound").isEnabled,
                       "The Default sound (system alert) can be previewed too")
     }
@@ -339,6 +337,11 @@ final class UIControlsTests: XCTestCase {
     func testSettingsDesktopClockControls() throws {
         let ui = settingsUI()
         try ui.press("Desktop Clock")
+        let overlay = settings.showDesktopOverlay
+        try ui.press("Show widget")
+        XCTAssertEqual(settings.showDesktopOverlay, !overlay)
+        try ui.press("Show widget")
+        XCTAssertEqual(settings.showDesktopOverlay, overlay)
         for size in OverlaySize.allCases {
             try ui.press(size.label)
             XCTAssertEqual(settings.overlaySize, size)

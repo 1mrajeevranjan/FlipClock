@@ -227,9 +227,9 @@ Open Settings by right-clicking the menu bar clock, or from the widget's context
 
 | Tab | Controls |
 |---|---|
-| General | Desktop clock on/off, launch at login, reminder notification access, reminder sound |
+| General | Launch at login, reminder notification access, reminder sound |
 | Appearance | Theme, AM/PM style, digit font |
-| Desktop Clock | Size, time format, Full Color / Monochrome, card colour, frosted glass, date row, float across screen, fill screen |
+| Desktop Clock | Show widget on/off, size, time format, Full Color / Monochrome, card colour, frosted glass, date row, float across screen, fill screen |
 | World Clocks | Up to 5 clocks: time zone, optional name, where to show it, widget size, 12/24-hour |
 
 ## Permissions and Privacy
@@ -415,7 +415,7 @@ Development spot check (Debug build, popover closed): about 0.4% CPU on average.
 <summary><b>The desktop widget isn't visible</b></summary>
 
 - The widget sits below normal app windows by design, like the native widgets. Show the desktop to see it.
-- Check that **Desktop clock** is on in Settings › General.
+- Check that **Show widget** is on in Settings › Desktop Clock.
 - If it ended up off screen, quit ClackClock and reset its position:
   `defaults delete com.rajeevranjan.clackclock "NSWindow Frame DesktopOverlayFrame"`.
 </details>

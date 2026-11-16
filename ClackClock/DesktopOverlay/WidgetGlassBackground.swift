@@ -25,30 +25,39 @@ struct WidgetGlassBackground: View {
     /// (or forever, if Screen Recording access was denied), in which case
     /// this falls back to the live `NSVisualEffectView` blur below.
     var backdropImage: CGImage? = nil
-    /// The same backdrop pre-blurred for the dimmed look (see
-    /// `DesktopBackdropCapture.dimmedImage`).
+    /// The same backdrop blurred far harder, for the dimmed look (see
+    /// `dimmedMix`).
     var dimmedBackdropImage: CGImage? = nil
     /// Which of macOS's three widget looks to render (see `GlassTone`).
     /// Monochrome is a deliberate user choice and drains the glass all the
     /// way to greyscale.
     ///
-    /// Dimmed is deliberately *not* full greyscale. Measuring a real widget
-    /// while the system had it dimmed showed its glass still carrying some
-    /// colour (saturation ~0.13-0.25 over a ~0.3 wallpaper) but far more
-    /// diffused than the vivid state — nearly a flat average of what's behind
-    /// it. So dimming pulls the vibrancy back, deepens the scrim a little, and
-    /// adds a second blur on top of the captured one.
+    /// Dimmed is *not* a greyed-out vivid. Fitting the real dimmed Calendar
+    /// and Battery widgets against the raw wallpaper under them (screen
+    /// capture vs. the wallpaper window alone), their glass is, to within a
+    /// few levels: half the wallpaper blurred only ~3-4pt — individual
+    /// jellyfish still readable, which is what reads as "clear" — and half
+    /// blurred 40-100pt, which halves the contrast without moving the
+    /// brightness, at slightly boosted saturation (x1.1-1.2) and no
+    /// noticeable lift or tint. Draining saturation and darkening left ours a
+    /// dull grey slab; the heavy blur on its own, a frosted one. So dimming
+    /// lays `dimmedBackdropImage` over the light one at `dimmedMix`, keeps the
+    /// colour, and rims the full edge.
     var tone: GlassTone = .vivid
+
+    /// How much of the heavily blurred backdrop covers the light one when
+    /// dimmed — measured at 0.50-0.55 on the system's own widgets.
+    static let dimmedMix: Double = 0.5
+
+    /// Blur of the heavy half of the dimmed glass (see `tone`). Baked into a
+    /// second capture image, not a live SwiftUI `.blur`, which was too heavy
+    /// to animate smoothly across the panel.
+    static func dimmedBlur(scale: CGFloat) -> CGFloat {
+        (80 * scale).clamped(to: 32...100)
+    }
 
     private var monochrome: Bool { tone == .monochrome }
     private var dimmed: Bool { tone == .dimmed }
-
-    /// Extra diffusion the dimmed backdrop gets on top of the vivid one's
-    /// blur. Baked into a second capture image (not a live SwiftUI `.blur`,
-    /// which was too heavy to animate smoothly across the panel).
-    static func dimmedBlur(scale: CGFloat) -> CGFloat {
-        (18 * scale).clamped(to: 8...28)
-    }
 
     /// `34 * scale`, clamped to `14...40`. The default `.full` size
     /// (`scale = 0.65`) now renders at `22pt` — smaller than the old flat
@@ -92,15 +101,22 @@ struct WidgetGlassBackground: View {
             // — light catching curved glass from above, not a stroke drawn
             // all the way around (which is what previously read as an
             // artificial "ring").
-            shape.strokeBorder(
-                AngularGradient(
-                    colors: [.white.opacity(0.05), .white.opacity(0.55), .white.opacity(0.05)],
-                    center: .center,
-                    startAngle: .degrees(200),
-                    endAngle: .degrees(340)
-                ),
-                lineWidth: 1
-            )
+            ZStack {
+                shape.strokeBorder(
+                    AngularGradient(
+                        colors: [.white.opacity(0.05), .white.opacity(0.55), .white.opacity(0.05)],
+                        center: .center,
+                        startAngle: .degrees(200),
+                        endAngle: .degrees(340)
+                    ),
+                    lineWidth: 1
+                )
+                // Dimmed native glass catches light all the way round, the
+                // bevel that makes it read as a clear pane. Faded rather than
+                // inserted so it rides the vivid <-> dimmed crossfade.
+                shape.strokeBorder(Color.white.opacity(0.22), lineWidth: 1)
+                    .opacity(dimmed ? 1 : 0)
+            }
             .blendMode(.plusLighter)
         }
     }
@@ -112,9 +128,12 @@ struct WidgetGlassBackground: View {
     /// intuitive choice for "frosted" — pushed the panel the wrong way, to
     /// 142. macOS darkens widget glass so content stays legible over a bright
     /// photo, and that slight deepening is a real part of the look.
-    static func scrim(isDark: Bool, dimmed: Bool) -> Color {
-        let base = isDark ? 0.20 : 0.05
-        return Color.black.opacity(dimmed ? base + 0.08 : base)
+    ///
+    /// Dimmed uses the same: measured, the system's dimmed glass sits within
+    /// a few levels of the wallpaper's own brightness, so neither the extra
+    /// black nor a white lift tried earlier belongs there.
+    static func scrim(isDark: Bool) -> Color {
+        Color.black.opacity(isDark ? 0.20 : 0.05)
     }
 
     /// See the `.saturation` call site — real widget glass runs its backdrop
@@ -122,9 +141,10 @@ struct WidgetGlassBackground: View {
     /// "vibrant glass" from "a blurry screenshot of the wallpaper".
     static let vibrancy: Double = 1.35
 
-    /// Dimmed still keeps the backdrop in colour (see `dimmed`); it just stops
-    /// boosting it, landing near the wallpaper's own saturation.
-    static let dimmedVibrancy: Double = 0.75
+    /// Measured x1.1-1.2 on the system's dimmed widgets: the hue passes
+    /// through barely boosted (1.5 read as a lavender-tinted panel), and
+    /// dropping below 1 is what turned it grey.
+    static let dimmedVibrancy: Double = 1.15
 
     /// Passing the backdrop through at saturation 1 is what kept this reading
     /// as a flat grey-brown panel next to the real thing.
@@ -204,18 +224,16 @@ struct WidgetGlassBackground: View {
                                 // fixed and isn't a public API.
                                 ZStack {
                                     backdropLayer(backdropImage, size: proxy.size)
-                                        .saturation(Self.saturation(monochrome: monochrome, dimmed: false))
-                                    // The dimmed look is its own pre-blurred
-                                    // image faded in on top, so switching
-                                    // looks animates nothing but opacity and a
-                                    // colour matrix — cheap enough to run at
-                                    // full frame rate from the first frame.
+                                    // Pre-blurred and only faded in, so
+                                    // switching looks animates nothing but
+                                    // opacity and a colour matrix — cheap
+                                    // enough to run at full frame rate.
                                     if let dimmedBackdropImage {
                                         backdropLayer(dimmedBackdropImage, size: proxy.size)
-                                            .saturation(Self.saturation(monochrome: false, dimmed: true))
-                                            .opacity(dimmed ? 1 : 0)
+                                            .opacity(dimmed ? Self.dimmedMix : 0)
                                     }
                                 }
+                                .saturation(Self.saturation(monochrome: monochrome, dimmed: dimmed))
                                 // The blurred wallpaper alone reads as dark
                                 // smoked glass, not frosted glass. macOS's
                                 // own widgets lay a translucent scrim over
@@ -226,7 +244,7 @@ struct WidgetGlassBackground: View {
                                 // does its own sampling and washed the panel
                                 // out entirely when tried before) keeps the
                                 // strength tunable and predictable.
-                                .overlay(Self.scrim(isDark: isDark, dimmed: dimmed))
+                                .overlay(Self.scrim(isDark: isDark))
                             } else {
                                 // The corner rounding lives on the
                                 // NSVisualEffectView's own CALayer (see

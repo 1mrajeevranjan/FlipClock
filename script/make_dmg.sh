@@ -11,6 +11,11 @@
 #   NOTARY_PROFILE=clackclock-notary script/make_dmg.sh
 #
 # Create the notary profile once with `xcrun notarytool store-credentials`.
+#
+# Or package an app Xcode's Organizer already exported (Distribute App >
+# Direct Distribution: Developer ID signed, notarized and stapled) as is:
+#
+#   APP="/path/to/exported/ClackClock.app" script/make_dmg.sh
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -18,15 +23,33 @@ BUILD_DIR="${TMPDIR:-/tmp}/ClackClock-DMG"
 DIST_DIR="$ROOT_DIR/dist"
 APP_NAME="ClackClock"
 
-xcodebuild -quiet -project "$ROOT_DIR/ClackClock.xcodeproj" -scheme ClackClock \
-  -configuration Release -derivedDataPath "$BUILD_DIR/DerivedData" build
-APP="$BUILD_DIR/DerivedData/Build/Products/Release/$APP_NAME.app"
+die() { echo "error: $*" >&2; exit 1; }
 
+# A DMG signed with anything but a Developer ID, or signed and never notarized,
+# is assessed and rejected outright on other Macs ("Apple could not verify ...
+# is free of malware") even when the app inside is notarized. Unsigned, it isn't
+# assessed at all and Gatekeeper judges the app alone.
 if [[ -n "${DEVELOPER_ID:-}" ]]; then
-  # Re-signing with only the project's entitlements also drops the
-  # development-only get-task-allow.
-  codesign --force --options runtime --timestamp \
-    --entitlements "$ROOT_DIR/ClackClock/ClackClock.entitlements" --sign "$DEVELOPER_ID" "$APP"
+  [[ "$DEVELOPER_ID" == "Developer ID Application:"* ]] \
+    || die "DEVELOPER_ID must be a \"Developer ID Application: ...\" identity, not \"$DEVELOPER_ID\""
+  [[ -n "${NOTARY_PROFILE:-}" ]] \
+    || die "DEVELOPER_ID needs NOTARY_PROFILE too: a signed but unnotarized DMG is blocked on other Macs"
+fi
+
+if [[ -n "${APP:-}" ]]; then
+  [[ -d "$APP" ]] || die "APP=$APP doesn't exist"
+  # Re-signing here would void the export's notarization ticket.
+else
+  xcodebuild -quiet -project "$ROOT_DIR/ClackClock.xcodeproj" -scheme ClackClock \
+    -configuration Release -derivedDataPath "$BUILD_DIR/DerivedData" build
+  APP="$BUILD_DIR/DerivedData/Build/Products/Release/$APP_NAME.app"
+
+  if [[ -n "${DEVELOPER_ID:-}" ]]; then
+    # Re-signing with only the project's entitlements also drops the
+    # development-only get-task-allow.
+    codesign --force --options runtime --timestamp \
+      --entitlements "$ROOT_DIR/ClackClock/ClackClock.entitlements" --sign "$DEVELOPER_ID" "$APP"
+  fi
 fi
 
 STAGE="$BUILD_DIR/stage"
@@ -84,10 +107,14 @@ rm -f "$RW_DMG"
 
 if [[ -n "${DEVELOPER_ID:-}" ]]; then
   codesign --sign "$DEVELOPER_ID" --timestamp "$OUT"
-  if [[ -n "${NOTARY_PROFILE:-}" ]]; then
-    xcrun notarytool submit "$OUT" --keychain-profile "$NOTARY_PROFILE" --wait
-    xcrun stapler staple "$OUT"
-  fi
+  xcrun notarytool submit "$OUT" --keychain-profile "$NOTARY_PROFILE" --wait
+  xcrun stapler staple "$OUT"
+  spctl --assess --type open --context context:primary-signature "$OUT" \
+    || die "Gatekeeper rejects $OUT"
 fi
+
+# The same verdict a downloading Mac's Gatekeeper reaches on first launch.
+spctl --assess --type execute "$STAGE/$APP_NAME.app" 2>/dev/null \
+  || echo "warning: Gatekeeper rejects $APP_NAME.app; this DMG only works on this Mac" >&2
 
 echo "$OUT"

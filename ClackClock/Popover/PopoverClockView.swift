@@ -96,7 +96,8 @@ struct PopoverClockView: View {
             .preferredColorScheme(settings.theme.colorScheme)
             .onAppear { presentation.refreshCalendar() }
             .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged)
-                .merge(with: NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange))) { _ in
+                .merge(with: NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange))
+                .receive(on: DispatchQueue.main)) { _ in
                 presentation.refreshCalendar()
             }
     }

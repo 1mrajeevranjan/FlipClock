@@ -310,22 +310,25 @@ final class AppSettingsTests: XCTestCase {
     }
 
     /// The app's Monochrome pick and the system's dimming are deliberately
-    /// different strengths: the first is an explicit request for greyscale,
-    /// the second only flattens. Measuring a real dimmed widget showed its
-    /// glass still in colour, so dimming must not drain to grey.
-    func testAppMonochromeGoesFullGreyscaleButDimmingOnlyFlattens() {
+    /// different: the first is an explicit request for greyscale, the second
+    /// isn't. Next to the real dimmed Calendar/Weather widgets the glass passes
+    /// the wallpaper's hue straight through (lavender over a lavender
+    /// wallpaper), so pulling saturation below 1 is what turned ours grey.
+    func testAppMonochromeGoesFullGreyscaleButDimmingKeepsTheColour() {
         XCTAssertEqual(WidgetGlassBackground.saturation(monochrome: true, dimmed: false), 0)
         XCTAssertEqual(WidgetGlassBackground.saturation(monochrome: true, dimmed: true), 0)
-
-        let dimmedSat = WidgetGlassBackground.saturation(monochrome: false, dimmed: true)
-        let vividSat = WidgetGlassBackground.saturation(monochrome: false, dimmed: false)
-        XCTAssertGreaterThan(dimmedSat, 0, "dimming must keep the backdrop in colour, like the system's own widgets")
-        XCTAssertLessThan(dimmedSat, vividSat, "dimming must still be visibly flatter than vivid")
+        XCTAssertGreaterThanOrEqual(WidgetGlassBackground.saturation(monochrome: false, dimmed: true), 1,
+                                    "dimmed glass must keep the wallpaper's colour, not drain toward grey")
     }
 
-    func testDimmingDeepensTheScrimRatherThanLeavingItUnchanged() {
-        let vivid = WidgetGlassBackground.scrim(isDark: false, dimmed: false)
-        let dimmed = WidgetGlassBackground.scrim(isDark: false, dimmed: true)
-        XCTAssertNotEqual(vivid, dimmed)
+    /// The app relaunches itself so a fresh Screen Recording grant takes
+    /// effect — only on leaving System Settings after visiting it.
+    func testRelaunchesOnlyOnLeavingSystemSettingsAfterVisitingIt() {
+        let settings = ScreenCaptureRelaunch.systemSettingsBundleID
+        XCTAssertFalse(ScreenCaptureRelaunch.shouldRelaunch(activated: "com.apple.finder", visitedSettings: false),
+                       "prompt dismissed without opening Settings")
+        XCTAssertFalse(ScreenCaptureRelaunch.shouldRelaunch(activated: settings, visitedSettings: true),
+                       "still in Settings")
+        XCTAssertTrue(ScreenCaptureRelaunch.shouldRelaunch(activated: "com.apple.finder", visitedSettings: true))
     }
 }

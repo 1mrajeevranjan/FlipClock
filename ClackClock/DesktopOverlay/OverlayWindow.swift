@@ -65,17 +65,24 @@ final class OverlayWindow: NSPanel {
     func installContextMenu(openSettings: @escaping () -> Void, hide: @escaping () -> Void) {
         let menu = NSMenu()
         menu.addItem(ActionMenuItem("Settings…", handler: openSettings))
+        let glass = ActionMenuItem("Turn On Glass Effect…") { ScreenCaptureRelaunch.requestFromUser() }
+        menu.addItem(glass)
+        glassItem = glass
         menu.addItem(.separator())
         menu.addItem(ActionMenuItem("Hide Widget", handler: hide))
         contextMenu = menu
     }
 
     private var contextMenu: NSMenu?
+    /// Only shown while Screen Recording is off: the system prompt appears
+    /// once ever, so this is the way back after declining it.
+    private var glassItem: NSMenuItem?
 
     override func sendEvent(_ event: NSEvent) {
         let isContextClick = event.type == .rightMouseDown
             || (event.type == .leftMouseDown && event.modifierFlags.contains(.control))
         if isContextClick, let contextMenu, let contentView {
+            glassItem?.isHidden = CGPreflightScreenCaptureAccess()
             NSMenu.popUpContextMenu(contextMenu, with: event, for: contentView)
             return
         }
